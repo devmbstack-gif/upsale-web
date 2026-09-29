@@ -1,0 +1,29 @@
+/* Design tokens — dark / light via [data-theme] */
+
+:root,
+[data-theme="dark"] {
+  --brand-from: #7c3aed;
+  --brand-to: #c4b5fd;
+  --logo-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #ddd6fe 100%);
+  --background: #0b0718;
+  --foreground: #f4f0ff;
+  --surface: #140c24;
+  --surface-elevated: #1a1030;
+  --muted: #a89bc4;
+  --border: rgba(196, 181, 253, 0.12);
+  --glow: rgba(124, 58, 237, 0.35);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme="light"] {
+  --brand-from: #7c3aed;
+  --brand-to: #9f7aea;
+  --logo-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #ddd6fe 100%);
+  --background: #f7f4ff;
+  --foreground: #1a1028;
+  --surface: #ffffff;
+  --surface-elevated: #f3eefc;
+  --muted: #6b5f82;
+  --border: rgba(124, 58, 237, 0.14);
+  --glow: rgba(124, 58, 237, 0.2);
+}

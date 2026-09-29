@@ -307,6 +307,11 @@
   gap: 14px;
 }
 
+.heroStageCompact {
+  gap: 10px;
+  transform: none;
+}
+
 .phone {
   width: min(320px, 100%);
   padding: 12px 12px 16px;
@@ -318,12 +323,27 @@
     0 30px 80px rgba(124, 58, 237, 0.32);
 }
 
+.phoneCompact {
+  width: min(248px, 100%);
+  padding: 10px 10px 12px;
+  border-radius: 30px;
+  box-shadow:
+    0 0 0 5px rgba(14, 10, 23, 0.9),
+    0 18px 44px rgba(124, 58, 237, 0.28);
+}
+
 .notch {
   width: 108px;
   height: 18px;
   margin: 0 auto 10px;
   border-radius: 999px;
   background: #050408;
+}
+
+.phoneCompact .notch {
+  width: 84px;
+  height: 14px;
+  margin-bottom: 8px;
 }
 
 .screen {
@@ -335,12 +355,21 @@
   border: 1px solid rgba(167, 139, 250, 0.12);
 }
 
+.phoneCompact .screen {
+  height: 300px;
+  border-radius: 20px;
+}
+
 .pane {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   padding: 18px;
+}
+
+.phoneCompact .pane {
+  padding: 12px;
 }
 
 .paneKicker {
@@ -352,11 +381,20 @@
   text-transform: uppercase;
 }
 
+.phoneCompact .paneKicker {
+  font-size: 0.68rem;
+}
+
 .paneTitle {
   margin: 8px 0 0;
   font-family: var(--font-bric), "Bricolage Grotesque", sans-serif;
   font-size: 1.45rem;
   letter-spacing: -0.04em;
+}
+
+.phoneCompact .paneTitle {
+  margin-top: 4px;
+  font-size: 1.15rem;
 }
 
 .qrWrap {
@@ -466,12 +504,22 @@
   text-align: center;
 }
 
+.phoneCompact .coupon {
+  margin-top: 12px;
+  padding: 14px 12px;
+  border-radius: 14px;
+}
+
 .coupon strong {
   display: block;
   margin-top: 6px;
   font-family: var(--font-bric), "Bricolage Grotesque", sans-serif;
   font-size: 2.4rem;
   letter-spacing: -0.04em;
+}
+
+.phoneCompact .coupon strong {
+  font-size: 1.7rem;
 }
 
 .coupon code {
@@ -485,11 +533,59 @@
   letter-spacing: 0.12em;
 }
 
+.phoneCompact .coupon code {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
 .coupon span {
   display: block;
   margin-top: 12px;
   color: #c4b5e0;
   font-size: 0.86rem;
+}
+
+.phoneCompact .coupon span {
+  margin-top: 8px;
+  font-size: 0.76rem;
+}
+
+.phoneCompact .fakeField {
+  margin-top: 8px;
+  padding: 8px 10px;
+}
+
+.phoneCompact .claim {
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.phoneCompact .offerChip {
+  margin-top: 10px;
+  font-size: 0.74rem;
+}
+
+.phoneCompact .waCard {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.phoneCompact .qr {
+  grid-template-columns: repeat(17, 6px);
+  gap: 1px;
+  padding: 8px;
+}
+
+.phoneCompact .qrOn,
+.phoneCompact .qrOff {
+  width: 6px;
+  height: 6px;
+}
+
+.phoneCompact .stepLabel {
+  font-size: 0.78rem;
 }
 
 .waCard {

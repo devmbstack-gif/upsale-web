@@ -284,7 +284,7 @@ export default function SignUpMultiStepForm() {
         </div>
       </header>
 
-      <main className={styles.shell}>
+      <main className={`${styles.shell} ${step < 3 ? styles.shellCompact : ""}`}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
@@ -296,24 +296,26 @@ export default function SignUpMultiStepForm() {
             transition={{ duration: 0.28 }}
           >
             {step === 1 ? (
-              <section className={styles.card}>
+              <section className={`${styles.card} ${styles.cardCompact}`}>
                 <p className={styles.eyebrow}>Account setup</p>
                 <h1>Create the login for your business</h1>
                 <p className={styles.lede}>This email is how you will sign back in.</p>
-                <div className={styles.fields}>
+                <div className={`${styles.fields} ${styles.fieldsCompact}`}>
                   <Field label="Business name" error={errors.businessName?.message}>
                     <input autoComplete="organization" {...register("businessName")} />
                   </Field>
                   <Field label="Business email" error={errors.email?.message}>
                     <input type="email" autoComplete="email" {...register("email")} />
                   </Field>
-                  <Field label="Password" error={errors.password?.message}>
-                    <input type="password" autoComplete="new-password" {...register("password")} />
-                  </Field>
+                  <div className={styles.row}>
+                    <Field label="Password" error={errors.password?.message}>
+                      <input type="password" autoComplete="new-password" {...register("password")} />
+                    </Field>
+                    <Field label="Confirm password" error={errors.confirmPassword?.message}>
+                      <input type="password" autoComplete="new-password" {...register("confirmPassword")} />
+                    </Field>
+                  </div>
                   <p className={styles.hint}>At least 8 characters, with one uppercase letter and one number.</p>
-                  <Field label="Confirm password" error={errors.confirmPassword?.message}>
-                    <input type="password" autoComplete="new-password" {...register("confirmPassword")} />
-                  </Field>
                   <CaptchaWidget
                     solved={captchaSolved}
                     onSolvedChange={(solved, proof) => {
@@ -331,11 +333,11 @@ export default function SignUpMultiStepForm() {
             ) : null}
 
             {step === 2 ? (
-              <section className={styles.card}>
+              <section className={`${styles.card} ${styles.cardCompact}`}>
                 <p className={styles.eyebrow}>Business details</p>
                 <h1>Where should this account live?</h1>
                 <p className={styles.lede}>Currency and timezone follow the country. You can change the timezone.</p>
-                <div className={styles.fields}>
+                <div className={`${styles.fields} ${styles.fieldsCompact}`}>
                   <Field label="Business support email" error={errors.supportEmail?.message}>
                     <input type="email" autoComplete="email" {...register("supportEmail")} />
                   </Field>
@@ -389,7 +391,7 @@ export default function SignUpMultiStepForm() {
                   <div className={styles.field}>
                     Logo
                     <span className={styles.hint}>Optional. Skip if you want to add it later.</span>
-                    <div className={styles.logoBox}>
+                    <div className={`${styles.logoBox} ${styles.logoBoxCompact}`}>
                       {logoPreview ? <img className={styles.preview} src={logoPreview} alt="Logo preview" /> : null}
                       <input type="file" accept="image/*" onChange={onLogo} />
                     </div>
@@ -448,7 +450,31 @@ export default function SignUpMultiStepForm() {
                   </div>
                   <label className={styles.check}>
                     <input type="checkbox" {...register("acceptTerms")} />
-                    <span>I agree to the Terms and Privacy Policy.</span>
+                    <span>
+                      I agree to the{" "}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.checkLink}
+                        onClick={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.checkLink}
+                        onClick={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
                   </label>
                   {errors.acceptTerms?.message ? <span className={styles.error}>{errors.acceptTerms.message}</span> : null}
                   <label className={styles.check}>
@@ -478,7 +504,10 @@ export default function SignUpMultiStepForm() {
         </AnimatePresence>
       </main>
 
-      <p className={styles.authFooter} style={{ marginTop: 0, marginBottom: 40 }}>
+      <p
+        className={styles.authFooter}
+        style={{ marginTop: 0, marginBottom: step < 3 ? 16 : 40 }}
+      >
         Already have an account? <Link href="/login">Sign In</Link>
       </p>
 
