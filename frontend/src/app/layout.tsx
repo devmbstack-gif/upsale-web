@@ -1,29 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-dm",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
+  variable: "--font-bric",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "UPSale",
-  description: "UPSale storefront",
+  title: "UPSale — Turn walk-ins into customers you can message",
+  description:
+    "UPSale turns a counter QR code into a WhatsApp customer list, a one-time coupon, and the next offer for restaurants, salons, and retailers.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${dmSans.variable} ${bricolage.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

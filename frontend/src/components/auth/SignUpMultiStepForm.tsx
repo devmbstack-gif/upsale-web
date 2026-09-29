@@ -1,0 +1,502 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type ChangeEvent, type ReactNode } from "react";
+import { useForm, type Resolver } from "react-hook-form";
+import {
+  accountFields,
+  accountSchema,
+  businessCategories,
+  businessFields,
+  businessSchema,
+  confirmFields,
+  confirmSchema,
+  countries,
+  countryDefaults,
+  currencies,
+  dialCodes,
+  signUpSchema,
+  timezones,
+  type SignUpValues,
+} from "@/lib/validations/auth";
+import CaptchaWidget, { type CaptchaProof } from "./CaptchaWidget";
+import OtpModal from "./OtpModal";
+import AuthBackground from "./AuthBackground";
+import styles from "./auth.module.css";
+
+type SignUpFormValues = {
+  businessName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  supportEmail: string;
+  category: SignUpValues["category"] | "";
+  country: SignUpValues["country"] | "";
+  currency: SignUpValues["currency"] | "";
+  timezone: SignUpValues["timezone"] | "";
+  city: string;
+  logoPreview: string;
+  dialCode: string;
+  whatsappNumber: string;
+  acceptTerms: boolean;
+  acceptConsent: boolean;
+};
+
+const steps = [
+  { id: 1, label: "Account" },
+  { id: 2, label: "Business" },
+  { id: 3, label: "WhatsApp" },
+] as const;
+
+const slide = {
+  enter: (direction: number) => ({ x: direction > 0 ? 36 : -36, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -36 : 36, opacity: 0 }),
+};
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className={styles.field}>
+      {label}
+      {children}
+      {error ? <span className={styles.error}>{error}</span> : null}
+    </label>
+  );
+}
+
+export default function SignUpMultiStepForm() {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(1);
+  const [captchaSolved, setCaptchaSolved] = useState(false);
+  const [captchaProof, setCaptchaProof] = useState<CaptchaProof | null>(null);
+  const [logoError, setLogoError] = useState("");
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const {
+    register,
+    setValue,
+    getValues,
+    trigger,
+    watch,
+    formState: { errors },
+  } = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema) as Resolver<SignUpFormValues>,
+    mode: "onTouched",
+    defaultValues: {
+      businessName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      supportEmail: "",
+      category: "",
+      country: "",
+      currency: "",
+      timezone: "",
+      city: "",
+      logoPreview: "",
+      dialCode: "+92",
+      whatsappNumber: "",
+      acceptTerms: false,
+      acceptConsent: false,
+    },
+  });
+
+  const values = watch();
+  const logoPreview = values.logoPreview;
+  const countryField = register("country");
+  const accountReady = accountSchema.safeParse(values).success && captchaSolved;
+  const businessReady = businessSchema.safeParse(values).success;
+  const confirmReady = confirmSchema.safeParse(values).success;
+
+  function move(next: number) {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  }
+
+  async function goToBusiness() {
+    const valid = await trigger([...accountFields]);
+    if (!valid || !captchaSolved) return;
+    move(2);
+  }
+
+  async function goToWhatsApp() {
+    const valid = await trigger([...businessFields]);
+    if (!valid) return;
+    move(3);
+  }
+
+  function onCountryChange(event: ChangeEvent<HTMLSelectElement>) {
+    countryField.onChange(event);
+    const selected = event.target.value as SignUpValues["country"] | "";
+    if (!selected) return;
+    const defaults = countryDefaults[selected];
+    setValue("currency", defaults.currency, { shouldValidate: true, shouldTouch: true });
+    setValue("timezone", defaults.timezone, { shouldValidate: true, shouldTouch: true });
+  }
+
+  function onLogo(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setLogoError("Upload an image file.");
+      return;
+    }
+    if (file.size > 1_500_000) {
+      setLogoError("Logo must be under 1.5 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setValue("logoPreview", String(reader.result ?? ""));
+      setLogoError("");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function sendCode() {
+    const response = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        email: getValues("email"),
+        captchaToken: captchaProof?.token,
+        captchaAnswer: captchaProof?.answer,
+      }),
+    });
+    const payload = (await response.json()) as { ok: boolean; message?: string };
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.message ?? "Could not send the code.");
+    }
+    setOtpError("");
+  }
+
+  async function createAccount() {
+    const valid = await trigger([...confirmFields]);
+    if (!valid) return;
+    setSubmitting(true);
+    setOtpError("");
+    try {
+      await sendCode();
+      setOtpOpen(true);
+    } catch (error) {
+      setOtpError(error instanceof Error ? error.message : "Could not send the code.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function verifyCode(code: string) {
+    const current = getValues();
+    setSubmitting(true);
+    setOtpError("");
+    try {
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          email: current.email,
+          code,
+          password: current.password,
+          businessName: current.businessName,
+          supportEmail: current.supportEmail,
+          category: current.category,
+          country: current.country,
+          currency: current.currency,
+          timezone: current.timezone,
+          city: current.city,
+          whatsapp: `${current.dialCode}${current.whatsappNumber}`,
+          termsAccepted: true,
+          marketingConsent: true,
+          logoPreview: current.logoPreview,
+        }),
+      });
+      const payload = (await response.json()) as { ok: boolean; message?: string };
+      if (!response.ok || !payload.ok) {
+        setOtpError(payload.message ?? "That code does not match.");
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setOtpError("Could not verify the code.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className={styles.page}>
+      <AuthBackground />
+      <header className={styles.progress}>
+        <div className={styles.progressTop}>
+          <div className={styles.progressLead}>
+            <Link href="/" className={styles.backHome} aria-label="Back to home">
+              <span className={styles.backHomeArrow} aria-hidden="true">
+                ←
+              </span>
+              <span className={styles.backHomeText}>Back to home</span>
+            </Link>
+            <Link href="/" className={styles.brand} aria-label="UPSale home">
+              <img src="/upsale-logo.png" alt="" />
+            </Link>
+          </div>
+          <p className={styles.stepLabel}>Step {step} of 3</p>
+        </div>
+        <ol className={styles.track} aria-label="Sign up progress">
+          {steps.map((item) => {
+            const done = step > item.id;
+            const active = step === item.id;
+            return (
+              <li key={item.id} className={styles.trackItem} aria-current={active ? "step" : undefined}>
+                <span
+                  className={`${styles.dot} ${active ? styles.dotActive : ""} ${done ? styles.dotDone : ""}`}
+                >
+                  {done ? "✓" : item.id}
+                </span>
+                <span className={styles.trackName}>{item.label}</span>
+              </li>
+            );
+          })}
+        </ol>
+        <div className={styles.bar} aria-hidden="true">
+          <motion.div
+            className={styles.barFill}
+            initial={false}
+            animate={{ width: `${(step / 3) * 100}%` }}
+            transition={{ duration: 0.35 }}
+          />
+        </div>
+      </header>
+
+      <main className={styles.shell}>
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={slide}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.28 }}
+          >
+            {step === 1 ? (
+              <section className={styles.card}>
+                <p className={styles.eyebrow}>Account setup</p>
+                <h1>Create the login for your business</h1>
+                <p className={styles.lede}>This email is how you will sign back in.</p>
+                <div className={styles.fields}>
+                  <Field label="Business name" error={errors.businessName?.message}>
+                    <input autoComplete="organization" {...register("businessName")} />
+                  </Field>
+                  <Field label="Business email" error={errors.email?.message}>
+                    <input type="email" autoComplete="email" {...register("email")} />
+                  </Field>
+                  <Field label="Password" error={errors.password?.message}>
+                    <input type="password" autoComplete="new-password" {...register("password")} />
+                  </Field>
+                  <p className={styles.hint}>At least 8 characters, with one uppercase letter and one number.</p>
+                  <Field label="Confirm password" error={errors.confirmPassword?.message}>
+                    <input type="password" autoComplete="new-password" {...register("confirmPassword")} />
+                  </Field>
+                  <CaptchaWidget
+                    solved={captchaSolved}
+                    onSolvedChange={(solved, proof) => {
+                      setCaptchaSolved(solved);
+                      setCaptchaProof(solved && proof ? proof : null);
+                    }}
+                  />
+                </div>
+                <div className={styles.actions}>
+                  <button type="button" className={styles.primary} disabled={!accountReady} onClick={goToBusiness}>
+                    Next: Business Details
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {step === 2 ? (
+              <section className={styles.card}>
+                <p className={styles.eyebrow}>Business details</p>
+                <h1>Where should this account live?</h1>
+                <p className={styles.lede}>Currency and timezone follow the country. You can change the timezone.</p>
+                <div className={styles.fields}>
+                  <Field label="Business support email" error={errors.supportEmail?.message}>
+                    <input type="email" autoComplete="email" {...register("supportEmail")} />
+                  </Field>
+                  <div className={styles.row}>
+                    <Field label="Business category" error={errors.category?.message}>
+                      <select {...register("category")}>
+                        <option value="">Select</option>
+                        {businessCategories.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Country" error={errors.country?.message}>
+                      <select {...countryField} onChange={onCountryChange}>
+                        <option value="">Select</option>
+                        {countries.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                  <div className={styles.row}>
+                    <Field label="Currency" error={errors.currency?.message}>
+                      <select {...register("currency")} disabled={values.country !== "Other" && values.country !== ""}>
+                        <option value="">Select a country</option>
+                        {currencies.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Timezone" error={errors.timezone?.message}>
+                      <select {...register("timezone")}>
+                        <option value="">Select</option>
+                        {timezones.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                  <Field label="City / address" error={errors.city?.message}>
+                    <input autoComplete="street-address" {...register("city")} />
+                  </Field>
+                  <div className={styles.field}>
+                    Logo
+                    <span className={styles.hint}>Optional. Skip if you want to add it later.</span>
+                    <div className={styles.logoBox}>
+                      {logoPreview ? <img className={styles.preview} src={logoPreview} alt="Logo preview" /> : null}
+                      <input type="file" accept="image/*" onChange={onLogo} />
+                    </div>
+                    {logoError ? <span className={styles.error}>{logoError}</span> : null}
+                    {logoPreview ? (
+                      <button
+                        type="button"
+                        className={styles.textButton}
+                        onClick={() => setValue("logoPreview", "")}
+                      >
+                        Skip for now
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <div className={styles.actions}>
+                  <button type="button" className={styles.ghost} onClick={() => move(1)}>
+                    Back
+                  </button>
+                  <button type="button" className={styles.primary} disabled={!businessReady} onClick={goToWhatsApp}>
+                    Next: WhatsApp & Confirm
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {step === 3 ? (
+              <section className={styles.card}>
+                <p className={styles.eyebrow}>WhatsApp and confirmation</p>
+                <h1>How should customers hear from you?</h1>
+                <p className={styles.lede}>We only need the number. API keys are not part of signup.</p>
+                <div className={styles.fields}>
+                  <div className={styles.field}>
+                    WhatsApp Business number
+                    <div className={styles.phoneRow}>
+                      <select aria-label="Country code" {...register("dialCode")}>
+                        {dialCodes.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {item.country} {item.code}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel-national"
+                        placeholder="3001234567"
+                        aria-label="WhatsApp number"
+                        {...register("whatsappNumber")}
+                      />
+                    </div>
+                    {errors.dialCode?.message ? <span className={styles.error}>{errors.dialCode.message}</span> : null}
+                    {errors.whatsappNumber?.message ? (
+                      <span className={styles.error}>{errors.whatsappNumber.message}</span>
+                    ) : null}
+                  </div>
+                  <label className={styles.check}>
+                    <input type="checkbox" {...register("acceptTerms")} />
+                    <span>I agree to the Terms and Privacy Policy.</span>
+                  </label>
+                  {errors.acceptTerms?.message ? <span className={styles.error}>{errors.acceptTerms.message}</span> : null}
+                  <label className={styles.check}>
+                    <input type="checkbox" {...register("acceptConsent")} />
+                    <span>I agree to only message customers who have provided explicit consent.</span>
+                  </label>
+                  {errors.acceptConsent?.message ? (
+                    <span className={styles.error}>{errors.acceptConsent.message}</span>
+                  ) : null}
+                </div>
+                <div className={styles.actions}>
+                  <button type="button" className={styles.ghost} onClick={() => move(2)} disabled={submitting}>
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primary}
+                    disabled={!confirmReady || submitting}
+                    onClick={createAccount}
+                  >
+                    {submitting ? "Sending code…" : "Create Account"}
+                  </button>
+                </div>
+              </section>
+            ) : null}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      <p className={styles.authFooter} style={{ marginTop: 0, marginBottom: 40 }}>
+        Already have an account? <Link href="/login">Sign In</Link>
+      </p>
+
+      <OtpModal
+        open={otpOpen}
+        email={values.email}
+        error={otpError}
+        submitting={submitting}
+        onClose={() => setOtpOpen(false)}
+        onResend={() => {
+          void sendCode().catch((error: unknown) => {
+            setOtpError(error instanceof Error ? error.message : "Could not resend the code.");
+          });
+        }}
+        onSubmitCode={(code) => {
+          void verifyCode(code);
+        }}
+      />
+    </div>
+  );
+}
