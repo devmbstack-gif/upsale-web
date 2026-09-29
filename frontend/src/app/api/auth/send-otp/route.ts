@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const captcha = verifyCaptchaForEmail(businessEmail, parsed.data.captchaToken, parsed.data.captchaAnswer);
   if (!captcha.ok) {
     return NextResponse.json(
-      { ok: false, message: "CAPTCHA verification failed. Try again." },
+      { ok: false, message: "CAPTCHA verification failed. Solve it again on step 1, then retry." },
       { status: 400 },
     );
   }
@@ -30,16 +30,21 @@ export async function POST(request: Request) {
   let issued: Awaited<ReturnType<typeof issueOtp>>;
   try {
     issued = await issueOtp(businessEmail);
-  } catch {
+  } catch (err) {
+    console.error("issueOtp failed:", err);
     return NextResponse.json(
-      { ok: false, message: "The database is not reachable. Start MongoDB and try again." },
+      { ok: false, message: "The database is not reachable. Check MONGODB_URI and try again." },
       { status: 503 },
     );
   }
 
   if (!issued.ok) {
     return NextResponse.json(
-      { ok: false, message: `Wait ${issued.waitSeconds}s before resending the code.` },
+      {
+        ok: false,
+        waitSeconds: issued.waitSeconds,
+        message: `Wait ${issued.waitSeconds}s before resending the code.`,
+      },
       { status: 429 },
     );
   }
@@ -47,17 +52,29 @@ export async function POST(request: Request) {
   let sent: Awaited<ReturnType<typeof sendOtpEmail>>;
   try {
     sent = await sendOtpEmail(businessEmail, issued.code);
-  } catch {
+  } catch (err) {
+    console.error("sendOtpEmail failed:", err);
     await clearOtp(businessEmail).catch(() => undefined);
     return NextResponse.json(
       { ok: false, message: "The email service did not accept the message." },
       { status: 502 },
     );
   }
+
   if (!sent.ok) {
     await clearOtp(businessEmail).catch(() => undefined);
     return NextResponse.json({ ok: false, message: sent.message }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true });
+  const isDev = process.env.NODE_ENV !== "production";
+  return NextResponse.json({
+    ok: true,
+    delivery: sent.delivery,
+    resendAfterSeconds: 60,
+    message:
+      sent.delivery === "console"
+        ? "Email is not configured — use the code shown below (also printed in the server terminal)."
+        : "We sent a 6-digit code to your business email.",
+    ...(isDev && sent.previewCode ? { previewCode: sent.previewCode } : {}),
+  });
 }

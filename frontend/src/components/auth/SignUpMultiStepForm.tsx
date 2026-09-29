@@ -25,6 +25,9 @@ import {
 import CaptchaWidget, { type CaptchaProof } from "./CaptchaWidget";
 import OtpModal from "./OtpModal";
 import AuthBackground from "./AuthBackground";
+import { PasswordInput } from "./PasswordInput";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import styles from "./auth.module.css";
 
 type SignUpFormValues = {
@@ -85,6 +88,8 @@ export default function SignUpMultiStepForm() {
   const [otpOpen, setOtpOpen] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(60);
+  const [otpSendCount, setOtpSendCount] = useState(0);
 
   const {
     register,
@@ -167,6 +172,21 @@ export default function SignUpMultiStepForm() {
     reader.readAsDataURL(file);
   }
 
+  function applyOtpSendResult(payload: {
+    previewCode?: string;
+    message?: string;
+    delivery?: string;
+    resendAfterSeconds?: number;
+  }) {
+    setOtpSendCount((n) => n + 1);
+    setResendCooldown(payload.resendAfterSeconds ?? 60);
+    if (payload.previewCode) {
+      setOtpError(`Dev code: ${payload.previewCode}`);
+    } else {
+      setOtpError("");
+    }
+  }
+
   async function sendCode() {
     const response = await fetch("/api/auth/send-otp", {
       method: "POST",
@@ -178,11 +198,22 @@ export default function SignUpMultiStepForm() {
         captchaAnswer: captchaProof?.answer,
       }),
     });
-    const payload = (await response.json()) as { ok: boolean; message?: string };
+    const payload = (await response.json()) as {
+      ok: boolean;
+      message?: string;
+      previewCode?: string;
+      delivery?: string;
+      resendAfterSeconds?: number;
+      waitSeconds?: number;
+    };
     if (!response.ok || !payload.ok) {
+      if (response.status === 429 && payload.waitSeconds) {
+        setResendCooldown(payload.waitSeconds);
+      }
       throw new Error(payload.message ?? "Could not send the code.");
     }
-    setOtpError("");
+    applyOtpSendResult(payload);
+    return payload;
   }
 
   async function createAccount() {
@@ -195,6 +226,7 @@ export default function SignUpMultiStepForm() {
       setOtpOpen(true);
     } catch (error) {
       setOtpError(error instanceof Error ? error.message : "Could not send the code.");
+      setOtpOpen(false);
     } finally {
       setSubmitting(false);
     }
@@ -231,7 +263,7 @@ export default function SignUpMultiStepForm() {
         setOtpError(payload.message ?? "That code does not match.");
         return;
       }
-      router.push("/dashboard");
+      router.push("/app");
       router.refresh();
     } catch {
       setOtpError("Could not verify the code.");
@@ -253,10 +285,13 @@ export default function SignUpMultiStepForm() {
               <span className={styles.backHomeText}>Back to home</span>
             </Link>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <img src="/upsale-logo.png" alt="" />
+              <BrandLogo variant="auto" size="sm" />
             </Link>
           </div>
-          <p className={styles.stepLabel}>Step {step} of 3</p>
+          <div className={styles.themeActions}>
+            <ThemeToggle />
+            <p className={styles.stepLabel}>Step {step} of 3</p>
+          </div>
         </div>
         <ol className={styles.track} aria-label="Sign up progress">
           {steps.map((item) => {
@@ -308,11 +343,11 @@ export default function SignUpMultiStepForm() {
                     <input type="email" autoComplete="email" {...register("email")} />
                   </Field>
                   <Field label="Password" error={errors.password?.message}>
-                    <input type="password" autoComplete="new-password" {...register("password")} />
+                    <PasswordInput registration={register("password")} autoComplete="new-password" />
                   </Field>
                   <p className={styles.hint}>At least 8 characters, with one uppercase letter and one number.</p>
                   <Field label="Confirm password" error={errors.confirmPassword?.message}>
-                    <input type="password" autoComplete="new-password" {...register("confirmPassword")} />
+                    <PasswordInput registration={register("confirmPassword")} autoComplete="new-password" />
                   </Field>
                   <CaptchaWidget
                     solved={captchaSolved}
@@ -420,7 +455,11 @@ export default function SignUpMultiStepForm() {
               <section className={styles.card}>
                 <p className={styles.eyebrow}>WhatsApp and confirmation</p>
                 <h1>How should customers hear from you?</h1>
-                <p className={styles.lede}>We only need the number. API keys are not part of signup.</p>
+                <p className={styles.lede}>
+                  WhatsApp is saved for later customer messages. To create your account we email a
+                  6-digit code to <strong>{values.email || "your business email"}</strong> — not to
+                  WhatsApp.
+                </p>
                 <div className={styles.fields}>
                   <div className={styles.field}>
                     WhatsApp Business number
@@ -458,6 +497,7 @@ export default function SignUpMultiStepForm() {
                   {errors.acceptConsent?.message ? (
                     <span className={styles.error}>{errors.acceptConsent.message}</span>
                   ) : null}
+                  {otpError && !otpOpen ? <p className={styles.error}>{otpError}</p> : null}
                 </div>
                 <div className={styles.actions}>
                   <button type="button" className={styles.ghost} onClick={() => move(2)} disabled={submitting}>
@@ -483,15 +523,23 @@ export default function SignUpMultiStepForm() {
       </p>
 
       <OtpModal
+        key={otpSendCount}
         open={otpOpen}
         email={values.email}
         error={otpError}
         submitting={submitting}
+        resendCooldownSeconds={resendCooldown}
+        onResendCooldownChange={setResendCooldown}
         onClose={() => setOtpOpen(false)}
-        onResend={() => {
-          void sendCode().catch((error: unknown) => {
+        onResend={async () => {
+          setSubmitting(true);
+          try {
+            await sendCode();
+          } catch (error) {
             setOtpError(error instanceof Error ? error.message : "Could not resend the code.");
-          });
+          } finally {
+            setSubmitting(false);
+          }
         }}
         onSubmitCode={(code) => {
           void verifyCode(code);

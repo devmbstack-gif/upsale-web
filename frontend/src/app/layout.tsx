@@ -1,29 +1,60 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import Script from "next/script";
+import { DM_Sans, Outfit } from "next/font/google";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const outfit = Outfit({
+  variable: "--font-display",
   subsets: ["latin"],
-  variable: "--font-dm",
   display: "swap",
 });
 
-const bricolage = Bricolage_Grotesque({
+const dmSans = DM_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
-  variable: "--font-bric",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "UPSale — Turn walk-ins into customers you can message",
+  title: {
+    default: "UPSale — Turn walk-ins into customers",
+    template: "%s · UPSale",
+  },
   description:
-    "UPSale turns a counter QR code into a WhatsApp customer list, a one-time coupon, and the next offer for restaurants, salons, and retailers.",
+    "UPSale turns a counter QR code into a WhatsApp customer list, coupons, and offers for local businesses.",
 };
+
+const themeInitScript = `
+(function(){
+  try {
+    var stored = localStorage.getItem('upsale-theme');
+    var theme = (stored === 'light' || stored === 'dark')
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch (e) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${bricolage.variable}`}>
-      <body>{children}</body>
+    <html
+      lang="en"
+      className={`${outfit.variable} ${dmSans.variable} h-full antialiased dark`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full font-sans text-foreground">
+        <Script id="upsale-theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

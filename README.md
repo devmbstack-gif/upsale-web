@@ -6,9 +6,9 @@ MERN-style monorepo with **Next.js** (frontend + admin) and **NestJS** (backend)
 
 ```
 UPSale/
-├── frontend/   # Next.js customer-facing app (port 3000)
+├── frontend/   # Business Owner Dashboard + (later) customer QR pages (port 3000)
 ├── backend/    # NestJS API + MongoDB (port 4000)
-└── admin/      # Next.js admin panel (port 3001)
+└── admin/      # Super Admin console (port 3001)
 ```
 
 ## Prerequisites
@@ -45,12 +45,11 @@ npm run dev:admin
 npm run dev:backend
 ```
 
-| App      | URL                    |
-|----------|------------------------|
-| Frontend | http://localhost:3000  |
-| Admin    | http://localhost:3001  |
-| Backend  | http://localhost:4000  |
-| API docs | http://localhost:4000/api |
+| App | URL | Role |
+|-----|-----|------|
+| Frontend | http://localhost:3000 | Business owner dashboard (`/login`, offers, customers…) |
+| Admin | http://localhost:3001 | Super admin (platform) |
+| Backend | http://localhost:4000/api | NestJS API |
 
 ## Tech stack
 

@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/lib/validations/auth";
 import AuthBackground from "./AuthBackground";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import styles from "./auth.module.css";
 
 type ResetPasswordFormProps = {
@@ -78,10 +80,13 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               <span className={styles.backHomeText}>Back to home</span>
             </Link>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <img src="/upsale-logo.png" alt="" />
+              <BrandLogo variant="auto" size="sm" />
             </Link>
           </div>
-          <p className={styles.stepLabel}>Reset password</p>
+          <div className={styles.themeActions}>
+            <ThemeToggle />
+            <p className={styles.stepLabel}>Reset password</p>
+          </div>
         </div>
       </header>
 
