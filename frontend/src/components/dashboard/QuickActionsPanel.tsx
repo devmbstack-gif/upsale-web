@@ -15,10 +15,10 @@ const actions = [
     cta: "Open customers",
   },
   {
-    title: "Export report",
-    description: "Download CSV of customers and redemptions.",
-    href: "/app/customers",
-    cta: "Export UI",
+    title: "Send a deal",
+    description: "Message a segment now or schedule WhatsApp.",
+    href: "/app/deals",
+    cta: "Open deals",
   },
 ];
 

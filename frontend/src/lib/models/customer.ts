@@ -10,6 +10,8 @@ const customerSchema = new Schema(
     optedOut: { type: Boolean, default: false },
     scans: { type: Number, default: 0 },
     couponsRedeemed: { type: Number, default: 0 },
+    visitCount: { type: Number, default: 0 },
+    totalSpend: { type: Number, default: 0 },
     tags: { type: [String], default: [] },
     lastVisitAt: { type: Date, default: Date.now },
   },

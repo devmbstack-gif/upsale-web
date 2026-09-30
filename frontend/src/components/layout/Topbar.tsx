@@ -31,7 +31,7 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-[var(--border)] bg-background/80 px-4 py-4 backdrop-blur-md md:px-8">
+    <header className="z-30 flex shrink-0 items-center justify-between gap-4 border-b border-[var(--border)] bg-background/80 px-4 py-4 backdrop-blur-md md:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"

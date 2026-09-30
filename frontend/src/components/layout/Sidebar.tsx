@@ -12,6 +12,7 @@ const nav = [
   { href: "/app/offers", label: "Offers", icon: "◎" },
   { href: "/app/customers", label: "Customers", icon: "◉" },
   { href: "/app/coupons", label: "Coupons", icon: "▣" },
+  { href: "/app/deals", label: "Deals", icon: "✦" },
   { href: "/app/profile", label: "Profile", icon: "◈" },
 ];
 
@@ -58,7 +59,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[min(300px,88vw)] flex-col border-r border-[var(--border)] bg-surface/95 backdrop-blur-xl transition-transform duration-300 lg:static lg:z-0 lg:w-72 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(300px,88vw)] flex-col border-r border-[var(--border)] bg-surface/95 backdrop-blur-xl transition-transform duration-300 lg:static lg:z-0 lg:h-full lg:w-72 lg:shrink-0 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >

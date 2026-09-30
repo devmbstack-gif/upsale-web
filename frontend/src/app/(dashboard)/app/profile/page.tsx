@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Input, TextArea } from "@/components/ui/Input";
+import { Input, PasswordField, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { useEffect, useState } from "react";
 
@@ -24,6 +24,14 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [form, setForm] = useState({
     businessName: "",
     category: "",
@@ -86,6 +94,30 @@ export default function ProfilePage() {
       setMessage("Saved.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function onChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordMessage(null);
+    setPasswordError(null);
+    try {
+      const res = await fetch("/api/profile/password", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passwords),
+      });
+      const data = (await res.json()) as { ok: boolean; message?: string };
+      if (!res.ok || !data.ok) {
+        setPasswordError(data.message ?? "Could not update password.");
+        return;
+      }
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordMessage(data.message ?? "Password updated.");
+    } finally {
+      setPasswordSaving(false);
     }
   }
 
@@ -212,6 +244,59 @@ export default function ProfilePage() {
       </Reveal>
 
       <Reveal delay={2}>
+        <div className="card-interactive space-y-6 p-6 md:p-8">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Change password</h2>
+            <p className="text-sm text-muted">
+              Use your current password, then choose a new one (min 8 characters, 1 uppercase, 1 number).
+            </p>
+          </div>
+          <form className="grid gap-4 md:grid-cols-2" onSubmit={onChangePassword}>
+            <PasswordField
+              label="Current password"
+              name="currentPassword"
+              autoComplete="current-password"
+              value={passwords.currentPassword}
+              onChange={(e) =>
+                setPasswords((p) => ({ ...p, currentPassword: e.target.value }))
+              }
+              required
+              wrapperClassName="md:col-span-2"
+            />
+            <PasswordField
+              label="New password"
+              name="newPassword"
+              autoComplete="new-password"
+              value={passwords.newPassword}
+              onChange={(e) => setPasswords((p) => ({ ...p, newPassword: e.target.value }))}
+              required
+            />
+            <PasswordField
+              label="Confirm new password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              value={passwords.confirmPassword}
+              onChange={(e) =>
+                setPasswords((p) => ({ ...p, confirmPassword: e.target.value }))
+              }
+              required
+            />
+            <div className="flex flex-wrap items-center gap-3 md:col-span-2">
+              <Button type="submit" disabled={passwordSaving}>
+                {passwordSaving ? "Updating…" : "Update password"}
+              </Button>
+              {passwordError ? (
+                <span className="text-sm text-red-400">{passwordError}</span>
+              ) : null}
+              {passwordMessage ? (
+                <span className="text-sm text-muted">{passwordMessage}</span>
+              ) : null}
+            </div>
+          </form>
+        </div>
+      </Reveal>
+
+      <Reveal delay={3}>
         <div className="card-interactive space-y-4 p-6 md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>

@@ -32,6 +32,10 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
     title: "Coupons",
     subtitle: "Issued and redeemed codes",
   },
+  "/app/deals": {
+    title: "Deals",
+    subtitle: "WhatsApp campaigns by segment",
+  },
 };
 
 function resolveHeader(pathname: string) {
@@ -51,17 +55,17 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const header = useMemo(() => resolveHeader(pathname), [pathname]);
 
   return (
-    <div className="bg-atmosphere relative flex min-h-screen overflow-hidden">
+    <div className="bg-atmosphere relative flex h-dvh overflow-hidden">
       <AmbientOrbs />
-      <div className="relative z-10 flex min-h-screen w-full">
+      <div className="relative z-10 flex h-full min-h-0 w-full">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <Topbar
             title={header.title}
             subtitle={header.subtitle}
             onMenuClick={() => setSidebarOpen(true)}
           />
-          <main className="flex-1 px-4 pb-10 pt-6 md:px-8 md:pt-8">
+          <main className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-6 md:px-8 md:pt-8">
             <PageTransition>{children}</PageTransition>
           </main>
         </div>

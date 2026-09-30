@@ -2,12 +2,13 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Customer = {
   _id: string;
@@ -16,8 +17,11 @@ type Customer = {
   email?: string | null;
   scans?: number;
   couponsRedeemed?: number;
+  visitCount?: number;
+  totalSpend?: number;
   lastVisitAt?: string;
   tags?: string[];
+  optedOut?: boolean;
 };
 
 type Coupon = {
@@ -30,37 +34,103 @@ type Coupon = {
   customerId?: { _id?: string } | string;
 };
 
+type Visit = {
+  _id: string;
+  amount: number;
+  category?: string;
+  note?: string;
+  visitedAt: string;
+};
+
 export default function CustomerDetailPage() {
   const params = useParams();
   const id = String(params.id ?? "");
   const [customer, setCustomer] = useState<Customer | null | undefined>(undefined);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [redeeming, setRedeeming] = useState<string | null>(null);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    const [cRes, couponRes, visitRes] = await Promise.all([
+      fetch(`/api/customers/${id}`, { credentials: "same-origin" }),
+      fetch("/api/coupons", { credentials: "same-origin" }),
+      fetch(`/api/customers/${id}/visits`, { credentials: "same-origin" }),
+    ]);
+    if (!cRes.ok) {
+      setCustomer(null);
+      return;
+    }
+    const cData = (await cRes.json()) as { customer: Customer };
+    setCustomer(cData.customer);
+    if (couponRes.ok) {
+      const data = (await couponRes.json()) as { coupons: Coupon[] };
+      setCoupons(
+        (data.coupons ?? []).filter((c) => {
+          const cid = typeof c.customerId === "object" ? c.customerId?._id : c.customerId;
+          return String(cid) === id;
+        }),
+      );
+    }
+    if (visitRes.ok) {
+      const data = (await visitRes.json()) as { visits: Visit[] };
+      setVisits(data.visits ?? []);
+    }
+  }, [id]);
 
   useEffect(() => {
-    if (!id) return;
-    void (async () => {
-      const [cRes, couponRes] = await Promise.all([
-        fetch(`/api/customers/${id}`, { credentials: "same-origin" }),
-        fetch("/api/coupons", { credentials: "same-origin" }),
-      ]);
-      if (!cRes.ok) {
-        setCustomer(null);
+    void load();
+  }, [load]);
+
+  async function recordVisit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setFormMessage(null);
+    try {
+      const res = await fetch(`/api/customers/${id}/visits`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(amount || 0),
+          category,
+          note,
+        }),
+      });
+      const data = (await res.json()) as { ok: boolean; message?: string };
+      if (!res.ok || !data.ok) {
+        setFormMessage(data.message ?? "Could not save visit.");
         return;
       }
-      const cData = (await cRes.json()) as { customer: Customer };
-      setCustomer(cData.customer);
-      if (couponRes.ok) {
-        const data = (await couponRes.json()) as { coupons: Coupon[] };
-        setCoupons(
-          (data.coupons ?? []).filter((c) => {
-            const cid =
-              typeof c.customerId === "object" ? c.customerId?._id : c.customerId;
-            return String(cid) === id;
-          }),
-        );
-      }
-    })();
-  }, [id]);
+      setAmount("");
+      setCategory("");
+      setNote("");
+      setFormMessage("Visit saved.");
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function redeemCoupon(couponId: string, code: string) {
+    const ok = window.confirm(`Mark ${code} as redeemed?`);
+    if (!ok) return;
+    setRedeeming(couponId);
+    try {
+      const res = await fetch(`/api/coupons/${couponId}/redeem`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (res.ok) await load();
+    } finally {
+      setRedeeming(null);
+    }
+  }
 
   if (customer === undefined) {
     return (
@@ -87,13 +157,12 @@ export default function CustomerDetailPage() {
         <div>
           <h2 className="font-display text-2xl font-semibold">{customer.name}</h2>
           <p className="mt-1 text-muted">{customer.phone}</p>
-          {customer.email ? (
-            <p className="text-sm text-muted">{customer.email}</p>
-          ) : null}
+          {customer.email ? <p className="text-sm text-muted">{customer.email}</p> : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {(customer.tags ?? []).map((tag) => (
               <Badge key={tag}>{tag}</Badge>
             ))}
+            {customer.optedOut ? <Badge variant="paused">Opted out</Badge> : null}
           </div>
         </div>
         <Button href="/app/customers" variant="secondary">
@@ -101,15 +170,19 @@ export default function CustomerDetailPage() {
         </Button>
       </Reveal>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <Reveal delay={1} className="card-interactive p-5">
-          <p className="text-xs uppercase text-muted">Total scans</p>
+          <p className="text-xs uppercase text-muted">Scans</p>
           <p className="font-display mt-1 text-2xl font-semibold">{customer.scans ?? 0}</p>
         </Reveal>
         <Reveal delay={1} className="card-interactive p-5">
-          <p className="text-xs uppercase text-muted">Coupons redeemed</p>
+          <p className="text-xs uppercase text-muted">Visits logged</p>
+          <p className="font-display mt-1 text-2xl font-semibold">{customer.visitCount ?? 0}</p>
+        </Reveal>
+        <Reveal delay={1} className="card-interactive p-5">
+          <p className="text-xs uppercase text-muted">Total spend</p>
           <p className="font-display mt-1 text-2xl font-semibold">
-            {customer.couponsRedeemed ?? 0}
+            {(customer.totalSpend ?? 0).toLocaleString()}
           </p>
         </Reveal>
         <Reveal delay={2} className="card-interactive p-5">
@@ -119,6 +192,82 @@ export default function CustomerDetailPage() {
           </p>
         </Reveal>
       </div>
+
+      <Reveal delay={1}>
+        <section className="card-interactive space-y-4 p-6">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Record purchase / visit</h3>
+            <p className="text-sm text-muted">Used for segments and future AI deal suggestions.</p>
+          </div>
+          <form className="grid gap-3 sm:grid-cols-3" onSubmit={recordVisit}>
+            <Input
+              label="Amount"
+              name="amount"
+              type="number"
+              min={0}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+            />
+            <Input
+              label="Category (optional)"
+              name="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Coffee, Haircut…"
+            />
+            <Input
+              label="Note (optional)"
+              name="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Walk-in"
+            />
+            <div className="flex items-end gap-3 sm:col-span-3">
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save visit"}
+              </Button>
+              {formMessage ? <span className="text-sm text-muted">{formMessage}</span> : null}
+            </div>
+          </form>
+        </section>
+      </Reveal>
+
+      <Reveal delay={1}>
+        <section className="space-y-3">
+          <h3 className="font-display text-lg font-semibold">Visit history</h3>
+          <TableShell>
+            <Table>
+              <THead>
+                <tr>
+                  <TH>When</TH>
+                  <TH>Amount</TH>
+                  <TH>Category</TH>
+                  <TH>Note</TH>
+                </tr>
+              </THead>
+              <TBody>
+                {visits.map((v) => (
+                  <TR key={v._id}>
+                    <TD>{formatDateTime(v.visitedAt)}</TD>
+                    <TD>{(v.amount ?? 0).toLocaleString()}</TD>
+                    <TD>{v.category || "—"}</TD>
+                    <TD>{v.note || "—"}</TD>
+                  </TR>
+                ))}
+                {visits.length === 0 ? (
+                  <TR>
+                    <TD colSpan={4} className="py-8 text-center text-muted">
+                      No visits recorded yet.
+                    </TD>
+                  </TR>
+                ) : null}
+              </TBody>
+            </Table>
+          </TableShell>
+        </section>
+      </Reveal>
 
       <Reveal delay={2}>
         <section className="space-y-3">
@@ -131,6 +280,7 @@ export default function CustomerDetailPage() {
                   <TH>Offer</TH>
                   <TH>Status</TH>
                   <TH>Issued</TH>
+                  <TH />
                 </tr>
               </THead>
               <TBody>
@@ -148,12 +298,26 @@ export default function CustomerDetailPage() {
                         </Badge>
                       </TD>
                       <TD>{formatDate(c.issuedAt)}</TD>
+                      <TD className="text-right">
+                        {!redeemed ? (
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-brand-to hover:underline disabled:opacity-50"
+                            disabled={redeeming === c._id}
+                            onClick={() => void redeemCoupon(c._id, c.code)}
+                          >
+                            {redeeming === c._id ? "…" : "Redeem"}
+                          </button>
+                        ) : (
+                          "—"
+                        )}
+                      </TD>
                     </TR>
                   );
                 })}
                 {coupons.length === 0 ? (
                   <TR>
-                    <TD colSpan={4} className="py-8 text-center text-muted">
+                    <TD colSpan={5} className="py-8 text-center text-muted">
                       No coupons for this customer.
                     </TD>
                   </TR>

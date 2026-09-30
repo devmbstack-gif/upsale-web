@@ -2,9 +2,10 @@
 
 import { PanelSkeleton } from "@/components/dashboard/PanelSkeleton";
 import { Reveal } from "@/components/ui/Reveal";
-import type { Customer } from "@/lib/mock-data";
+import type { DashboardCustomer } from "@/components/customers/CustomersTable";
+import { countSegments } from "@/lib/segments";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const CustomersTable = dynamic(
   () => import("@/components/customers/CustomersTable"),
@@ -21,9 +22,12 @@ type ApiCustomer = {
   lastVisitAt?: string;
   joinedAt?: string;
   tags?: string[];
+  visitCount?: number;
+  totalSpend?: number;
+  optedOut?: boolean;
 };
 
-function mapCustomer(c: ApiCustomer): Customer {
+function mapCustomer(c: ApiCustomer): DashboardCustomer {
   return {
     id: c._id,
     name: c.name,
@@ -34,11 +38,14 @@ function mapCustomer(c: ApiCustomer): Customer {
     lastVisitAt: c.lastVisitAt ?? new Date().toISOString(),
     joinedAt: c.joinedAt ?? new Date().toISOString(),
     tags: c.tags ?? [],
+    visitCount: c.visitCount ?? 0,
+    totalSpend: c.totalSpend ?? 0,
+    optedOut: c.optedOut ?? false,
   };
 }
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[] | null>(null);
+  const [customers, setCustomers] = useState<DashboardCustomer[] | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -52,6 +59,22 @@ export default function CustomersPage() {
     })();
   }, []);
 
+  const segmentCounts = useMemo(() => {
+    if (!customers) return undefined;
+    return countSegments(
+      customers.map((c) => ({
+        _id: c.id,
+        joinedAt: c.joinedAt,
+        lastVisitAt: c.lastVisitAt,
+        scans: c.scans,
+        couponsRedeemed: c.couponsRedeemed,
+        visitCount: c.visitCount ?? c.scans,
+        totalSpend: c.totalSpend ?? 0,
+        optedOut: c.optedOut,
+      })),
+    );
+  }, [customers]);
+
   if (!customers) {
     return (
       <div className="mx-auto max-w-6xl">
@@ -63,7 +86,7 @@ export default function CustomersPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <Reveal>
-        <CustomersTable customers={customers} />
+        <CustomersTable customers={customers} segmentCounts={segmentCounts} />
       </Reveal>
     </div>
   );
