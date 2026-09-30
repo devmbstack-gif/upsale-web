@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
 export const SESSION_COOKIE = "upsale_session";
+export const ADMIN_SESSION_COOKIE = "upsale_admin_session";
 
 export type SessionPayload = {
   sub: string;
@@ -13,6 +14,14 @@ export type SessionPayload = {
   timezone: string;
   city: string;
   whatsapp: string;
+  exp: number;
+};
+
+export type AdminSessionPayload = {
+  sub: string;
+  email: string;
+  name: string;
+  role: "super_admin";
   exp: number;
 };
 
@@ -58,5 +67,18 @@ export function readSessionToken(jwt: string | undefined | null): SessionPayload
   const payload = read<SessionPayload>(jwt);
   if (!payload?.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
   if (payload.plan !== "Free Trial" || !payload.email) return null;
+  return payload;
+}
+
+export function createAdminSessionToken(payload: AdminSessionPayload) {
+  return token(payload);
+}
+
+export function readAdminSessionToken(
+  jwt: string | undefined | null,
+): AdminSessionPayload | null {
+  const payload = read<AdminSessionPayload>(jwt);
+  if (!payload?.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
+  if (payload.role !== "super_admin" || !payload.email || !payload.sub) return null;
   return payload;
 }

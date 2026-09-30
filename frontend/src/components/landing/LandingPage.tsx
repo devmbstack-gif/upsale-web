@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import PhonePreview, { QrMark } from "./PhonePreview";
+import Footer from "@/components/Footer";
 import styles from "./landing.module.css";
 
 type DealAction = "approve" | "regenerate" | "edit";
@@ -667,7 +668,7 @@ export default function LandingPage() {
         <div className={styles.navWrap}>
           <header className={styles.nav}>
             <Link href="/" className={styles.logo} aria-label="UPSale home">
-              <BrandLogo variant="auto" size="md" />
+              <BrandLogo variant="auto" size="md" priority />
             </Link>
             <nav className={styles.navActions} aria-label="Account">
               <ThemeToggle />
@@ -736,7 +737,7 @@ export default function LandingPage() {
             </div>
           </section>
 
-          <section className={`${styles.section} ${styles.container}`} id="how">
+          <section className={`${styles.section} ${styles.container}`} id="how-it-works">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>How it works</p>
               <h2>Four steps from the door to the next message</h2>
@@ -763,7 +764,12 @@ export default function LandingPage() {
               {FLOW.map((item, index) => (
                 <Reveal key={item.title} delay={0.08 * index}>
                   <article className={styles.flowCard}>
-                    <span className={styles.flowIndex}>{index + 1}</span>
+                    <span
+                      className={styles.flowIndex}
+                      style={{ animationDelay: `${index * 0.32}s` }}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                     <h3>{item.title}</h3>
                     <p>{item.text}</p>
                   </article>
@@ -780,7 +786,7 @@ export default function LandingPage() {
             <Bento />
           </section>
 
-          <section className={`${styles.section} ${styles.container}`} id="setup">
+          <section className={`${styles.section} ${styles.container}`} id="integrations">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>Setup</p>
               <h2>Nine moves from an empty account to a live offer</h2>
@@ -895,21 +901,7 @@ export default function LandingPage() {
           </Reveal>
         </section>
 
-        <footer className={styles.siteFooter}>
-          <div className={`${styles.container} ${styles.footerInner}`}>
-            <div className={styles.footerBrand}>
-              <BrandLogo variant="auto" size="sm" />
-              <p>QR offers that turn walk-ins into WhatsApp customers.</p>
-            </div>
-            <nav className={styles.footerNav} aria-label="Footer">
-              <a href="#how">How it works</a>
-              <a href="#pricing">Pricing</a>
-              <Link href="/login">Log in</Link>
-              <Link href="/signup">Sign up</Link>
-            </nav>
-            <p className={styles.copy}>© {new Date().getFullYear()} UPSale. All rights reserved.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

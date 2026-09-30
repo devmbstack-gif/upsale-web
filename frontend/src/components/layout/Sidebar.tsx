@@ -66,7 +66,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-6 md:px-5">
           <Link href="/app" onClick={onClose} className="min-w-0 flex-1 overflow-visible">
-            <BrandLogo size="lg" />
+            <BrandLogo variant="auto" size="lg" />
           </Link>
           <button
             type="button"

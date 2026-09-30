@@ -1,4 +1,4 @@
-/* Design tokens — dark / light via [data-theme] */
+/* Design tokens — dark / light via [data-theme] (legal pages) + mirrors globals.css */
 
 :root,
 [data-theme="dark"] {
@@ -12,18 +12,32 @@
   --muted: #a89bc4;
   --border: rgba(196, 181, 253, 0.12);
   --glow: rgba(124, 58, 237, 0.35);
+  --hover-surface: rgba(255, 255, 255, 0.05);
+  --input-bg: rgba(11, 7, 24, 0.6);
+  --input-border: rgba(167, 139, 250, 0.22);
+  --nav-bg: rgb(10 8 20 / 70%);
+  --nav-border: rgb(255 255 255 / 10%);
+  --card-surface: #0e0a17;
+  --overlay: rgba(0, 0, 0, 0.6);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="light"] {
   --brand-from: #7c3aed;
-  --brand-to: #9f7aea;
+  --brand-to: #6366f1;
   --logo-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #ddd6fe 100%);
-  --background: #f7f4ff;
-  --foreground: #1a1028;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-elevated: #f3eefc;
-  --muted: #6b5f82;
-  --border: rgba(124, 58, 237, 0.14);
-  --glow: rgba(124, 58, 237, 0.2);
+  --surface-elevated: #f1f5f9;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --glow: rgba(124, 58, 237, 0.18);
+  --hover-surface: rgba(124, 58, 237, 0.06);
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --nav-bg: rgb(255 255 255 / 80%);
+  --nav-border: rgb(226 232 240 / 80%);
+  --card-surface: #ffffff;
+  --overlay: rgba(15, 23, 42, 0.45);
 }

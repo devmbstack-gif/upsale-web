@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import styles from "./legal.module.css";
 
 type LegalShellProps = {
@@ -15,8 +16,7 @@ export default function LegalShell({ title, description, updated, children }: Le
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.brand} aria-label="UPSale home">
-            <img src="/upsale-logo.png" alt="" className={styles.brandImg} />
-            <span className={styles.brandMark}>UPSale</span>
+            <BrandLogo variant="auto" size="md" />
           </Link>
           <Link href="/" className={styles.back}>
             <span aria-hidden="true">←</span>

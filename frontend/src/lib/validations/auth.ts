@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  countryNames,
+  currencyOptions,
+  timezoneOptions,
+  WORLD_COUNTRIES,
+  type CountryOption,
+} from "@/lib/data/countries";
 
 export const businessCategories = [
   "Restaurant",
@@ -9,52 +16,29 @@ export const businessCategories = [
   "Other",
 ] as const;
 
-export const countries = [
-  "Pakistan",
-  "India",
-  "UAE",
-  "Saudi Arabia",
-  "UK",
-  "USA",
-  "Other",
-] as const;
+/** Prefer `countryNames` / `WORLD_COUNTRIES` — alias for older imports */
+export const countries = countryNames;
 
-export const currencies = ["PKR", "INR", "AED", "SAR", "GBP", "USD", "EUR"] as const;
+export const currencies = currencyOptions.map((c) => c.code) as [string, ...string[]];
 
-export const timezones = [
-  "Asia/Karachi",
-  "Asia/Kolkata",
-  "Asia/Dubai",
-  "Asia/Riyadh",
-  "Europe/London",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "UTC",
-] as const;
+export const timezones = timezoneOptions as [string, ...string[]];
 
-export const dialCodes = [
-  { country: "Pakistan", code: "+92" },
-  { country: "India", code: "+91" },
-  { country: "UAE", code: "+971" },
-  { country: "Saudi Arabia", code: "+966" },
-  { country: "UK", code: "+44" },
-  { country: "USA", code: "+1" },
-] as const;
+export const dialCodes = WORLD_COUNTRIES.filter((c) => c.name !== "Other").map((c) => ({
+  country: c.name,
+  code: c.dialCode,
+}));
 
-export const countryDefaults: Record<
-  (typeof countries)[number],
-  { currency: (typeof currencies)[number]; timezone: (typeof timezones)[number] }
-> = {
-  Pakistan: { currency: "PKR", timezone: "Asia/Karachi" },
-  India: { currency: "INR", timezone: "Asia/Kolkata" },
-  UAE: { currency: "AED", timezone: "Asia/Dubai" },
-  "Saudi Arabia": { currency: "SAR", timezone: "Asia/Riyadh" },
-  UK: { currency: "GBP", timezone: "Europe/London" },
-  USA: { currency: "USD", timezone: "America/New_York" },
-  Other: { currency: "USD", timezone: "UTC" },
-};
+export const countryDefaults: Record<string, { currency: string; timezone: string; dialCode: string }> =
+  Object.fromEntries(
+    WORLD_COUNTRIES.map((c) => [
+      c.name,
+      { currency: c.currency, timezone: c.timezone, dialCode: c.dialCode },
+    ]),
+  );
+
+export function getCountryDefaults(name: string): CountryOption | undefined {
+  return WORLD_COUNTRIES.find((c) => c.name === name);
+}
 
 const passwordSchema = z
   .string()
@@ -78,15 +62,59 @@ const enumError = (message: string) => ({
   errorMap: () => ({ message }),
 });
 
-export const businessSchema = z.object({
-  supportEmail: z.string().trim().email("Enter a valid support email"),
-  category: z.enum(businessCategories, enumError("Select a business category")),
-  country: z.enum(countries, enumError("Select a country")),
-  currency: z.enum(currencies, enumError("Currency is required")),
-  timezone: z.enum(timezones, enumError("Select a timezone")),
-  city: z.string().trim().min(2, "Enter your city or address"),
-  logoPreview: z.string().optional(),
-});
+const countrySet = new Set(countryNames);
+const currencySet = new Set(currencies);
+const timezoneSet = new Set(timezones);
+
+export const businessSchema = z
+  .object({
+    supportEmail: z.string().trim().email("Enter a valid support email"),
+    category: z.enum(businessCategories, enumError("Select a business category")),
+    categoryOther: z.string().optional(),
+    country: z
+      .string()
+      .trim()
+      .min(1, "Select a country")
+      .refine((value) => countrySet.has(value), "Select a country"),
+    currency: z
+      .string()
+      .trim()
+      .min(1, "Currency is required")
+      .refine((value) => currencySet.has(value), "Currency is required"),
+    timezone: z
+      .string()
+      .trim()
+      .min(1, "Select a timezone")
+      .refine((value) => timezoneSet.has(value), "Select a timezone"),
+    city: z.string().trim().min(2, "Enter your city or address"),
+    logoPreview: z.string().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.category !== "Other") return;
+    const custom = values.categoryOther?.trim() ?? "";
+    if (custom.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Specify your business type",
+        path: ["categoryOther"],
+      });
+    }
+  });
+
+/** Final category stored/submitted — custom text when "Other" is selected. */
+export function resolveBusinessCategory(
+  category: string,
+  categoryOther?: string | null,
+): string {
+  if (category === "Other") return (categoryOther ?? "").trim();
+  return category.trim();
+}
+
+export const submittedCategorySchema = z
+  .string()
+  .trim()
+  .min(2, "Select a business category")
+  .refine((value) => value !== "Other", "Specify your business type");
 
 export const confirmSchema = z.object({
   dialCode: z.string().min(1, "Select a country code"),
@@ -118,6 +146,7 @@ export const accountFields = [
 export const businessFields = [
   "supportEmail",
   "category",
+  "categoryOther",
   "country",
   "currency",
   "timezone",

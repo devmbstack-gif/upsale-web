@@ -14,15 +14,15 @@ import {
   businessSchema,
   confirmFields,
   confirmSchema,
-  countries,
   countryDefaults,
-  currencies,
   dialCodes,
+  resolveBusinessCategory,
   signUpSchema,
-  timezones,
   type SignUpValues,
 } from "@/lib/validations/auth";
+import { currencyOptions, formatCurrencyLabel, timezoneOptions } from "@/lib/data/countries";
 import CaptchaWidget, { type CaptchaProof } from "./CaptchaWidget";
+import CountrySelect from "./CountrySelect";
 import OtpModal from "./OtpModal";
 import AuthBackground from "./AuthBackground";
 import { PasswordInput } from "./PasswordInput";
@@ -37,6 +37,7 @@ type SignUpFormValues = {
   confirmPassword: string;
   supportEmail: string;
   category: SignUpValues["category"] | "";
+  categoryOther: string;
   country: SignUpValues["country"] | "";
   currency: SignUpValues["currency"] | "";
   timezone: SignUpValues["timezone"] | "";
@@ -108,6 +109,7 @@ export default function SignUpMultiStepForm() {
       confirmPassword: "",
       supportEmail: "",
       category: "",
+      categoryOther: "",
       country: "",
       currency: "",
       timezone: "",
@@ -122,10 +124,16 @@ export default function SignUpMultiStepForm() {
 
   const values = watch();
   const logoPreview = values.logoPreview;
-  const countryField = register("country");
   const accountReady = accountSchema.safeParse(values).success && captchaSolved;
   const businessReady = businessSchema.safeParse(values).success;
   const confirmReady = confirmSchema.safeParse(values).success;
+
+  function onCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
+    const next = event.target.value;
+    if (next !== "Other") {
+      setValue("categoryOther", "", { shouldValidate: true, shouldDirty: true });
+    }
+  }
 
   function move(next: number) {
     setDirection(next > step ? 1 : -1);
@@ -144,13 +152,13 @@ export default function SignUpMultiStepForm() {
     move(3);
   }
 
-  function onCountryChange(event: ChangeEvent<HTMLSelectElement>) {
-    countryField.onChange(event);
-    const selected = event.target.value as SignUpValues["country"] | "";
-    if (!selected) return;
+  function onCountrySelect(selected: string) {
+    setValue("country", selected, { shouldValidate: true, shouldTouch: true, shouldDirty: true });
     const defaults = countryDefaults[selected];
+    if (!defaults) return;
     setValue("currency", defaults.currency, { shouldValidate: true, shouldTouch: true });
     setValue("timezone", defaults.timezone, { shouldValidate: true, shouldTouch: true });
+    setValue("dialCode", defaults.dialCode, { shouldValidate: true, shouldTouch: true });
   }
 
   function onLogo(event: ChangeEvent<HTMLInputElement>) {
@@ -247,7 +255,7 @@ export default function SignUpMultiStepForm() {
           password: current.password,
           businessName: current.businessName,
           supportEmail: current.supportEmail,
-          category: current.category,
+          category: resolveBusinessCategory(current.category, current.categoryOther),
           country: current.country,
           currency: current.currency,
           timezone: current.timezone,
@@ -285,7 +293,7 @@ export default function SignUpMultiStepForm() {
               <span className={styles.backHomeText}>Back to home</span>
             </Link>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <BrandLogo variant="auto" size="sm" />
+              <BrandLogo variant="auto" size="md" priority />
             </Link>
           </div>
           <div className={styles.themeActions}>
@@ -378,7 +386,11 @@ export default function SignUpMultiStepForm() {
                   </Field>
                   <div className={styles.row}>
                     <Field label="Business category" error={errors.category?.message}>
-                      <select {...register("category")}>
+                      <select
+                        {...register("category", {
+                          onChange: onCategoryChange,
+                        })}
+                      >
                         <option value="">Select</option>
                         {businessCategories.map((item) => (
                           <option key={item} value={item}>
@@ -387,24 +399,37 @@ export default function SignUpMultiStepForm() {
                         ))}
                       </select>
                     </Field>
-                    <Field label="Country" error={errors.country?.message}>
-                      <select {...countryField} onChange={onCountryChange}>
-                        <option value="">Select</option>
-                        {countries.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
+                    <div className={styles.field}>
+                      Country
+                      <CountrySelect
+                        value={values.country}
+                        onChange={onCountrySelect}
+                        error={errors.country?.message}
+                      />
+                    </div>
                   </div>
+                  {values.category === "Other" ? (
+                    <Field
+                      label="Specify your business type"
+                      error={errors.categoryOther?.message}
+                    >
+                      <input
+                        autoComplete="organization-title"
+                        placeholder="Specify your business type..."
+                        {...register("categoryOther")}
+                      />
+                    </Field>
+                  ) : null}
                   <div className={styles.row}>
                     <Field label="Currency" error={errors.currency?.message}>
-                      <select {...register("currency")} disabled={values.country !== "Other" && values.country !== ""}>
+                      <select
+                        {...register("currency")}
+                        disabled={values.country !== "Other" && values.country !== ""}
+                      >
                         <option value="">Select a country</option>
-                        {currencies.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
+                        {currencyOptions.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {formatCurrencyLabel(item.code, item.symbol)}
                           </option>
                         ))}
                       </select>
@@ -412,7 +437,7 @@ export default function SignUpMultiStepForm() {
                     <Field label="Timezone" error={errors.timezone?.message}>
                       <select {...register("timezone")}>
                         <option value="">Select</option>
-                        {timezones.map((item) => (
+                        {timezoneOptions.map((item) => (
                           <option key={item} value={item}>
                             {item}
                           </option>

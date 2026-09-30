@@ -1,11 +1,15 @@
 .page {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
+  /* clip (not hidden) so sticky nav can stick to the viewport while orbs stay contained */
+  overflow-x: clip;
+  overflow-y: visible;
   background: var(--background, #0b0718);
   color: var(--foreground, #f4f0ff);
   font-family: var(--font-body), "DM Sans", sans-serif;
-  transition: background 0.35s ease, color 0.35s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .page *,
@@ -22,11 +26,11 @@
 
 .navWrap {
   position: sticky;
-  top: 14px;
-  z-index: 40;
+  top: 1rem;
+  z-index: 50;
   display: flex;
   justify-content: center;
-  padding: 0 16px;
+  padding: 1rem 1rem 0;
 }
 
 .nav {
@@ -36,12 +40,19 @@
   width: min(1120px, 100%);
   padding: 10px 10px 10px 18px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface, #140c24) 72%, transparent);
-  border: 1px solid var(--border, rgba(167, 139, 250, 0.2));
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
   box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.35),
+    0 10px 40px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--foreground);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .logo {
@@ -207,7 +218,7 @@
 .subtitle {
   margin: 20px 0 0;
   max-width: 520px;
-  color: #c4b5e0;
+  color: var(--muted);
   font-size: 1.08rem;
   line-height: 1.6;
 }
@@ -222,7 +233,7 @@
 
 .finePrint {
   margin: 12px 0 0;
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.84rem;
 }
 
@@ -241,11 +252,15 @@
   width: min(320px, 100%);
   padding: 12px 12px 16px;
   border-radius: 38px;
-  background: linear-gradient(180deg, #241833, #100b18);
-  border: 1px solid rgba(167, 139, 250, 0.38);
+  background: linear-gradient(180deg, var(--surface-elevated), var(--phone-frame));
+  border: 1px solid var(--border);
   box-shadow:
-    0 0 0 8px rgba(14, 10, 23, 0.9),
-    0 30px 80px rgba(124, 58, 237, 0.32);
+    0 0 0 8px color-mix(in srgb, var(--background) 90%, transparent),
+    0 30px 80px var(--glow);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .phoneCompact {
@@ -262,7 +277,7 @@
   height: 18px;
   margin: 0 auto 10px;
   border-radius: 999px;
-  background: #0b0718;
+  background: var(--background);
 }
 
 .phoneCompact .notch {
@@ -276,7 +291,7 @@
   height: 430px;
   overflow: hidden;
   border-radius: 24px;
-  background: #0e0a17;
+  background: var(--card-surface);
   border: 1px solid rgba(167, 139, 250, 0.12);
 }
 
@@ -329,9 +344,10 @@
   flex: 1;
   margin-top: 16px;
   border-radius: 18px;
-  background: linear-gradient(165deg, #1a1030 0%, #0f0a18 100%);
+  background: linear-gradient(165deg, var(--surface-elevated) 0%, var(--phone-frame) 100%);
   overflow: hidden;
   padding: 12px;
+  transition: background 0.2s ease;
 }
 
 .qr {
@@ -381,7 +397,7 @@
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: #17102a;
+  background: var(--surface-elevated);
   border: 1px solid rgba(167, 139, 250, 0.16);
 }
 
@@ -403,7 +419,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   background: rgba(124, 58, 237, 0.25);
-  color: #ddd6fe;
+  color: var(--foreground);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -425,7 +441,7 @@
   border-radius: 18px;
   background:
     radial-gradient(120px 80px at 90% 0%, rgba(167, 139, 250, 0.35), transparent 70%),
-    #17102a;
+    var(--surface-elevated);
   border: 1px dashed rgba(167, 139, 250, 0.55);
   text-align: center;
 }
@@ -453,7 +469,7 @@
   margin-top: 10px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: #0b0718;
+  background: var(--background);
   color: #a78bfa;
   font-size: 1.05rem;
   letter-spacing: 0.12em;
@@ -468,7 +484,7 @@
 .coupon span {
   display: block;
   margin-top: 12px;
-  color: #c4b5e0;
+  color: var(--muted);
   font-size: 0.86rem;
 }
 
@@ -592,16 +608,17 @@
 
 .stepLabel {
   margin: 0;
-  color: #c4b5e0;
+  color: var(--muted);
   font-size: 0.86rem;
 }
 
 .marquee {
   margin: 18px 0 10px;
   overflow: hidden;
-  border-block: 1px solid rgba(167, 139, 250, 0.14);
-  background: rgba(14, 10, 23, 0.72);
+  border-block: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-surface) 72%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .track {
@@ -622,9 +639,9 @@
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: #17102a;
+  background: var(--surface-elevated);
   border: 1px solid rgba(167, 139, 250, 0.16);
-  color: #e9e4f5;
+  color: var(--foreground);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -659,7 +676,7 @@
 .lede {
   max-width: 620px;
   margin: 12px 0 0;
-  color: #c4b5e0;
+  color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.6;
 }
@@ -701,12 +718,14 @@
   height: 100%;
   padding: 18px 16px 20px;
   border-radius: 20px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.14);
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .flowCard:hover,
@@ -720,15 +739,17 @@
 .flowIndex {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   margin-bottom: 18px;
-  border-radius: 50%;
-  background: #17102a;
-  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 12px;
+  background: var(--surface-elevated);
   color: #a78bfa;
   font-family: var(--font-bric), "Bricolage Grotesque", sans-serif;
-  box-shadow: 0 0 18px rgba(124, 58, 237, 0.35);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  animation: stepGlow 4.8s ease-in-out infinite;
 }
 
 .flowCard h3,
@@ -746,7 +767,7 @@
 .priceCard p,
 .setupItem p {
   margin: 8px 0 0;
-  color: #c4b5e0;
+  color: var(--muted);
   line-height: 1.5;
   font-size: 0.95rem;
 }
@@ -782,19 +803,22 @@
   border-radius: 22px;
   background:
     linear-gradient(180deg, rgba(167, 139, 250, 0.07), transparent 30%),
-    #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.14);
+    var(--card-surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .dealPreview {
   margin-top: 18px;
   padding: 16px;
   border-radius: 16px;
-  background: #17102a;
+  background: var(--surface-elevated);
   border: 1px solid rgba(167, 139, 250, 0.16);
   min-height: 148px;
   animation: dealGlow 3.2s ease-in-out infinite;
@@ -813,7 +837,7 @@
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(124, 58, 237, 0.22);
-  color: #ddd6fe;
+  color: var(--foreground);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -824,7 +848,7 @@
   resize: vertical;
   border-radius: 12px;
   border: 1px solid rgba(167, 139, 250, 0.28);
-  background: #0b0718;
+  background: var(--background);
   color: inherit;
   font: inherit;
   padding: 10px;
@@ -846,7 +870,7 @@
   border-radius: 999px;
   border: 1px solid rgba(167, 139, 250, 0.28);
   background: transparent;
-  color: #f4f1fb;
+  color: var(--foreground);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 650;
@@ -926,7 +950,7 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #17102a;
+  background: var(--surface-elevated);
   font-size: 0.9rem;
 }
 
@@ -939,8 +963,8 @@
 
 .chip {
   border: 1px solid rgba(167, 139, 250, 0.2);
-  background: #17102a;
-  color: #f4f1fb;
+  background: var(--surface-elevated);
+  color: var(--foreground);
   border-radius: 999px;
   padding: 8px 12px;
   font: inherit;
@@ -1028,7 +1052,7 @@
   justify-content: space-between;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #17102a;
+  background: var(--surface-elevated);
   font-variant-numeric: tabular-nums;
   animation: codeGlow 3.3s ease-in-out infinite;
 }
@@ -1070,12 +1094,14 @@
   min-height: 148px;
   padding: 18px 16px;
   border-radius: 18px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.14);
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .num {
@@ -1084,9 +1110,12 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: #17102a;
+  background: var(--surface-elevated);
   color: #a78bfa;
   font-family: var(--font-bric), "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
   animation: stepGlow 4.8s ease-in-out infinite;
 }
 
@@ -1096,11 +1125,11 @@
   aspect-ratio: 16 / 9;
   border-radius: 28px;
   overflow: hidden;
-  border: 1px solid rgba(167, 139, 250, 0.22);
+  border: 1px solid var(--border);
   background:
     radial-gradient(circle at 50% 42%, rgba(124, 58, 237, 0.38), transparent 42%),
-    linear-gradient(180deg, #17102a, #0e0a17);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    linear-gradient(180deg, var(--surface-elevated), var(--card-surface));
+  box-shadow: var(--shadow-soft);
 }
 
 .videoCaption {
@@ -1108,7 +1137,7 @@
   left: 22px;
   bottom: 18px;
   margin: 0;
-  color: #ddd6fe;
+  color: var(--foreground);
 }
 
 .play {
@@ -1219,7 +1248,7 @@
   0%,
   72%,
   100% {
-    background: #17102a;
+    background: var(--surface-elevated);
     color: #a78bfa;
     box-shadow: none;
   }
@@ -1243,8 +1272,8 @@
   flex: 0 0 auto;
   border-radius: 999px;
   border: 1px solid rgba(167, 139, 250, 0.22);
-  background: #17102a;
-  color: #e9e4f5;
+  background: var(--surface-elevated);
+  color: var(--foreground);
   font: inherit;
   font-weight: 650;
   padding: 9px 14px;
@@ -1272,18 +1301,20 @@
   height: 100%;
   padding: 22px;
   border-radius: 24px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.14);
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   transition:
     transform 0.25s ease,
     background 0.25s ease,
     border-color 0.25s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    color 0.25s ease;
 }
 
 .priceCard:hover {
   transform: translateY(-4px);
-  background: #161022;
+  background: var(--surface-elevated);
   border-color: rgba(167, 139, 250, 0.42);
   box-shadow: 0 20px 48px rgba(124, 58, 237, 0.22);
 }
@@ -1336,7 +1367,7 @@
 
 .amount span {
   margin-bottom: 6px;
-  color: #c4b5e0;
+  color: var(--muted);
   font-family: var(--font-dm), "DM Sans", sans-serif;
   font-size: 0.9rem;
   letter-spacing: 0;
@@ -1408,8 +1439,13 @@
   margin-top: 14px;
   padding: 22px 24px;
   border-radius: 22px;
-  background: #17102a;
-  border: 1px solid rgba(167, 139, 250, 0.16);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .enterprise h3 {
@@ -1420,7 +1456,7 @@
 
 .enterprise p {
   margin: 6px 0 0;
-  color: #c4b5e0;
+  color: var(--muted);
 }
 
 .contact {
@@ -1447,9 +1483,9 @@
 .points li {
   padding: 12px 14px;
   border-radius: 14px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.12);
-  color: #e7e1f4;
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
 }
 
 .form,
@@ -1459,9 +1495,13 @@
   gap: 12px;
   padding: 22px;
   border-radius: 24px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.16);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .formRow {
@@ -1476,19 +1516,24 @@
   gap: 6px;
   font-size: 0.86rem;
   font-weight: 650;
-  color: #ddd6fe;
+  color: var(--foreground);
 }
 
 .field input,
 .field textarea {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(167, 139, 250, 0.2);
-  background: #0b0718;
-  color: #f4f1fb;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--foreground);
   font: inherit;
   font-weight: 500;
   padding: 12px 12px;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .field textarea {
@@ -1515,7 +1560,7 @@
 
 .thanks p {
   margin: 0;
-  color: #c4b5e0;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -1685,6 +1730,7 @@
   .typingDot,
   .codeRow,
   .num,
+  .flowIndex,
   .headlineAccent,
   .btnPulse::after {
     animation: none;
@@ -1707,31 +1753,114 @@
 }
 
 :global(html.light) .nav {
-  background: color-mix(in srgb, var(--surface) 88%, white);
-  border-color: var(--border);
-  box-shadow: 0 10px 36px -18px rgba(91, 33, 182, 0.18);
+  background: var(--nav-bg);
+  border-color: var(--nav-border);
+  box-shadow: 0 10px 36px -18px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--foreground);
 }
 
 :global(html.light) .btnGhost {
   color: var(--foreground);
+  border-color: var(--border);
 }
 
 :global(html.light) .subtitle,
 :global(html.light) .finePrint,
-:global(html.light) .eyebrow {
+:global(html.light) .eyebrow,
+:global(html.light) .lede {
   color: var(--muted);
 }
 
 :global(html.light) .card,
 :global(html.light) .flowCard,
 :global(html.light) .priceCard,
-:global(html.light) .setupItem {
-  background: color-mix(in srgb, var(--surface) 92%, white);
+:global(html.light) .setupItem,
+:global(html.light) .form,
+:global(html.light) .thanks,
+:global(html.light) .enterprise,
+:global(html.light) .video,
+:global(html.light) .editor,
+:global(html.light) .points li {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--foreground);
+  box-shadow: var(--shadow-soft);
+}
+
+:global(html.light) .marquee {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
   border-color: var(--border);
   color: var(--foreground);
 }
 
-:global(html.light) .marquee {
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  color: var(--muted);
+:global(html.light) .field input,
+:global(html.light) .field textarea,
+:global(html.light) .field select {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--foreground);
+}
+
+:global(html.light) .field input::placeholder,
+:global(html.light) .field textarea::placeholder {
+  color: #94a3b8;
+}
+
+:global(html.light) .tag,
+:global(html.light) .chip,
+:global(html.light) .tab {
+  background: var(--surface-elevated);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+:global(html.light) .phone,
+:global(html.light) .frame {
+  background: linear-gradient(180deg, #e2e8f0, #cbd5e1);
+}
+
+:global(html.light) .screen,
+:global(html.light) .notch,
+:global(html.light) .qrWrap {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:global(html.light) .priceCard:hover .cta,
+:global(html.light) .popular .cta {
+  background: var(--brand-from);
+  color: #ffffff;
+  border-color: var(--brand-from);
+}
+
+:global(html.light) .priceCard .btnPrimary:hover,
+:global(html.light) .popular .btnPrimary:hover {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+:global(html.light) .popular .btnPrimary {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid var(--border);
+}
+
+:global(html.light) .headline,
+:global(html.light) h1,
+:global(html.light) h2,
+:global(html.light) h3 {
+  color: var(--foreground);
+}
+
+:global(html.light) .flowCard,
+:global(html.light) .setupItem,
+:global(html.light) .priceCard {
+  border-color: var(--border);
+}
+
+:global(html.light) .btnPrimary {
+  color: #ffffff;
 }

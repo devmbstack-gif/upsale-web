@@ -80,7 +80,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               <span className={styles.backHomeText}>Back to home</span>
             </Link>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <BrandLogo variant="auto" size="sm" />
+              <BrandLogo variant="auto" size="md" priority />
             </Link>
           </div>
           <div className={styles.themeActions}>

@@ -7,7 +7,7 @@ import { checkOtp, clearOtp } from "@/lib/auth/otp";
 import { createSessionToken, SESSION_COOKIE, type SessionPayload } from "@/lib/auth/session";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { connectDB } from "@/lib/mongodb";
-import { businessCategories, countries, currencies, timezones } from "@/lib/validations/auth";
+import { submittedCategorySchema } from "@/lib/validations/auth";
 
 const bodySchema = z.object({
   email: z.string().trim().email(),
@@ -15,10 +15,10 @@ const bodySchema = z.object({
   businessName: z.string().trim().min(1),
   password: z.string().min(8).regex(/[A-Z]/).regex(/[0-9]/),
   supportEmail: z.string().trim().email(),
-  category: z.enum(businessCategories),
-  country: z.enum(countries),
-  currency: z.enum(currencies),
-  timezone: z.enum(timezones),
+  category: submittedCategorySchema,
+  country: z.string().trim().min(1),
+  currency: z.string().trim().min(1),
+  timezone: z.string().trim().min(1),
   city: z.string().trim().min(2),
   whatsapp: z.string().trim().min(8),
   termsAccepted: z.literal(true),

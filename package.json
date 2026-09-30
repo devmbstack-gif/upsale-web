@@ -16,7 +16,8 @@
     "dev:admin": "npm run dev -w admin",
     "build": "npm run build -w backend && npm run build -w frontend && npm run build -w admin",
     "start": "concurrently \"npm run start -w frontend\" \"npm run start -w admin\"",
-    "start:all": "concurrently \"npm run start -w backend\" \"npm run start -w frontend\" \"npm run start -w admin\""
+    "start:all": "concurrently \"npm run start -w backend\" \"npm run start -w frontend\" \"npm run start -w admin\"",
+    "seed:admin": "npm run seed:admin -w frontend"
   },
   "devDependencies": {
     "concurrently": "^9.2.4"

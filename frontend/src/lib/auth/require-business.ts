@@ -21,5 +21,13 @@ export async function requireBusiness(): Promise<
   if (!owner?._id) {
     return { error: NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 }) };
   }
+  if (owner.isSuspended) {
+    return {
+      error: NextResponse.json(
+        { ok: false, message: "This account has been suspended." },
+        { status: 403 },
+      ),
+    };
+  }
   return { owner, businessId: String(owner._id) };
 }

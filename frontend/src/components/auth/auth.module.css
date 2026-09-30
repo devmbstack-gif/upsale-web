@@ -8,7 +8,9 @@
     var(--background, #0b0718);
   color: var(--foreground, #f4f1fb);
   font-family: var(--font-body), "DM Sans", sans-serif;
-  transition: background 0.35s ease, color 0.35s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .page *,
@@ -87,13 +89,15 @@
 }
 
 .brand img {
-  height: 34px;
+  height: 36px;
   width: auto;
+  max-width: none;
+  object-fit: contain;
 }
 
 .stepLabel {
   margin: 0;
-  color: #ddd6fe;
+  color: var(--foreground);
   font-size: 0.92rem;
   font-weight: 700;
 }
@@ -113,7 +117,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.82rem;
   font-weight: 650;
 }
@@ -125,8 +129,8 @@
   height: 28px;
   flex: 0 0 auto;
   border-radius: 999px;
-  border: 1px solid rgba(167, 139, 250, 0.28);
-  background: #17102a;
+  border: 1px solid var(--input-border);
+  background: var(--surface-elevated);
 }
 
 .dotActive {
@@ -153,7 +157,7 @@
   height: 4px;
   margin: 0 auto;
   border-radius: 999px;
-  background: #17102a;
+  background: var(--surface-elevated);
   overflow: hidden;
 }
 
@@ -179,9 +183,15 @@
   border-radius: 24px;
   background:
     linear-gradient(180deg, rgba(167, 139, 250, 0.08), transparent 28%),
-    #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.16);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    var(--card-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  color: var(--foreground);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cardCompact {
@@ -213,7 +223,7 @@
 
 .lede {
   margin: 8px 0 0;
-  color: #c4b5e0;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -268,7 +278,7 @@
   gap: 6px;
   font-size: 0.86rem;
   font-weight: 680;
-  color: #ddd6fe;
+  color: var(--foreground);
 }
 
 .field input,
@@ -277,9 +287,9 @@
 .phoneRow select {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(167, 139, 250, 0.22);
-  background: #050408;
-  color: #f4f1fb;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--foreground);
   font: inherit;
   font-weight: 520;
   padding: 12px 12px;
@@ -353,7 +363,7 @@
 }
 
 .hint {
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.8rem;
   font-weight: 520;
 }
@@ -365,8 +375,8 @@
   margin-top: 4px;
   padding: 14px;
   border-radius: 16px;
-  background: #17102a;
-  border: 1px solid rgba(167, 139, 250, 0.16);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
 }
 
 .captchaRow {
@@ -379,7 +389,7 @@
   flex: 1;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #050408;
+  background: var(--input-bg);
   font-family: var(--font-bric), "Bricolage Grotesque", sans-serif;
   font-size: 1.35rem;
   letter-spacing: 0.04em;
@@ -402,8 +412,8 @@
 
 .ghost {
   background: transparent;
-  color: #f4f1fb;
-  border: 1px solid rgba(167, 139, 250, 0.28);
+  color: var(--foreground);
+  border: 1px solid var(--input-border);
 }
 
 .primary {
@@ -453,7 +463,7 @@
   align-items: center;
   gap: 12px;
   margin: 18px 0 14px;
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.82rem;
   font-weight: 650;
   letter-spacing: 0.04em;
@@ -474,20 +484,20 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  border: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 999px;
   padding: 12px 16px;
-  background: #7c3aed;
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
   cursor: pointer;
   font: inherit;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
-  transition: background 160ms ease, transform 160ms ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 .googleButton:hover:not(:disabled) {
-  background: #6d28d9;
+  background: #e5e5e5;
 }
 
 .googleButton:disabled {
@@ -499,6 +509,115 @@
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
+}
+
+.countrySelect {
+  position: relative;
+  width: 100%;
+}
+
+.countryTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 520;
+  padding: 12px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.countryTriggerOpen {
+  outline: 2px solid #7c3aed;
+  border-color: transparent;
+}
+
+.countryPlaceholder {
+  color: var(--muted);
+}
+
+.countryChevron {
+  color: #a78bfa;
+  font-size: 0.85rem;
+}
+
+.countryPanel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  border-radius: 14px;
+  border: 1px solid var(--input-border);
+  background: var(--card-surface);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.countrySearch {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface-elevated);
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 520;
+  padding: 12px 12px;
+}
+
+.countrySearch:focus {
+  outline: none;
+}
+
+.countryList {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.countryOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 520;
+  padding: 10px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.countryOption:hover,
+.countryOptionActive {
+  background: rgba(124, 58, 237, 0.22);
+}
+
+.countryMeta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.countryEmpty {
+  padding: 14px 10px;
+  color: var(--muted);
+  font-size: 0.86rem;
 }
 
 .authShell {
@@ -574,7 +693,7 @@
 
 .authFooter {
   margin: 18px 0 0;
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.9rem;
   text-align: center;
   line-height: 1.5;
@@ -635,8 +754,8 @@
   height: 64px;
   border-radius: 14px;
   object-fit: cover;
-  background: #17102a;
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
 }
 
 .logoBoxCompact .preview {
@@ -649,7 +768,7 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  color: #e7e1f4;
+  color: var(--foreground);
   font-size: 0.92rem;
   font-weight: 520;
   line-height: 1.45;
@@ -662,7 +781,7 @@
 
 .note {
   margin: 14px 0 0;
-  color: #9b90b0;
+  color: var(--muted);
   font-size: 0.84rem;
 }
 
@@ -673,15 +792,15 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(5, 4, 8, 0.72);
+  background: var(--overlay);
 }
 
 .modal {
   width: min(440px, 100%);
   padding: 22px;
   border-radius: 22px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.22);
+  background: var(--card-surface);
+  border: 1px solid var(--input-border);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
 }
 
@@ -702,8 +821,8 @@
   width: 48px;
   height: 56px;
   border-radius: 12px;
-  border: 1px solid rgba(167, 139, 250, 0.28);
-  background: #050408;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
   color: white;
   text-align: center;
   font: inherit;
@@ -716,7 +835,7 @@
   padding: 10px 12px;
   border-radius: 12px;
   background: rgba(124, 58, 237, 0.16);
-  color: #ddd6fe;
+  color: var(--foreground);
   font-size: 0.86rem;
 }
 
@@ -754,8 +873,8 @@
 .stat {
   padding: 16px;
   border-radius: 16px;
-  background: #0e0a17;
-  border: 1px solid rgba(167, 139, 250, 0.14);
+  background: var(--card-surface);
+  border: 1px solid var(--border);
 }
 
 .stat span {
@@ -842,22 +961,75 @@
 
 :global(html.light) .card,
 :global(html.light) .modal {
-  background: color-mix(in srgb, var(--surface) 94%, white);
+  background: var(--surface);
   border-color: var(--border);
   color: var(--foreground);
+  box-shadow: var(--shadow-soft);
 }
 
 :global(html.light) .lede,
 :global(html.light) .eyebrow,
 :global(html.light) .hint,
-:global(html.light) .stepLabel {
+:global(html.light) .stepLabel,
+:global(html.light) .authFooter {
   color: var(--muted);
+}
+
+:global(html.light) .field,
+:global(html.light) .fieldTop {
+  color: var(--foreground);
 }
 
 :global(html.light) .field input,
 :global(html.light) .field select,
-:global(html.light) .field textarea {
+:global(html.light) .field textarea,
+:global(html.light) .phoneRow input,
+:global(html.light) .phoneRow select,
+:global(html.light) .otpInput,
+:global(html.light) .countryTrigger,
+:global(html.light) .countrySearch,
+:global(html.light) .captchaInput {
   background: var(--input-bg);
-  border-color: var(--border);
+  border-color: var(--input-border);
   color: var(--foreground);
+}
+
+:global(html.light) .field input::placeholder,
+:global(html.light) .field textarea::placeholder,
+:global(html.light) .countrySearch::placeholder {
+  color: #94a3b8;
+}
+
+:global(html.light) .countryPanel {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+:global(html.light) .countryOption {
+  color: var(--foreground);
+}
+
+:global(html.light) .ghost {
+  color: var(--foreground);
+  border-color: var(--border);
+  background: transparent;
+}
+
+:global(html.light) .stat {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+
+:global(html.light) .overlay {
+  background: var(--overlay);
+}
+
+:global(html.light) .checkboxRow,
+:global(html.light) .termsLabel {
+  color: var(--muted);
+}
+
+:global(html.light) .authFooter a:hover {
+  color: var(--brand-from);
 }

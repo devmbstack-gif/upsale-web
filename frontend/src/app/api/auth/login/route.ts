@@ -33,6 +33,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (owner.isSuspended) {
+      return NextResponse.json(
+        { ok: false, message: "This account has been suspended. Contact support." },
+        { status: 403 },
+      );
+    }
+
     const matches = await bcrypt.compare(parsed.data.password, owner.passwordHash);
     if (!matches) {
       return NextResponse.json({ ok: false, message: "Invalid email or password." }, { status: 401 });

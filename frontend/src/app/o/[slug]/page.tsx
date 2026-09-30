@@ -146,7 +146,7 @@ export default function PublicOfferPage() {
       <div className="relative z-10 mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
         <header className="mb-8 flex items-center justify-between gap-4">
           <Link href="/" aria-label="UPSale home">
-            <BrandLogo variant="auto" size="sm" />
+            <BrandLogo variant="auto" size="md" />
           </Link>
           <span className="text-xs text-muted">Guest offer</span>
         </header>

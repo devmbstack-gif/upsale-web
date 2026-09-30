@@ -94,7 +94,7 @@ function LoginFormInner() {
         <div className={styles.progressTop}>
           <div className={styles.progressLead}>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <BrandLogo variant="auto" size="sm" />
+              <BrandLogo variant="auto" size="md" priority />
             </Link>
           </div>
           <div className={styles.themeActions}>
