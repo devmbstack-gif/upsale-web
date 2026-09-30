@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/Button";
 import { Input, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
+import { AI_DEAL_DRAFT_KEY, type AiDealDraft } from "@/lib/ai-deal-maker";
 import { segmentLabel, type SegmentId } from "@/lib/segments";
 import { formatDateTime } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 type Deal = {
   _id: string;
@@ -27,7 +29,8 @@ type Counts = Record<string, number>;
 
 const AUDIENCES: SegmentId[] = ["all", "new", "repeat", "vip", "at_risk"];
 
-export default function DealsPage() {
+function DealsPageInner() {
+  const searchParams = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [counts, setCounts] = useState<Counts>({});
   const [title, setTitle] = useState("");
@@ -38,6 +41,7 @@ export default function DealsPage() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [fromAi, setFromAi] = useState(false);
 
   async function load() {
     const [dealsRes, segRes] = await Promise.all([
@@ -57,6 +61,59 @@ export default function DealsPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    const applyDraft = (draft: {
+      title?: string;
+      message?: string;
+      discountLabel?: string;
+      audience?: string;
+    }) => {
+      if (draft.title) setTitle(draft.title);
+      if (draft.message) setMessage(draft.message);
+      if (draft.discountLabel) setDiscountLabel(draft.discountLabel);
+      if (
+        draft.audience === "all" ||
+        draft.audience === "new" ||
+        draft.audience === "repeat" ||
+        draft.audience === "vip" ||
+        draft.audience === "at_risk"
+      ) {
+        setAudience(draft.audience);
+      }
+      setFromAi(true);
+      setNote("Draft loaded from AI Deal Maker. Review, then send or schedule — nothing was sent yet.");
+    };
+
+    const qTitle = searchParams.get("title");
+    const qMessage = searchParams.get("message");
+    if (searchParams.get("fromAi") === "1" && (qTitle || qMessage)) {
+      applyDraft({
+        title: qTitle ?? undefined,
+        message: qMessage ?? undefined,
+        discountLabel: searchParams.get("discount") ?? undefined,
+        audience: searchParams.get("audience") ?? undefined,
+      });
+      try {
+        sessionStorage.removeItem(AI_DEAL_DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    try {
+      const raw = sessionStorage.getItem(AI_DEAL_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as AiDealDraft;
+      if (draft?.fromAi && (draft.title || draft.message)) {
+        applyDraft(draft);
+        sessionStorage.removeItem(AI_DEAL_DRAFT_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,11 +155,15 @@ export default function DealsPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       <Reveal>
         <form className="card-interactive space-y-4 p-6 md:p-8" onSubmit={onSubmit}>
-          <div>
-            <h2 className="font-display text-lg font-semibold">Create a deal</h2>
-            <p className="text-sm text-muted">
-              Choose an audience segment, then send now or schedule. Opted-out customers are excluded.
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold">Create a deal</h2>
+              <p className="text-sm text-muted">
+                Choose an audience segment, then send now or schedule. Opted-out customers are
+                excluded.
+              </p>
+            </div>
+            {fromAi ? <Badge variant="pending">From AI Deal Maker</Badge> : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -271,5 +332,19 @@ export default function DealsPage() {
         </section>
       </Reveal>
     </div>
+  );
+}
+
+export default function DealsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl py-12 text-center text-sm text-muted">
+          Loading deals…
+        </div>
+      }
+    >
+      <DealsPageInner />
+    </Suspense>
   );
 }

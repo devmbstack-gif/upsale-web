@@ -36,6 +36,10 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
     title: "Deals",
     subtitle: "WhatsApp campaigns by segment",
   },
+  "/app/ai": {
+    title: "AI Deal Maker",
+    subtitle: "Suggest, edit, approve — never auto-send",
+  },
 };
 
 function resolveHeader(pathname: string) {
