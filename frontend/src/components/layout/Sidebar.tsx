@@ -13,6 +13,7 @@ const nav = [
   { href: "/app/customers", label: "Customers", icon: "◉" },
   { href: "/app/coupons", label: "Coupons", icon: "▣" },
   { href: "/app/deals", label: "Deals", icon: "✦" },
+  { href: "/app/ai", label: "AI Deal Maker", icon: "✧" },
   { href: "/app/profile", label: "Profile", icon: "◈" },
 ];
 
