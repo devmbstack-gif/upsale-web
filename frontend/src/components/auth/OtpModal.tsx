@@ -8,8 +8,10 @@ type OtpModalProps = {
   email: string;
   error?: string;
   submitting: boolean;
+  resendCooldownSeconds: number;
+  onResendCooldownChange: (seconds: number) => void;
   onSubmitCode: (code: string) => void;
-  onResend: () => void;
+  onResend: () => void | Promise<void>;
   onClose: () => void;
 };
 
@@ -18,26 +20,29 @@ export default function OtpModal({
   email,
   error,
   submitting,
+  resendCooldownSeconds,
+  onResendCooldownChange,
   onSubmitCode,
   onResend,
   onClose,
 }: OtpModalProps) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
-  const [seconds, setSeconds] = useState(60);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     if (!open) return;
     setDigits(["", "", "", "", "", ""]);
-    setSeconds(60);
     inputs.current[0]?.focus();
   }, [open]);
 
   useEffect(() => {
-    if (!open || seconds <= 0) return;
-    const timer = window.setTimeout(() => setSeconds((current) => current - 1), 1000);
+    if (!open || resendCooldownSeconds <= 0) return;
+    const timer = window.setTimeout(
+      () => onResendCooldownChange(resendCooldownSeconds - 1),
+      1000,
+    );
     return () => window.clearTimeout(timer);
-  }, [open, seconds]);
+  }, [open, resendCooldownSeconds, onResendCooldownChange]);
 
   if (!open) return null;
 
@@ -71,6 +76,11 @@ export default function OtpModal({
     inputs.current[Math.min(pasted.length, 5)]?.focus();
   }
 
+  async function handleResendClick() {
+    if (resendCooldownSeconds > 0 || submitting) return;
+    await onResend();
+  }
+
   const code = digits.join("");
 
   return (
@@ -78,7 +88,15 @@ export default function OtpModal({
       <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="otp-title">
         <p className={styles.eyebrow}>Email verification</p>
         <h2 id="otp-title">Enter the 6-digit code</h2>
-        <p className={styles.lede}>We sent a code to {email}. It expires in 5 minutes.</p>
+        <p className={styles.lede}>
+          We sent a code to {email}. It expires in 5 minutes.
+          {error?.startsWith("Dev code:") ? (
+            <>
+              <br />
+              <strong>{error}</strong>
+            </>
+          ) : null}
+        </p>
         <div className={styles.otpRow}>
           {digits.map((digit, index) => (
             <input
@@ -98,7 +116,7 @@ export default function OtpModal({
             />
           ))}
         </div>
-        {error ? <p className={styles.error}>{error}</p> : null}
+        {error && !error.startsWith("Dev code:") ? <p className={styles.error}>{error}</p> : null}
         <div className={styles.actions}>
           <button type="button" className={styles.ghost} onClick={onClose} disabled={submitting}>
             Back
@@ -113,11 +131,16 @@ export default function OtpModal({
           </button>
         </div>
         <p className={styles.note}>
-          {seconds > 0 ? (
-            <>Resend OTP in {seconds}s</>
+          {resendCooldownSeconds > 0 ? (
+            <>Resend code in {resendCooldownSeconds}s</>
           ) : (
-            <button type="button" className={styles.textButton} onClick={onResend} disabled={submitting}>
-              Resend OTP
+            <button
+              type="button"
+              className={styles.textButton}
+              onClick={() => void handleResendClick()}
+              disabled={submitting}
+            >
+              {submitting ? "Sending…" : "Resend code"}
             </button>
           )}
         </p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { QrPlaceholder } from "@/components/ui/QrPlaceholder";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import styles from "./landing.module.css";
@@ -77,7 +78,12 @@ export default function PhonePreview({ compact = false }: { compact?: boolean })
                   <p className={styles.paneKicker}>Step 1</p>
                   <h3 className={styles.paneTitle}>Scan the counter code</h3>
                   <div className={styles.qrWrap}>
-                    <QrMark />
+                    <QrPlaceholder
+                      compact
+                      size={compact ? 140 : 168}
+                      value="https://upsale.app/o/demo-offer"
+                      title=""
+                    />
                     <span className={styles.scan} />
                   </div>
                 </>

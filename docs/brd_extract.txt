@@ -1,0 +1,634 @@
+﻿==== UPSale_BRD_Final_Phases_1_to_4_Poppins.pdf pages 10 ====
+---PAGE 1 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 1
+UPSale
+QR Discounts + Customer Data + WhatsApp Deals + AI Deal Maker
+Business Requirements Document (BRD)
+Simple Phase-wise Development Plan
+Prepared For MB Stack Pvt. Limited
+Product UPSale
+Primary Launch Local businesses - restaurants, salons, bakeries and local 
+stores
+Version Final scope - September 2026
+Core Product Goal
+Help a local business capture customer contact details through a QR discount and bring those customers back using 
+approved WhatsApp deals. The customer never creates an account and never logs in.
+
+---PAGE 2 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 2
+1. Product Overview
+UPSale is a simple SaaS system for local businesses. A business owner creates an account, sets a discount or reward, 
+and receives a system-generated QR code and link. The QR can be placed at the counter, table, receipt, package, 
+menu or social media.
+A customer only scans the QR. There is no customer signup, password or account. The QR opens one simple mobile 
+page showing the offer and a short consent notice. The customer enters name and WhatsApp number, with email 
+optional, accepts marketing consent, and receives the discount/coupon. The customer details are saved inside that 
+business owner's dashboard.
+The business can later send daily or weekly WhatsApp offers to selected customers. Purchase or visit history can be 
+recorded so the AI Deal Maker can suggest more relevant deals. AI suggestions are always shown to the business 
+owner first; the owner approves or edits them before sending.
+1.1 Main Business Goal
+´éÀ Convert walk-in or local customers into a reusable customer database.
+´éÀ Give customers an instant reason to share their WhatsApp contact through a clear discount or reward.
+´éÀ Help the business bring customers back with simple WhatsApp deals.
+´éÀ Use customer purchase/visit history to create more relevant AI-assisted offers.
+´éÀ Create recurring SaaS revenue through business subscriptions.
+1.2 Target Businesses
+Business Type Example Use
+Restaurant Scan QR at table/counter, get a discount, receive future food 
+deals.
+Salon Scan QR after service, save customer, send next-visit offers.
+Bakery Scan QR on counter/box, offer discount, send cake or seasonal 
+deals.
+Local Retail Store Scan QR at checkout, collect customer contact, send category 
+deals.
+Local E-commerce Store Share QR/link with orders or social pages and use the same 
+customer/deal flow.
+2. Simple User Flows
+2.1 Customer Flow - No Signup
+1. Customer scans the business QR code or opens its reward link.
+2. A simple mobile page shows the business name, discount/reward and a clear note that WhatsApp details will be 
+used for marketing.
+3. Customer enters Name + WhatsApp Number. Email is optional.
+4. Customer ticks the consent checkbox and taps "Get My Discount".
+5. System saves the customer under that business and shows the unique coupon/discount immediately.
+6. Customer shows the coupon to the business. No account, password, login or app installation is required.
+Keep it easy
+The customer experience must stay on one short mobile flow. Do not add customer registration, customer 
+
+---PAGE 3 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 3
+dashboard, password, profile setup or extra steps.
+2.2 Business Owner Flow
+1. Business owner creates an UPSale account and enters basic business information.
+2. Owner creates the QR discount/reward and chooses its value and basic rules.
+3. UPSale generates the QR code and shareable link.
+4. Owner displays the QR and starts collecting consented customer details.
+5. Owner sees customers inside the dashboard and can download customer data.
+6. Owner records a customer purchase/visit when useful for future personalization.
+7. Owner creates a manual deal or asks AI Deal Maker for suggestions.
+8. Owner selects customers/segments, approves the deal, and schedules a daily, weekly or one-time WhatsApp 
+campaign.
+9. Owner checks basic campaign and redemption results.
+
+---PAGE 4 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 4
+3. Required Modules
+Only the modules below are included in this BRD. No additional product modules are part of the current scope.
+3.1 Business Owner Account & Dashboard
+´éÀ Business owner signup/login.
+´éÀ Business name, logo, category, country, currency, timezone, address and WhatsApp business details.
+´éÀ Simple dashboard showing total customers, new customers, QR scans, active deal, deals sent and redeemed 
+discounts.
+´éÀ Quick buttons: Create Discount, Download QR, Create Deal and View Customers.
+3.2 QR Discount / Reward
+´éÀ Owner can create percentage discount, fixed-value discount or simple reward/free item.
+´éÀ Owner sets discount value, title, short conditions and expiry.
+´éÀ System automatically generates a unique QR code and public link for the offer.
+´éÀ QR artwork/message must clearly tell the customer that contact details are collected for marketing if the customer 
+claims the discount.
+´éÀ Owner can download the QR for printing or copy the link for sharing.
+3.3 Customer Capture & Consent
+´éÀ No customer account or signup.
+´éÀ QR opens a fast mobile form with Name, WhatsApp Number and optional Email.
+´éÀ Clear consent checkbox before details are stored for WhatsApp marketing.
+´éÀ Customer can unsubscribe/opt out later and opted-out customers must not receive future campaigns.
+´éÀ Same WhatsApp number should be recognized to reduce duplicate customer records.
+3.4 Unique Coupon & Basic Fraud Control
+´éÀ After successful form submission, system generates a unique coupon/reward code.
+´éÀ Coupon can have expiry, minimum spend and one-use/per-customer limits set by the owner.
+´éÀ Business can mark coupon as redeemed so the same one-use coupon cannot be used again.
+´éÀ Redemption is saved against the customer for reporting and future deal analysis.
+3.5 Customer Database
+´éÀ Owner sees only customers collected by that business.
+´éÀ Customer fields: name, WhatsApp number, email if provided, date joined, consent status, last visit/purchase, total 
+visits/purchases and basic category interest when recorded.
+´éÀ Search and filter customers.
+´éÀ Download/export customer list.
+´éÀ Opted-out customers remain suppressed from marketing sends.
+3.6 Purchase / Visit History
+This requirement is necessary because AI cannot know previous buying interests unless purchase information is 
+available.
+´éÀ Owner can open a customer and record a visit/purchase.
+
+---PAGE 5 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 5
+´éÀ Record amount and optional product/category purchased.
+´éÀ System updates last purchase, visit count, spend and category interest.
+´éÀ This history is used only to improve customer segmentation and AI deal suggestions.
+3.7 Customer Segments
+´éÀ Basic automatic groups: New Customers, Repeat Customers, VIP/High Spend, At Risk/Inactive and category-based 
+customers when purchase categories exist.
+´éÀ Owner can select one or more groups before sending a deal.
+´éÀ Owner can also select individual customers instead of using a segment.
+3.8 Deals & WhatsApp Campaigns
+´éÀ Dedicated Deals page for creating offer title, message, discount and validity.
+´éÀ Choose customers individually or by segment/category.
+´éÀ Send now or schedule one-time, daily or weekly delivery.
+´éÀ Use WhatsApp business messaging/API through custom code or n8n workflow automation.
+´éÀ Provide basic limits/frequency control so the same customer is not spammed repeatedly.
+´éÀ Record basic status such as scheduled, sent, failed and redeemed where available.
+3.9 AI Deal Maker
+´éÀ AI reviews available customer purchase/visit history, favorite categories, last visit, previous redemption and spend 
+information.
+´éÀ AI creates a suggested deal and WhatsApp message for the selected customer/segment.
+´éÀ Owner can Approve, Edit, Regenerate or Schedule the suggestion.
+´éÀ AI must respect the owner's maximum discount, minimum spend and excluded products/categories.
+´éÀ AI must never automatically send a new discount without owner approval.
+3.10 Subscription & Country Pricing
+´éÀ Three business subscription packages: Starter, Growth and Pro.
+´éÀ Growth package is marked as Most Popular.
+´éÀ Enterprise pricing is custom/contact sales, not a fourth standard package.
+´éÀ Pricing changes according to the business billing country/region, for example Pakistan, India, UAE, Saudi Arabia, 
+UK and USA.
+´éÀ WhatsApp messaging/API usage costs should be limited or charged separately instead of promising unlimited 
+messages.
+
+---PAGE 6 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 6
+Plan Positioning Main Access
+Starter Low-cost entry QR discount, customer database, basic 
+deals.
+Growth MOST POPULAR QR + customers + segments + WhatsApp 
+campaigns + AI Deal Maker.
+Pro Growing businesses Higher usage limits and full included 
+features.
+Enterprise Custom pricing Custom volume and commercial 
+requirements.
+3.11 Public Website / Landing Page
+´éÀ Modern animated landing page with strong product theme and clear use cases.
+´éÀ Show the simple journey visually: Scan QR -> Get Discount -> Business Gets Customer -> Send Future Deals.
+´éÀ Pricing section with three packages and Growth highlighted as Most Popular.
+´éÀ Animated usage guide explaining setup and customer flow.
+´éÀ Product demo/video section.
+´éÀ Clear CTA for business registration or sales contact.
+
+---PAGE 7 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 7
+4. Screens / Pages Required
+Area Required Pages
+Public Website Home/Landing, Pricing, Usage Guide, Demo/Video.
+Business Owner Login/Signup, Onboarding, Dashboard, QR Discount, 
+Customers, Customer Detail/Purchase History, Deals, AI Deal 
+Maker, Campaigns, Subscription, Settings.
+Customer QR Reward Page only: offer + short details/consent form + 
+coupon result. No customer account.
+5. Basic Data Requirements
+Data Minimum Information
+Business Name, category, country, currency, timezone, WhatsApp 
+configuration, subscription.
+QR Offer Title, type, discount/reward, rules, expiry, QR/link, status.
+Customer Business ID, name, WhatsApp, optional email, consent, joined date, 
+opt-out status.
+Coupon Customer, offer, unique code, expiry, redeemed status/date.
+Purchase/Visit Customer, date, amount, optional product/category.
+Deal/Campaign Offer/message, selected audience, schedule, approval, send status.
+AI Suggestion Selected audience/customer, suggested deal/message, owner 
+decision.
+6. Essential Rules
+´éÀ Customer must never be forced to create an account, login or password.
+´éÀ Marketing consent must be clear before storing/using WhatsApp details for promotions.
+´éÀ Opted-out customers must be blocked from future marketing campaigns.
+´éÀ Customer data of one business must never be visible to another business.
+´éÀ Unique one-use coupons cannot be redeemed twice.
+´éÀ AI deals require owner approval before sending.
+´éÀ AI discount cannot exceed limits set by the owner.
+´éÀ Daily/weekly automation must follow the owner-selected schedule and avoid repeated spam.
+´éÀ Sensitive credentials such as WhatsApp/API keys must be stored securely.
+´éÀ All customer-facing screens must work smoothly on mobile phones.
+7. Suggested Technical Approach
+Part Suggested Approach
+Frontend React.js / Next.js with a clean mobile-first UI.
+Backend Node.js + Express/Nest-style API structure.
+Database MongoDB for businesses, customers, coupons, deals and 
+histories.
+Automation n8n can handle scheduled workflows initially; custom code can 
+replace/extend it later.
+WhatsApp Official WhatsApp Business messaging/API provider or Cloud 
+API setup.
+AI LLM/API used only for analysis and deal/message suggestions.
+QR Server-generated unique QR for each business offer/campaign.
+Hosting Standard secure cloud hosting with separate production 
+database.
+
+---PAGE 8 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 8
+8. Phase-wise Development Plan
+Scope note
+There are only four development phases in the current BRD. No Phase 5 is included.
+Phase 1 - Core QR & Customer Capture
+Goal: A business can register, create a discount QR, and collect customers through a very easy scan flow.
+´éÀ Business owner signup/login and basic business profile.
+´éÀ Create discount/reward.
+´éÀ Generate QR code and shareable link.
+´éÀ Customer QR page with offer, short form and consent.
+´éÀ Name + WhatsApp collection; email optional.
+´éÀ Unique coupon generation and redemption.
+´éÀ Basic customer database with search and export.
+´éÀ Basic owner dashboard.
+Phase 1 Done When: A real customer can scan a QR, give details/consent without signup, receive a coupon, and 
+appear immediately in the correct business dashboard.
+Phase 2 - Purchase History, Segments & WhatsApp Automation
+Goal: The business can understand basic customer behavior and send controlled WhatsApp deals.
+´éÀ Record customer purchase/visit and optional product/category.
+´éÀ Create New, Repeat, VIP/High Spend, At Risk and category segments.
+´éÀ Deals page and audience selection.
+´éÀ WhatsApp integration.
+´éÀ Send now or schedule one-time, daily or weekly campaigns.
+´éÀ Opt-out/suppression and basic frequency control.
+´éÀ Basic campaign send and redemption tracking.
+Phase 2 Done When: Owner can select a customer group, schedule a deal, and the system sends it only to eligible 
+consented customers.
+Phase 3 - AI Deal Maker
+Goal: AI helps the owner create better deals from available customer history, but the owner stays in control.
+´éÀ Analyze previous purchases/visits, recency, spend and category interest.
+´éÀ Generate personalized deal and WhatsApp copy.
+´éÀ Apply owner-set discount limits, minimum spend and exclusions.
+´éÀ Approve / Edit / Regenerate / Schedule actions.
+´éÀ Allow deal creation for individual customers or selected segments.
+´éÀ Never auto-send a newly generated deal without approval.
+Phase 3 Done When: AI can create a relevant suggestion from real stored history, and nothing is sent until the owner 
+approves it.
+
+---PAGE 9 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 9
+Phase 4 - Subscription, Country Pricing & Public Launch Website
+Goal: Make the product commercially ready for paid business accounts and present it professionally online.
+´éÀ Starter, Growth (Most Popular) and Pro subscription packages.
+´éÀ Enterprise custom pricing option.
+´éÀ Country/region-based pricing and currency display.
+´éÀ Plan usage limits and subscription status in owner account.
+´éÀ Animated landing page.
+´éÀ Pricing section.
+´éÀ Animated usage guide.
+´éÀ Demo/video section and business signup CTA.
+Phase 4 Done When: A business can understand the product from the website, choose the correct regional plan, 
+register and use the complete approved product flow.
+
+---PAGE 10 ---
+MB Stack Pvt. Limited  |  UPSale BRD
+Page 10
+9. Phase Acceptance Checklist
+Phase Must Pass Before Moving Forward
+Phase 1 No customer signup; QR works on mobile; consent is captured; 
+customer appears in correct business DB; unique coupon can 
+be redeemed only as allowed.
+Phase 2 Purchase/visit can be saved; segments update; WhatsApp 
+campaign can be scheduled; opted-out customers are 
+excluded.
+Phase 3 AI uses available history; owner limits are respected; owner 
+approval is mandatory before sending.
+Phase 4 Three plans + enterprise custom option work; regional pricing 
+displays correctly; public landing, guide and demo sections are 
+complete.
+10. Final Product Summary
+UPSale should remain intentionally simple. The customer scans a QR, sees the discount, shares basic contact details 
+with clear marketing consent, and receives the reward. The customer never creates an account. From that point 
+onward, the business owner manages the customer relationship through the UPSale dashboard.
+The business owner can view/download customers, record purchase or visit history, build customer groups, create 
+deals, schedule WhatsApp campaigns, and use AI to prepare personalized offers. AI remains an assistant: the owner 
+approves the deal before it is sent.
+Final Scope Boundary
+Current development ends at Phase 4. Do not add extra modules, customer accounts, complex loyalty points, POS 
+systems, mobile apps, marketplace features or other features unless MB Stack explicitly approves them later.
+
+==== UPSale_Multi_Phase_Plan.pdf pages 8 ====
+---PAGE 1 ---
+UPSale Multi-Phase Development Plan
+---
+name: UPSale Multi-Phase Plan
+overview: Multi-phase UPSale build with Google auth, per-business WhatsApp, 14-day free trial,
+Super AdminÔÇôdriven dynamic packages and CMS for major marketing/product sections,
+purple/black theme, system health, and premium animations.
+todos:
+- id: phase-1-core
+content: "Phase 1: Google+email auth, design system, QR offers, capture, coupons, dashboard,
+rate limits"
+status: pending
+- id: phase-2-whatsapp
+content: "Phase 2: Encrypted per-business WA connect + test message, history, segments, deals,
+STOP opt-out, failure alerts"
+status: pending
+- id: phase-3-ai
+content: "Phase 3: AI Deal Maker with limits, approve/edit/regenerate/schedule only"
+status: pending
+- id: phase-4-launch
+content: "Phase 4: Dynamic trial/packages from admin + CMS-driven landing/pricing/guide/demo"
+status: pending
+- id: phase-admin
+content: "Super Admin: packages CMS, site sections CMS, platform settings, audit/backup, System
+Health, RBAC"
+status: pending
+isProject: false
+---
+# UPSale Multi-Phase Development Plan
+## Short Summary
+**UPSale** is a B2B SaaS for local businesses (restaurants, salons, bakeries, retail). A business
+creates a discount QR; a customer scans it, enters name + WhatsApp (optional email) with
+marketing consent, and gets a unique coupon ÔÇö **no customer account ever**. Each business
+connects **its own WhatsApp Business credentials**. Owners manage customers, visits, segments,
+WhatsApp deals, and **AI Deal Maker** (owner-approve only).
+**Trust-first monetization:** Every new business gets a **FREE trial** (default 14 days, configurable
+in Super Admin; no card at signup). **Paid packages are fully dynamic** from Super Admin (seeded
+as Starter / Growth / Pro + Enterprise). Pricing still highlights the trial so users feel safe to register.
+After trial, they must choose a package to continue. Major landing/product copy is also
+admin-editable CMS.
+**Core loop:** Scan QR ÔåÆ Get Discount ÔåÆ Business Gets Customer ÔåÆ Send Future Deals (via that
+businessÔÇÖs WhatsApp).
+
+
+---PAGE 2 ---
+---
+## Approved Product Improvements
+1. Per-business WhatsApp self-integration (simple Connect ÔåÆ Test ÔåÆ Ready)
+2. Google login/signup (+ email/password)
+3. Dark purple + black brand; light and dark mode
+4. Professional font family (no generic default stack)
+5. Super Admin runtime platform settings (OpenAI keys, URLs, etc.)
+6. Super Admin System Health module
+7. **Secrets encryption + masked UI** for WA tokens / AI keys
+8. **Admin audit log** for platform config changes
+9. **WhatsApp Send test message** after connect
+10. **STOP / unsubscribe WhatsApp webhook** for customer opt-out
+11. **Campaign failure alerts** (dashboard + optional email)
+12. **14-day FREE trial for all new users** (see Trial & Packages model below)
+13. **RBAC** ÔÇö Super Admin vs Business Owner permissions enforced
+14. **QR page language toggle** (English + Urdu)
+15. **Config backup / previous value** when admin overwrites a setting (rollback-friendly)
+16. **Rate limits** on public QR submit + auth endpoints
+17. **Dynamic packages from Super Admin** ÔÇö create/edit/hide plans, features, limits, popular
+flag, sort order, country prices (not hardcoded)
+18. **Dynamic major sections CMS from Super Admin** ÔÇö anything likely to change later (landing
+copy, journey steps, usage guide, demo/video, CTAs, trial settings, consent/help text) is
+admin-editable
+---
+## Dynamic Content Strategy (Super Admin CMS)
+**Rule:** Layout, theme tokens, and animation behavior stay in code. **Content, packages, prices,
+limits, and marketing sections** that marketing/ops may change later live in MongoDB and are
+edited in Super Admin ÔÇö no redeploy.
+### A. Packages Manager (fully dynamic)
+Admin can manage all subscription packages without code changes:
+- Create / edit / archive (soft-hide) packages ÔÇö not limited to fixed Starter/Growth/Pro names
+- Fields per package: name, slug, short description, feature bullets, **usage limits** (customers,
+campaigns/month, AI generations, etc.), sort order, **Most Popular** flag (one at a time), self-serve
+vs Enterprise/contact-sales, active/inactive
+- **Country/region pricing matrix** per package (PK, IN, AE, SA, UK, US + addable regions):
+amount, currency, billing interval
+- Trial highlight badge text (e.g. ÔÇ£14-day free trialÔÇØ) per package or global
+- Stripe/price IDs or payment mapping fields when billing is wired
+- Public Pricing page + owner Subscribe screen **always read live packages** from API
+Seed defaults on first boot: Starter, Growth (popular), Pro, Enterprise (contact) ÔÇö admin can
+change anything afterward.
+
+
+---PAGE 3 ---
+### B. Trial Settings (dynamic, separate from packages)
+- Trial enabled on/off
+- Trial length in days (default **14**)
+- Which package **feature level** trial unlocks (usually Growth / Most Popular package id)
+- Fair-usage caps during trial
+- Post-trial paywall message + CTA copy
+### C. Site / Product Sections CMS (major changeable blocks)
+Admin edits structured sections (EN + optional Urdu where public-facing):
+| Section key | What admin can change |
+|-------------|------------------------|
+| `landing_hero` | Brand line, headline, supporting text, primary/secondary CTA labels + targets |
+| `landing_journey` | Step titles/body for Scan ÔåÆ Discount ÔåÆ Capture ÔåÆ Deals (order + count) |
+| `landing_usage_guide` | Animated guide steps/copy |
+| `landing_demo` | Demo/video URL, title, description |
+| `landing_pricing_intro` | Pricing section title/subtitle; trial trust line |
+| `landing_footer_cta` | Final signup/contact CTA |
+| `enterprise_contact` | Contact sales email/phone/form target + blurb |
+| `owner_onboarding` | First-login tips / WhatsApp connect help text |
+| `qr_consent_copy` | Consent checkbox wording (EN/Urdu) ÔÇö legal-sensitive, versioned |
+| `opt_out_help` | Customer/owner opt-out explanation copy |
+| `email_templates_meta` | Subject/previews for failure alerts (bodies can stay template files
+initially) |
+Each section stores: key, locale, JSON fields, published/draft, updatedBy, updatedAt. Public site
+and app fetch **published** content; admin can preview draft.
+### D. What stays in code (not CMS)
+- Theme colors/fonts/animation system
+- App routes and dashboard layout
+- Auth, QR engine, coupon rules, AI approval gate, tenant isolation
+- Super Admin / Owner RBAC structure
+### E. Safety
+- Publish confirmation for packages and marketing sections
+- Audit log on package/section/trial changes
+- Previous-version backup for section JSON and package snapshots (rollback)
+- Cache with short TTL or invalidate on publish so pricing/landing update quickly
+---
+## Trial & Packages Model (Chosen Approach)
+**Decision: Trial is separate from packages; packages are paid plans managed dynamically in
+Super Admin. Pricing UI still highlights the trial on every self-serve plan.**
+Why this performs best for trust/registration:
+
+
+---PAGE 4 ---
+- Local owners register faster when **no payment / no forced plan pick** is required on day one
+- One clear CTA: **Start 14-day Free Trial** (label/days from Trial Settings)
+- Packages stay clean for conversion after the product is proven ÔÇö and remain editable anytime
+- Marketing still shows trial badge on active self-serve plans so signup feels low-risk
+```mermaid
+flowchart TD
+signup[Register_Google_or_Email] --> trial[TrialActive_14Days_GrowthLevel]
+trial --> useProduct[Use_QR_Customers_WA_AI]
+trial --> choosePlan[Choose_Paid_Package]
+useProduct --> choosePlan
+choosePlan --> starter[Starter]
+choosePlan --> growth[Growth_MostPopular]
+choosePlan --> pro[Pro]
+choosePlan --> enterprise[Enterprise_ContactSales]
+trial --> expired[TrialExpired]
+expired --> paywall[Select_Package_To_Continue]
+paywall --> choosePlan
+```
+### Rules
+- **On successful business registration:** `subscriptionStatus = trial`, `trialEndsAt = now +
+TrialSettings.days` (default 14), **no card required**
+- **Trial entitlement:** features of the package selected in Trial Settings (usually Most Popular /
+Growth), within fair-usage caps
+- **One trial per business** (no reset by re-registering same business/email without Super Admin
+override)
+- **During trial:** persistent banner ÔÇö ÔÇ£X days left in your free trialÔÇØ + CTA **Choose plan** (copy
+from CMS/settings)
+- **Pricing page:** active packages from Packages Manager; each self-serve card can show trial
+badge; popular flag from admin
+- **Packages (paid):** admin-defined plans + country pricing; selecting a package starts paid
+subscription; trial may end early when they subscribe
+- **After trial expiry without package:** soft paywall ÔÇö read-only / limited dashboard, block new
+campaigns and AI sends until a package is selected; existing customer data retained
+- **Enterprise / contact-sales plans:** flagged in Packages Manager (no self-serve checkout)
+### Owner-facing copy goal
+Register with confidence ÔåÆ use the product for 14 days free ÔåÆ pick the package that fits.
+---
+## Recommended Technology Stack
+- **Frontend:** Next.js 15 (App Router) + TypeScript + Tailwind CSS
+- **Animations:** Framer Motion + GSAP ScrollTrigger + Lottie
+
+
+---PAGE 5 ---
+- **Backend:** NestJS + TypeScript
+- **Database:** MongoDB + Mongoose
+- **Auth:** Email/password + Google OAuth; JWT/session; customers never log in
+- **QR:** Server-side `qrcode`
+- **WhatsApp:** Per-tenant Cloud API credentials (encrypted); test message; inbound webhook for
+STOP/opt-out
+- **AI:** Provider key from Super Admin settings; never auto-send
+- **Payments:** Stripe (or equivalent) + country price maps; trial is app-managed (not dependent on
+card-upfront)
+- **Hosting:** Vercel + Nest host + MongoDB Atlas
+- **Extra:** Redis queues, S3 storage, encryption-at-rest, rate limiting middleware
+---
+## Design System (Theme & Fonts)
+- Dark purple + black core; CSS variables for light/dark
+- Manual + system theme toggle (persisted)
+- Professional `next/font` pair (e.g. Plus Jakarta Sans / Sora + Outfit / Manrope ÔÇö lock at build)
+- Marketing = expressive motion; dashboards = clean; QR page = fast + EN/Urdu toggle
+---
+## Animation Strategy
+- Landing scroll journey + Growth highlight + animated guide
+- Owner/Admin micro-interactions + skeletons
+- QR: light entrance + success only; honor `prefers-reduced-motion`
+---
+## Roles & Access
+- **Customer:** QR reward page only (EN/Urdu)
+- **Business Owner:** Dashboard, QR, customers, deals, WhatsApp connect, AI, trial/subscription,
+settings ÔÇö no platform env access
+- **Super Admin:** Businesses ops, Platform Settings, System Health, audit log, config rollback,
+optional trial extension ÔÇö RBAC enforced
+---
+## Phase Chart
+```mermaid
+flowchart LR
+P1[Phase1_Auth_QR_Capture] --> P2[Phase2_WA_Segments]
+P2 --> P3[Phase3_AI_DealMaker]
+P3 --> P4[Phase4_Trial_Billing_Landing]
+P1 --> SA[SuperAdmin_Config_Health]
+SA --> P3
+```
+
+
+---PAGE 6 ---
+### Phase overview
+- **Phase 1:** Google + email auth, theme/fonts, QR capture, coupons, dashboard, public rate
+limits, EN/Urdu QR toggle
+- **Phase 2:** History, segments, per-business WA connect + test message, campaigns, STOP
+webhook opt-out, failure alerts
+- **Phase 3:** AI Deal Maker (approve gate)
+- **Phase 4:** Trial engine + **admin-driven packages/pricing** + **CMS-driven** animated
+marketing (hero, journey, guide, demo, CTAs)
+- **Super Admin:** Packages Manager, Site Sections CMS, Trial Settings, Platform Settings,
+System Health, RBAC, audit/backup
+---
+## Phase 1 Detail ÔÇö Foundation
+- Email/password + Google OAuth signup/login
+- Purple/black design tokens; light/dark mode; professional fonts
+- Business profile fields; QR offers; public reward page (EN/Urdu)
+- Consent + unique coupons + redeem rules; tenant-isolated customers; search/export
+- Dashboard KPIs
+- Rate limits on QR submit + auth
+**Acceptance:** Auth works; theme works; mobile QR + consent + coupon; abuse rate limits active.
+---
+## Phase 2 Detail ÔÇö Retention + Per-Business WhatsApp
+- Purchase/visit history; segments (New, Repeat, VIP, At Risk, category)
+- Deals + audience selection
+- WhatsApp Connect wizard: token + IDs ÔåÆ encrypt ÔåÆ **Test Connection / Send test message** ÔåÆ
+Connected
+- Campaigns send only when Connected, using tenant credentials
+- Inbound webhook: STOP/unsubscribe ÔåÆ suppress future marketing
+- Opt-out + frequency caps; campaign statuses
+- Campaign failure surfaced in dashboard (+ optional email alert)
+**Acceptance:** No WA connect ÔçÆ no send; test message works; STOP suppresses; failures
+visible.
+---
+## Phase 3 Detail ÔÇö AI Assistant
+- History-aware deal + WhatsApp copy; owner limits; Approve / Edit / Regenerate / Schedule
+- Never auto-send; AI key from Super Admin settings
+**Acceptance:** Real history + limits + mandatory approval.
+---
+## Phase 4 Detail ÔÇö Trial, Dynamic Packages & CMS Launch Site
+- **Trial service:** reads Trial Settings (days, feature package); auto-start on register; countdown
+banner; one trial per business
+
+
+---PAGE 7 ---
+- **Packages:** loaded from Packages Manager API (seeded defaults; fully editable) + country
+pricing matrix
+- Pricing UI: active self-serve plans; trial badge from settings; Growth/popular driven by admin flag
+- Checkout / subscribe to selected package; trial ends or converts on subscribe
+- Post-trial paywall copy from CMS/settings
+- Animated landing + usage guide + demo: **content from Site Sections CMS**; motion stays in
+frontend
+- Public/owner UIs never hardcode package names, prices, or major marketing copy
+**Acceptance:** Admin can change a package price/feature and landing hero without redeploy; new
+user gets configured free trial days; pricing and site reflect published CMS data.
+---
+## Super Admin Detail
+**1. Packages Manager**
+- Full CRUD + archive for plans; features, limits, popular, sort, self-serve vs contact-sales
+- Per-country prices/currencies; payment mapping fields
+- Publish/activate controls
+**2. Trial Settings**
+- Enable, length (days), trial feature package, fair-usage caps, post-trial messages
+**3. Site Sections CMS**
+- Edit/publish major landing and product copy blocks listed above (hero, journey, guide, demo,
+pricing intro, CTAs, consent, onboarding help)
+- Draft vs published; EN (+ Urdu where needed)
+**4. Platform Settings**
+- Runtime keys/URLs (OpenAI, model/base URL, public app URL, payment-related config, future
+toggles)
+- Secrets encrypted at rest; masked in UI; reveal-on-demand
+**5. System Health**
+- API, MongoDB, Redis, AI ping, storage, payments config, aggregate WA send-path errors
+- Healthy / Degraded / Down + last checked + short reason; manual + periodic refresh
+**6. Safety / RBAC**
+- Only Super Admin role; owners blocked
+- Change confirmation; **previous-value / version backup** for settings, packages, sections
+- **Audit log:** who changed what entity, when (no raw secrets in logs)
+**Acceptance:** Packages and major site sections change without redeploy;
+keys/health/audit/rollback work; owners cannot access admin CMS.
+---
+## Essential Rules
+- No customer accounts
+- Clear marketing consent; opt-outs / STOP never messaged
+- Strict multi-tenant isolation; one-use coupons
+
+
+---PAGE 8 ---
+- AI never auto-sends
+- Per-business WhatsApp credentials only
+- Secrets encrypted; never plain-text logged
+- Mobile-first customer screens; EN/Urdu QR
+- Light/dark + professional fonts
+- **Configured free trial for every new business; packages are separate paid plans managed in
+Super Admin**
+- Packages, trial settings, and major marketing/product sections are **dynamic from admin** ÔÇö not
+hardcoded
+- Rate limits on public/auth endpoints
+---
+## Suggested Delivery Order
+1. Monorepo: `apps/web` + `apps/api` + shared types
+2. Phase 1 auth/theme/QR + rate limits + EN/Urdu
+3. Super Admin shell: Platform Settings + Health + RBAC + audit/backup
+4. Packages Manager + Trial Settings APIs (seed defaults) ÔÇö so Phase 4 UI is never hardcoded
+5. Site Sections CMS (hero/journey/guide/demo/CTAs/consent) with publish flow
+6. Phase 2 WA connect + test message + STOP + alerts
+7. Phase 3 AI Deal Maker
+8. Phase 4 trial engine + subscribe/checkout wired to dynamic packages + CMS-driven animated
+marketing
+---
+## Out of Scope
+Customer accounts, loyalty points, POS, native apps, marketplace, full free-form page builder (we
+use structured section CMS, not drag-drop websites), extra modules unless MB Stack explicitly
+approves.
+
+

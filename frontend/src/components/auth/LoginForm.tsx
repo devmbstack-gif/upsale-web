@@ -9,6 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginValues } from "@/lib/validations/auth";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import AuthBackground from "./AuthBackground";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { PasswordInput } from "./PasswordInput";
 import styles from "./auth.module.css";
 
 function GoogleIcon() {
@@ -75,7 +78,7 @@ function LoginFormInner() {
         setFormError(payload.message ?? "Invalid email or password.");
         return;
       }
-      router.push("/dashboard");
+      router.push("/app");
       router.refresh();
     } catch {
       setFormError("Could not sign in. Try again.");
@@ -90,17 +93,19 @@ function LoginFormInner() {
       <header className={styles.progress}>
         <div className={styles.progressTop}>
           <div className={styles.progressLead}>
-           
             <Link href="/" className={styles.brand} aria-label="UPSale home">
-              <img src="/upsale-logo.png" alt="" />
+              <BrandLogo variant="auto" size="sm" />
             </Link>
           </div>
-          <Link href="/" className={styles.backHome} aria-label="Back to home">
+          <div className={styles.themeActions}>
+            <ThemeToggle />
+            <Link href="/" className={styles.backHome} aria-label="Back to home">
               <span className={styles.backHomeArrow} aria-hidden="true">
                 ←
               </span>
               <span className={styles.backHomeText}>Back to home</span>
             </Link>
+          </div>
         </div>
       </header>
 
@@ -124,12 +129,11 @@ function LoginFormInner() {
                   Forgot Password?
                 </button>
               </span>
-              <input
+              <PasswordInput
                 id="login-password"
-                type="password"
+                registration={register("password")}
                 autoComplete="current-password"
                 placeholder="Your password"
-                {...register("password")}
               />
               {errors.password?.message ? <span className={styles.error}>{errors.password.message}</span> : null}
             </div>

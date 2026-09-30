@@ -52,34 +52,75 @@ export function resetPasswordEmailHtml(resetUrl: string) {
 </html>`;
 }
 
-async function sendWithResend(to: string, subject: string, html: string) {
+type SendResult =
+  | { ok: true; delivery: "email" | "console"; previewCode?: string }
+  | { ok: false; message: string };
+
+function allowConsoleFallback() {
+  return (
+    process.env.AUTH_OTP_CONSOLE === "1" ||
+    process.env.NODE_ENV !== "production" ||
+    !process.env.RESEND_API_KEY
+  );
+}
+
+function deliverViaConsole(to: string, subject: string, codeOrUrl: string): SendResult {
+  console.log("────────────────────────────────────────");
+  console.log(`[UPSale email fallback] To: ${to}`);
+  console.log(`[UPSale email fallback] Subject: ${subject}`);
+  console.log(`[UPSale email fallback] Code/link: ${codeOrUrl}`);
+  console.log("────────────────────────────────────────");
+  return {
+    ok: true,
+    delivery: "console",
+    previewCode: /^\d{6}$/.test(codeOrUrl) ? codeOrUrl : undefined,
+  };
+}
+
+async function sendWithResend(to: string, subject: string, html: string, fallbackValue: string): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
+    if (allowConsoleFallback()) {
+      return deliverViaConsole(to, subject, fallbackValue);
+    }
     return {
-      ok: false as const,
+      ok: false,
       message: "Email delivery is not configured. Add RESEND_API_KEY to frontend/.env.local.",
     };
   }
 
-  const resend = new Resend(apiKey);
-  const { error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
-    to,
-    subject,
-    html,
-  });
+  try {
+    const resend = new Resend(apiKey);
+    const from = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const { error } = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+    });
 
-  if (error) {
-    return { ok: false as const, message: error.message || "The email could not be sent." };
+    if (error) {
+      console.error("Resend error:", error.message);
+      if (allowConsoleFallback()) {
+        return deliverViaConsole(to, subject, fallbackValue);
+      }
+      return { ok: false, message: error.message || "The email could not be sent." };
+    }
+
+    return { ok: true, delivery: "email" };
+  } catch (err) {
+    console.error("Resend exception:", err);
+    if (allowConsoleFallback()) {
+      return deliverViaConsole(to, subject, fallbackValue);
+    }
+    return { ok: false, message: "The email service did not accept the message." };
   }
-
-  return { ok: true as const };
 }
 
 export async function sendOtpEmail(email: string, code: string) {
-  return sendWithResend(email, "Your UPSale verification code", otpEmailHtml(code));
+  return sendWithResend(email, "Your UPSale verification code", otpEmailHtml(code), code);
 }
 
 export async function sendResetPasswordEmail(email: string, resetUrl: string) {
-  return sendWithResend(email, "Reset your UPSale password", resetPasswordEmailHtml(resetUrl));
+  return sendWithResend(email, "Reset your UPSale password", resetPasswordEmailHtml(resetUrl), resetUrl);
 }

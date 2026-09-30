@@ -1,9 +1,11 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { AmbientOrbs } from "@/components/ui/AmbientOrbs";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import {
-  useEffect,
   useState,
   type CSSProperties,
   type FormEvent,
@@ -655,100 +657,20 @@ function ContactForm() {
   );
 }
 
-const STARFIELD = [
-  { x: 4, y: 8, size: 1, color: "#a78bfa", duration: 4.2, delay: 0.2, peak: 0.28 },
-  { x: 12, y: 18, size: 2, color: "#ffffff", duration: 5.1, delay: 1.1, peak: 0.18 },
-  { x: 18, y: 42, size: 1, color: "#a78bfa", duration: 3.6, delay: 2.4, peak: 0.32 },
-  { x: 7, y: 61, size: 1, color: "#ffffff", duration: 4.8, delay: 0.8, peak: 0.22 },
-  { x: 22, y: 76, size: 2, color: "#a78bfa", duration: 5.6, delay: 3.1, peak: 0.16 },
-  { x: 9, y: 91, size: 1, color: "#ffffff", duration: 3.9, delay: 1.7, peak: 0.3 },
-  { x: 31, y: 6, size: 1, color: "#ffffff", duration: 4.5, delay: 0.4, peak: 0.2 },
-  { x: 38, y: 22, size: 1, color: "#a78bfa", duration: 5.8, delay: 2.0, peak: 0.26 },
-  { x: 28, y: 35, size: 2, color: "#ffffff", duration: 3.4, delay: 3.5, peak: 0.15 },
-  { x: 42, y: 48, size: 1, color: "#a78bfa", duration: 4.9, delay: 0.6, peak: 0.34 },
-  { x: 33, y: 64, size: 1, color: "#ffffff", duration: 5.3, delay: 2.8, peak: 0.19 },
-  { x: 45, y: 81, size: 2, color: "#a78bfa", duration: 3.8, delay: 1.3, peak: 0.24 },
-  { x: 36, y: 94, size: 1, color: "#ffffff", duration: 4.6, delay: 4.0, peak: 0.21 },
-  { x: 54, y: 11, size: 1, color: "#a78bfa", duration: 5.0, delay: 0.9, peak: 0.29 },
-  { x: 61, y: 27, size: 2, color: "#ffffff", duration: 3.7, delay: 2.2, peak: 0.17 },
-  { x: 52, y: 39, size: 1, color: "#a78bfa", duration: 4.4, delay: 3.3, peak: 0.31 },
-  { x: 67, y: 53, size: 1, color: "#ffffff", duration: 5.5, delay: 1.5, peak: 0.23 },
-  { x: 58, y: 69, size: 2, color: "#a78bfa", duration: 4.1, delay: 0.3, peak: 0.18 },
-  { x: 71, y: 85, size: 1, color: "#ffffff", duration: 3.5, delay: 2.6, peak: 0.27 },
-  { x: 63, y: 96, size: 1, color: "#a78bfa", duration: 5.2, delay: 3.8, peak: 0.2 },
-  { x: 78, y: 9, size: 2, color: "#ffffff", duration: 4.7, delay: 1.0, peak: 0.16 },
-  { x: 86, y: 21, size: 1, color: "#a78bfa", duration: 3.3, delay: 2.9, peak: 0.33 },
-  { x: 81, y: 37, size: 1, color: "#ffffff", duration: 5.7, delay: 0.5, peak: 0.22 },
-  { x: 92, y: 46, size: 2, color: "#a78bfa", duration: 4.0, delay: 1.8, peak: 0.19 },
-  { x: 84, y: 62, size: 1, color: "#ffffff", duration: 4.3, delay: 3.6, peak: 0.28 },
-  { x: 95, y: 74, size: 1, color: "#a78bfa", duration: 5.4, delay: 2.1, peak: 0.21 },
-  { x: 88, y: 88, size: 2, color: "#ffffff", duration: 3.6, delay: 0.7, peak: 0.15 },
-  { x: 14, y: 31, size: 1, color: "#a78bfa", duration: 4.8, delay: 4.2, peak: 0.25 },
-  { x: 48, y: 15, size: 1, color: "#ffffff", duration: 5.1, delay: 1.4, peak: 0.2 },
-  { x: 73, y: 44, size: 1, color: "#a78bfa", duration: 3.9, delay: 2.5, peak: 0.3 },
-  { x: 26, y: 55, size: 2, color: "#ffffff", duration: 4.5, delay: 0.1, peak: 0.17 },
-  { x: 56, y: 58, size: 1, color: "#a78bfa", duration: 5.6, delay: 3.0, peak: 0.26 },
-  { x: 16, y: 72, size: 1, color: "#ffffff", duration: 3.8, delay: 1.6, peak: 0.23 },
-  { x: 40, y: 78, size: 1, color: "#a78bfa", duration: 4.2, delay: 2.7, peak: 0.19 },
-  { x: 76, y: 17, size: 2, color: "#ffffff", duration: 5.0, delay: 3.9, peak: 0.16 },
-  { x: 6, y: 49, size: 1, color: "#a78bfa", duration: 4.6, delay: 1.2, peak: 0.32 },
-  { x: 97, y: 33, size: 1, color: "#ffffff", duration: 3.4, delay: 0.0, peak: 0.24 },
-  { x: 50, y: 3, size: 1, color: "#a78bfa", duration: 5.3, delay: 2.3, peak: 0.18 },
-  { x: 69, y: 71, size: 2, color: "#ffffff", duration: 4.1, delay: 3.4, peak: 0.21 },
-  { x: 24, y: 12, size: 1, color: "#a78bfa", duration: 3.7, delay: 1.9, peak: 0.29 },
-  { x: 89, y: 55, size: 1, color: "#ffffff", duration: 4.9, delay: 0.4, peak: 0.2 },
-  { x: 11, y: 84, size: 2, color: "#a78bfa", duration: 5.5, delay: 2.8, peak: 0.15 },
-  { x: 47, y: 92, size: 1, color: "#ffffff", duration: 3.5, delay: 4.1, peak: 0.27 },
-  { x: 80, y: 4, size: 1, color: "#a78bfa", duration: 4.4, delay: 1.7, peak: 0.22 },
-  { x: 3, y: 27, size: 1, color: "#ffffff", duration: 5.2, delay: 3.2, peak: 0.19 },
-  { x: 65, y: 33, size: 2, color: "#a78bfa", duration: 3.8, delay: 0.9, peak: 0.25 },
-  { x: 20, y: 97, size: 1, color: "#ffffff", duration: 4.7, delay: 2.0, peak: 0.18 },
-  { x: 93, y: 66, size: 1, color: "#a78bfa", duration: 5.0, delay: 3.7, peak: 0.31 },
-  { x: 35, y: 43, size: 1, color: "#ffffff", duration: 4.3, delay: 1.1, peak: 0.23 },
-  { x: 59, y: 87, size: 2, color: "#a78bfa", duration: 3.6, delay: 2.4, peak: 0.17 },
-  { x: 74, y: 29, size: 1, color: "#ffffff", duration: 5.4, delay: 0.6, peak: 0.26 },
-  { x: 8, y: 14, size: 1, color: "#a78bfa", duration: 4.0, delay: 3.5, peak: 0.21 },
-] as const;
-
 export default function LandingPage() {
   const [playing, setPlaying] = useState(false);
 
   return (
     <div className={styles.page}>
-      <div className={`${styles.orb} ${styles.orbA}`} aria-hidden="true" />
-      <div className={`${styles.orb} ${styles.orbB}`} aria-hidden="true" />
-      <div className={`${styles.orb} ${styles.orbC}`} aria-hidden="true" />
-      <div className={styles.starfield} aria-hidden="true">
-        {STARFIELD.map((star, index) => (
-          <span
-            key={`${star.x}-${star.y}-${index}`}
-            className={styles.star}
-            style={
-              {
-                left: `${star.x}%`,
-                top: `${star.y}%`,
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                background: star.color,
-                "--star-duration": `${star.duration}s`,
-                "--star-delay": `${star.delay}s`,
-                "--star-peak": String(star.peak),
-              } as CSSProperties
-            }
-          />
-        ))}
-      </div>
+      <AmbientOrbs />
       <div className={styles.shell}>
         <div className={styles.navWrap}>
           <header className={styles.nav}>
             <Link href="/" className={styles.logo} aria-label="UPSale home">
-              <img
-                src="/upsale-logo.png"
-                alt=""
-                className={styles.logoImg}
-              />
+              <BrandLogo variant="auto" size="md" />
             </Link>
             <nav className={styles.navActions} aria-label="Account">
+              <ThemeToggle />
               <Link
                 href="/login"
                 className={`${styles.btn} ${styles.btnGhost} ${styles.btnSmall}`}
@@ -964,14 +886,29 @@ export default function LandingPage() {
           </section>
         </main>
 
-        <footer className={`${styles.footer} ${styles.container}`}>
+        <section className={`${styles.ctaBand} ${styles.container}`}>
           <Reveal>
             <h2>Put a QR on the counter. Keep the customer.</h2>
             <Link href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>
               Sign up
             </Link>
-            <p className={styles.copy}>© {new Date().getFullYear()} UPSale. All rights reserved.</p>
           </Reveal>
+        </section>
+
+        <footer className={styles.siteFooter}>
+          <div className={`${styles.container} ${styles.footerInner}`}>
+            <div className={styles.footerBrand}>
+              <BrandLogo variant="auto" size="sm" />
+              <p>QR offers that turn walk-ins into WhatsApp customers.</p>
+            </div>
+            <nav className={styles.footerNav} aria-label="Footer">
+              <a href="#how">How it works</a>
+              <a href="#pricing">Pricing</a>
+              <Link href="/login">Log in</Link>
+              <Link href="/signup">Sign up</Link>
+            </nav>
+            <p className={styles.copy}>© {new Date().getFullYear()} UPSale. All rights reserved.</p>
+          </div>
         </footer>
       </div>
     </div>
