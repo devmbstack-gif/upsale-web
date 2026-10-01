@@ -31,7 +31,9 @@ export async function POST(request: Request) {
 
     await connectDB();
 
-    const admin = await UserModel.findOne({ email }).select("+passwordHash name role isActive");
+    const admin = await UserModel.findOne({ email }).select(
+      "+passwordHash email name role isActive",
+    );
 
     if (admin && admin.role === "business_owner") {
       return NextResponse.json(

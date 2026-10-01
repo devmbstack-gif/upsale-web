@@ -15,11 +15,6 @@ import PhonePreview, { QrMark } from "./PhonePreview";
 import Footer from "@/components/Footer";
 import styles from "./landing.module.css";
 
-type DealAction = "approve" | "regenerate" | "edit";
-type CustomerGroup = "New" | "Repeat" | "VIP" | "At Risk";
-type RegionId = "PK" | "IN" | "AE" | "SA" | "GB" | "US";
-type PlanId = "starter" | "growth" | "pro";
-
 type RevealProps = {
   children: ReactNode;
   className?: string;
@@ -33,6 +28,9 @@ type LeadFormState = {
   whatsapp: string;
   message: string;
 };
+
+type RegionId = "PK" | "IN" | "AE" | "SA" | "GB" | "US";
+type PlanId = "starter" | "growth" | "pro";
 
 type Region = {
   id: RegionId;
@@ -48,18 +46,6 @@ type Plan = {
   summary: string;
   features: string[];
   popular?: boolean;
-};
-
-type Deal = {
-  title: string;
-  body: string;
-  audience: CustomerGroup;
-};
-
-type Customer = {
-  name: string;
-  visits: number;
-  group: CustomerGroup;
 };
 
 const BUSINESSES = [
@@ -90,31 +76,43 @@ const FLOW = [
   },
 ] as const;
 
-const DEALS: Deal[] = [
+const DEALS = [
   {
-    title: "Slow-hour boost",
-    body: "20% off Tuesday to Thursday, 2–5pm, for guests who have been quiet for 21 days.",
-    audience: "At Risk",
+    title: "20% Off Slow-Hour Boost",
+    body: "Quiet afternoons get a 20% nudge for guests quiet 21+ days.",
+    audience: "At Risk Customers",
   },
   {
-    title: "Second-visit nudge",
+    title: "VIP Early Access",
+    body: "Seasonal menu 48 hours early for your highest spenders.",
+    audience: "VIPs",
+  },
+  {
+    title: "Second-Visit Nudge",
     body: "A free add-on for anyone who already came twice this month.",
-    audience: "Repeat",
+    audience: "Repeat Guests",
+  },
+] as const;
+
+const WORKFLOW_STEPS = [
+  {
+    step: "01",
+    title: "Capture Customer Data",
+    text: "Customers scan the QR code at the counter and share WhatsApp details to unlock instantly.",
   },
   {
-    title: "VIP early look",
-    body: "Seasonal menu access 48 hours early, reserved for your highest spenders.",
-    audience: "VIP",
+    step: "02",
+    title: "AI Deal Engine",
+    text: "AI analyzes visit patterns and drafts personalized, high-converting offers automatically.",
   },
-];
+  {
+    step: "03",
+    title: "Growth & ROI",
+    text: "Deals sent on WhatsApp bring customers back in quiet hours and lift revenue.",
+  },
+] as const;
 
-const CUSTOMERS: Customer[] = [
-  { name: "Ayesha K.", visits: 1, group: "New" },
-  { name: "Bilal R.", visits: 6, group: "Repeat" },
-  { name: "Noor S.", visits: 14, group: "VIP" },
-  { name: "Hamza A.", visits: 2, group: "At Risk" },
-  { name: "Meher Q.", visits: 4, group: "Repeat" },
-];
+const GROWTH_BARS = [28, 36, 42, 48, 55, 63, 72] as const;
 
 const SETUP = [
   {
@@ -272,193 +270,132 @@ function formatMoney(amount: number, region: Region) {
   }).format(amount);
 }
 
-function Bento() {
+function ProductWorkflow() {
+  const reduceMotion = useReducedMotion();
   const [dealIndex, setDealIndex] = useState(0);
-  const [action, setAction] = useState<DealAction | null>(null);
-  const [draft, setDraft] = useState(DEALS[0].body);
-  const [group, setGroup] = useState<CustomerGroup>("Repeat");
+  const [action, setAction] = useState<"approve" | "regenerate" | null>(null);
   const deal = DEALS[dealIndex];
-  const visibleCustomers = CUSTOMERS.filter((customer) => customer.group === group);
 
-  function runAction(next: DealAction) {
+  function runAction(next: "approve" | "regenerate") {
     setAction(next);
     if (next === "regenerate") {
-      const following = (dealIndex + 1) % DEALS.length;
-      setDealIndex(following);
-      setDraft(DEALS[following].body);
-    }
-    if (next === "edit" && action !== "edit") {
-      setDraft(deal.body);
+      setDealIndex((current) => (current + 1) % DEALS.length);
     }
   }
 
   return (
-    <div className={styles.bento}>
-      <Reveal className={styles.ai}>
-        <article className={styles.card}>
-          <p className={styles.eyebrow}>AI Deal Maker</p>
-          <h3>A next offer, drafted from who already visited</h3>
-          <p>
-            Pick a group, read the draft, then approve it, regenerate it, or
-            rewrite the line yourself.
-          </p>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${dealIndex}-${action === "edit" ? "edit" : "view"}`}
-              className={styles.dealPreview}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-            >
-              <strong>{deal.title}</strong>
-              {action === "edit" ? (
-                <textarea
-                  className={styles.editor}
-                  value={draft}
-                  aria-label="Edit deal copy"
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-              ) : (
-                <p>{draft}</p>
-              )}
-              <span className={styles.audience}>{deal.audience}</span>
-            </motion.div>
-          </AnimatePresence>
-          <div className={styles.tags}>
-            {(
-              [
-                ["approve", "Approve"],
-                ["regenerate", "Regenerate"],
-                ["edit", "Edit"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                className={`${styles.tag} ${action === id ? styles.tagOn : ""}`}
-                onClick={() => runAction(id)}
+    <div className={styles.workflow}>
+      <Reveal className={styles.workflowCardWrap} delay={0.05}>
+        <motion.article
+          className={styles.workflowCard}
+          whileHover={reduceMotion ? undefined : { y: -6 }}
+          transition={{ type: "spring", stiffness: 320, damping: 22 }}
+        >
+          <span className={styles.workflowStep}>{WORKFLOW_STEPS[0].step}</span>
+          <h3>{WORKFLOW_STEPS[0].title}</h3>
+          <p>{WORKFLOW_STEPS[0].text}</p>
+          <div className={styles.workflowVisual}>
+            <div className={styles.workflowQrStand}>
+              <div className={styles.workflowQrMark}>
+                <QrMark compact />
+                <span className={styles.workflowScan} aria-hidden="true" />
+              </div>
+              <span className={styles.workflowQrLabel}>Counter QR</span>
+            </div>
+          </div>
+        </motion.article>
+      </Reveal>
+
+      <div className={styles.workflowArrow} aria-hidden="true">
+        →
+      </div>
+
+      <Reveal className={styles.workflowCardWrap} delay={0.15}>
+        <motion.article
+          className={`${styles.workflowCard} ${styles.workflowCardAi}`}
+          whileHover={reduceMotion ? undefined : { y: -6 }}
+          transition={{ type: "spring", stiffness: 320, damping: 22 }}
+        >
+          <span className={styles.workflowStep}>{WORKFLOW_STEPS[1].step}</span>
+          <h3>{WORKFLOW_STEPS[1].title}</h3>
+          <p>{WORKFLOW_STEPS[1].text}</p>
+          <div className={styles.workflowVisual}>
+            <div className={styles.aiSegments}>
+              <span className={styles.segmentRisk}>At Risk Customers</span>
+              <span className={styles.segmentVip}>VIPs</span>
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={deal.title}
+                className={styles.aiPrompt}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28 }}
               >
-                {label}
-              </button>
-            ))}
-          </div>
-          <p className={styles.status}>
-            {action === "approve" && "Approved. Queued for WhatsApp."}
-            {action === "regenerate" && "New draft ready to review."}
-            {action === "edit" && "Editing the message before it sends."}
-            {action === null && "Waiting for a decision."}
-          </p>
-        </article>
-      </Reveal>
-
-      <Reveal className={styles.qrCard} delay={0.12}>
-        <article className={styles.card}>
-          <h3>QR discounts</h3>
-          <p>One code. One offer. Printed beside the till.</p>
-          <div className={styles.miniQr}>
-            <div className={styles.miniQrFrame}>
-              <QrMark compact />
-              <span className={styles.miniScan} aria-hidden="true" />
-            </div>
-            <div>
-              <strong>15% off first visit</strong>
-              <p>Scan opens the claim page in the browser.</p>
-            </div>
-          </div>
-        </article>
-      </Reveal>
-
-      <Reveal className={styles.dbCard} delay={0.2}>
-        <article className={styles.card}>
-          <h3>Customer database</h3>
-          <p>Filtered to {group}.</p>
-          <div className={styles.rows}>
-            <AnimatePresence mode="popLayout">
-              {visibleCustomers.map((customer) => (
-                <motion.div
-                  key={customer.name}
-                  className={styles.row}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <span>{customer.name}</span>
-                  <span>
-                    {customer.visits} {customer.visits === 1 ? "visit" : "visits"}
-                  </span>
-                </motion.div>
-              ))}
+                <strong>{deal.title}</strong>
+                <span>{deal.audience}</span>
+              </motion.div>
             </AnimatePresence>
-          </div>
-        </article>
-      </Reveal>
-
-      <Reveal className={styles.groupCard} delay={0.28}>
-        <article className={styles.card}>
-          <h3>Customer groups</h3>
-          <p>Message a slice of the list, not the whole room.</p>
-          <div className={styles.chips}>
-            {(["New", "Repeat", "VIP", "At Risk"] as const).map((item) => (
+            <div className={styles.aiActions}>
               <button
-                key={item}
                 type="button"
-                className={`${styles.chip} ${
-                  item === "New"
-                    ? styles.chipNew
-                    : item === "Repeat"
-                      ? styles.chipRepeat
-                      : item === "VIP"
-                        ? styles.chipVip
-                        : styles.chipRisk
-                } ${group === item ? styles.chipOn : ""}`}
-                aria-pressed={group === item}
-                onClick={() => setGroup(item)}
+                className={`${styles.aiPill} ${styles.aiPillPulse} ${
+                  action === "approve" ? styles.aiPillOn : ""
+                }`}
+                onClick={() => runAction("approve")}
               >
-                {item}
+                Approve
               </button>
-            ))}
+              <button
+                type="button"
+                className={`${styles.aiPill} ${action === "regenerate" ? styles.aiPillOn : ""}`}
+                onClick={() => runAction("regenerate")}
+              >
+                Regenerate
+              </button>
+            </div>
           </div>
-        </article>
+        </motion.article>
       </Reveal>
 
-      <Reveal className={styles.waFeature} delay={0.36}>
-        <article className={styles.card}>
-          <h3>WhatsApp campaigns</h3>
-          <p>The same thread the coupon already opened.</p>
-          <div className={styles.bubble}>
-            Brew & Co: Tuesday is quiet. 20% off from 2–5pm if you show this
-            chat. Reply STOP to opt out.
-          </div>
-          <div className={styles.typing} aria-hidden="true">
-            <span className={styles.typingDot} />
-            <span className={styles.typingDot} />
-            <span className={styles.typingDot} />
-          </div>
-        </article>
-      </Reveal>
+      <div className={styles.workflowArrow} aria-hidden="true">
+        →
+      </div>
 
-      <Reveal className={styles.couponCard} delay={0.44}>
-        <article className={styles.card}>
-          <h3>Unique coupons</h3>
-          <p>Each code dies after one redemption.</p>
-          <div className={styles.codes}>
-            <div className={styles.codeRow}>
-              <code>AYE-15-4K</code>
-              <span>Used</span>
+      <Reveal className={styles.workflowCardWrap} delay={0.25}>
+        <motion.article
+          className={`${styles.workflowCard} ${styles.workflowCardGrowth}`}
+          whileHover={reduceMotion ? undefined : { y: -6 }}
+          transition={{ type: "spring", stiffness: 320, damping: 22 }}
+        >
+          <span className={styles.workflowStep}>{WORKFLOW_STEPS[2].step}</span>
+          <h3>{WORKFLOW_STEPS[2].title}</h3>
+          <p>{WORKFLOW_STEPS[2].text}</p>
+          <div className={styles.workflowVisual}>
+            <div className={styles.growthMetric}>
+              <strong>+35%</strong>
+              <span>Return Visits</span>
             </div>
-            <div className={styles.codeRow}>
-              <code>BIL-10-2Q</code>
-              <span>Live</span>
-            </div>
-            <div className={styles.codeRow}>
-              <code>NOR-20-9M</code>
-              <span>Live</span>
+            <div className={styles.growthChart} aria-hidden="true">
+              {GROWTH_BARS.map((height, index) => (
+                <motion.span
+                  key={height}
+                  className={styles.growthBar}
+                  initial={{ scaleY: reduceMotion ? 1 : 0.2 }}
+                  whileInView={{ scaleY: 1 }}
+                  viewport={{ once: true, amount: 0.6 }}
+                  transition={{
+                    duration: 0.55,
+                    delay: index * 0.06,
+                    ease: revealEase,
+                  }}
+                  style={{ height: `${height}%` }}
+                />
+              ))}
             </div>
           </div>
-        </article>
+        </motion.article>
       </Reveal>
     </div>
   );
@@ -781,9 +718,12 @@ export default function LandingPage() {
           <section className={`${styles.section} ${styles.container}`} id="features">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>Product</p>
-              <h2>Everything between the scan and the next visit</h2>
+              <h2>How UPSale Drives Repeat Customers with AI</h2>
+              <p className={styles.lede}>
+                Turn walk-in visitors into loyal repeat customers in 3 simple steps.
+              </p>
             </Reveal>
-            <Bento />
+            <ProductWorkflow />
           </section>
 
           <section className={`${styles.section} ${styles.container}`} id="integrations">

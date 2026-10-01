@@ -15,12 +15,17 @@ import {
   confirmFields,
   confirmSchema,
   countryDefaults,
-  dialCodes,
   resolveBusinessCategory,
   signUpSchema,
   type SignUpValues,
 } from "@/lib/validations/auth";
-import { currencyOptions, formatCurrencyLabel, timezoneOptions } from "@/lib/data/countries";
+import {
+  currencyOptions,
+  findCountry,
+  formatCurrencyLabel,
+  getPhoneExample,
+  timezoneOptions,
+} from "@/lib/data/countries";
 import CaptchaWidget, { type CaptchaProof } from "./CaptchaWidget";
 import CountrySelect from "./CountrySelect";
 import OtpModal from "./OtpModal";
@@ -159,6 +164,7 @@ export default function SignUpMultiStepForm() {
     setValue("currency", defaults.currency, { shouldValidate: true, shouldTouch: true });
     setValue("timezone", defaults.timezone, { shouldValidate: true, shouldTouch: true });
     setValue("dialCode", defaults.dialCode, { shouldValidate: true, shouldTouch: true });
+    setValue("whatsappNumber", "", { shouldDirty: true });
   }
 
   function onLogo(event: ChangeEvent<HTMLInputElement>) {
@@ -491,22 +497,37 @@ export default function SignUpMultiStepForm() {
                   <div className={styles.field}>
                     WhatsApp Business number
                     <div className={styles.phoneRow}>
-                      <select aria-label="Country code" {...register("dialCode")}>
-                        {dialCodes.map((item) => (
-                          <option key={item.code} value={item.code}>
-                            {item.country} {item.code}
-                          </option>
-                        ))}
-                      </select>
+                      {values.country === "Other" ? (
+                        <select aria-label="Country code" {...register("dialCode")}>
+                          {["+1", "+44", "+91", "+92", "+971", "+966", "+61", "+49", "+33", "+81"].map(
+                            (code) => (
+                              <option key={code} value={code}>
+                                {code}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      ) : (
+                        <span className={styles.dialCodeBadge} aria-label="Country code">
+                          {values.dialCode || findCountry(values.country)?.dialCode || "+"}
+                        </span>
+                      )}
                       <input
                         type="tel"
                         inputMode="numeric"
                         autoComplete="tel-national"
-                        placeholder="3001234567"
+                        placeholder={getPhoneExample(values.country || "Pakistan")}
                         aria-label="WhatsApp number"
                         {...register("whatsappNumber")}
                       />
                     </div>
+                    <span className={styles.hint}>
+                      Format for {values.country || "your country"}:{" "}
+                      <strong>
+                        {values.dialCode || "+…"}{" "}
+                        {getPhoneExample(values.country || "Pakistan")}
+                      </strong>
+                    </span>
                     {errors.dialCode?.message ? <span className={styles.error}>{errors.dialCode.message}</span> : null}
                     {errors.whatsappNumber?.message ? (
                       <span className={styles.error}>{errors.whatsappNumber.message}</span>

@@ -2,35 +2,35 @@
 
 @custom-variant dark (&:where(.dark *));
 
-/* Dark (default) — brand */
+/* Dark (default) — brand, softer glow + clearer text */
 :root,
 html.dark {
-  --background: #0b0718;
-  --foreground: #f4f0ff;
-  --surface: #140c24;
-  --surface-elevated: #1a1030;
-  --border: rgba(196, 181, 253, 0.12);
-  --muted: #a89bc4;
+  --background: #12101c;
+  --foreground: #f7f4ff;
+  --surface: #1a1528;
+  --surface-elevated: #221b33;
+  --border: rgba(196, 181, 253, 0.18);
+  --muted: #c9bdd9;
   --brand-from: #7c3aed;
   --brand-to: #c4b5fd;
-  --glow: rgba(124, 58, 237, 0.35);
-  --hover-surface: rgba(255, 255, 255, 0.05);
-  --input-bg: rgba(11, 7, 24, 0.6);
-  --input-border: rgba(167, 139, 250, 0.22);
-  --nav-bg: rgb(10 8 20 / 70%);
-  --nav-border: rgb(255 255 255 / 10%);
-  --card-surface: #0e0a17;
-  --phone-frame: #100b18;
-  --atmosphere-top: rgba(124, 58, 237, 0.18);
-  --atmosphere-side: rgba(196, 181, 253, 0.08);
-  --atmosphere-fade: rgba(20, 12, 36, 0.6);
-  --grid-line: rgba(196, 181, 253, 0.04);
-  --skeleton-a: rgba(255, 255, 255, 0.04);
-  --skeleton-b: rgba(255, 255, 255, 0.08);
-  --code-bg: rgba(0, 0, 0, 0.2);
+  --glow: rgba(124, 58, 237, 0.16);
+  --hover-surface: rgba(255, 255, 255, 0.06);
+  --input-bg: rgba(18, 16, 28, 0.72);
+  --input-border: rgba(167, 139, 250, 0.28);
+  --nav-bg: rgb(18 16 28 / 78%);
+  --nav-border: rgb(255 255 255 / 12%);
+  --card-surface: #181322;
+  --phone-frame: #1c1629;
+  --atmosphere-top: rgba(124, 58, 237, 0.1);
+  --atmosphere-side: rgba(196, 181, 253, 0.05);
+  --atmosphere-fade: rgba(26, 21, 40, 0.72);
+  --grid-line: rgba(196, 181, 253, 0.05);
+  --skeleton-a: rgba(255, 255, 255, 0.05);
+  --skeleton-b: rgba(255, 255, 255, 0.09);
+  --code-bg: rgba(0, 0, 0, 0.22);
   --danger-text: #fecaca;
-  --overlay: rgba(0, 0, 0, 0.6);
-  --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.28);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.22);
   --logo-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #ddd6fe 100%);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -114,7 +114,7 @@ body {
     ),
     radial-gradient(
       ellipse 45% 40% at 0% 80%,
-      rgba(124, 58, 237, 0.12),
+      rgba(124, 58, 237, 0.07),
       transparent 55%
     );
 }
@@ -272,10 +272,10 @@ html.light .sidebar-link-active {
 @keyframes pulse-glow {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.28;
   }
   50% {
-    opacity: 0.85;
+    opacity: 0.48;
   }
 }
 
@@ -406,7 +406,7 @@ html.light .sidebar-link-active {
   left: -12%;
   width: min(560px, 75vw);
   height: min(560px, 75vw);
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.4), transparent 68%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.22), transparent 68%);
 }
 
 .ambient-soft-glow--b {
@@ -414,7 +414,7 @@ html.light .sidebar-link-active {
   bottom: -14%;
   width: min(480px, 65vw);
   height: min(480px, 65vw);
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.32), transparent 70%);
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.16), transparent 70%);
   animation-duration: 24s, 11s;
   animation-delay: -5s, -2s;
 }
@@ -424,10 +424,10 @@ html.light .sidebar-link-active {
   left: 40%;
   width: min(320px, 42vw);
   height: min(320px, 42vw);
-  background: radial-gradient(circle, rgba(196, 181, 253, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(196, 181, 253, 0.12), transparent 70%);
   animation-duration: 28s, 12s;
   animation-delay: -8s, -3s;
-  opacity: 0.35;
+  opacity: 0.28;
 }
 
 html.light .ambient-soft-glow--a {

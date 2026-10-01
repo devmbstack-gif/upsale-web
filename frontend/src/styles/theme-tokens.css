@@ -5,20 +5,20 @@
   --brand-from: #7c3aed;
   --brand-to: #c4b5fd;
   --logo-gradient: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #ddd6fe 100%);
-  --background: #0b0718;
-  --foreground: #f4f0ff;
-  --surface: #140c24;
-  --surface-elevated: #1a1030;
-  --muted: #a89bc4;
-  --border: rgba(196, 181, 253, 0.12);
-  --glow: rgba(124, 58, 237, 0.35);
-  --hover-surface: rgba(255, 255, 255, 0.05);
-  --input-bg: rgba(11, 7, 24, 0.6);
-  --input-border: rgba(167, 139, 250, 0.22);
-  --nav-bg: rgb(10 8 20 / 70%);
-  --nav-border: rgb(255 255 255 / 10%);
-  --card-surface: #0e0a17;
-  --overlay: rgba(0, 0, 0, 0.6);
+  --background: #12101c;
+  --foreground: #f7f4ff;
+  --surface: #1a1528;
+  --surface-elevated: #221b33;
+  --muted: #c9bdd9;
+  --border: rgba(196, 181, 253, 0.18);
+  --glow: rgba(124, 58, 237, 0.16);
+  --hover-surface: rgba(255, 255, 255, 0.06);
+  --input-bg: rgba(18, 16, 28, 0.72);
+  --input-border: rgba(167, 139, 250, 0.28);
+  --nav-bg: rgb(18 16 28 / 78%);
+  --nav-border: rgb(255 255 255 / 12%);
+  --card-surface: #181322;
+  --overlay: rgba(0, 0, 0, 0.55);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

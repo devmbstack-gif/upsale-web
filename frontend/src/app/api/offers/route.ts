@@ -29,6 +29,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "Title is required" }, { status: 400 });
   }
 
+  let expiresAt: Date | null = null;
+  if (body.expiresAt) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const parsed = new Date(`${body.expiresAt}T00:00:00`);
+    if (Number.isNaN(parsed.getTime()) || parsed < today) {
+      return NextResponse.json(
+        { ok: false, message: "Expiry date cannot be in the past." },
+        { status: 400 },
+      );
+    }
+    expiresAt = parsed;
+  }
+
   const shareSlug = `o-${randomBytes(4).toString("hex")}`;
   const offer = await OfferModel.create({
     businessId,
@@ -40,7 +54,7 @@ export async function POST(request: Request) {
     rules: body.rules ?? "",
     status: "active",
     shareSlug,
-    expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
+    expiresAt,
   });
 
   return NextResponse.json({ ok: true, offer }, { status: 201 });

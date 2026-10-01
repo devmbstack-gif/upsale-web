@@ -88,6 +88,7 @@ export async function POST(request: Request, ctx: Ctx) {
       coupon: {
         code: existingCoupon.code,
         offerTitle: formatOfferHeadline(toPublicOffer(offer, business)),
+        issuedAt: existingCoupon.issuedAt,
       },
       businessName: business.businessName,
     });
@@ -111,6 +112,7 @@ export async function POST(request: Request, ctx: Ctx) {
     coupon: {
       code: coupon.code,
       offerTitle: formatOfferHeadline(toPublicOffer(offer, business)),
+      issuedAt: coupon.issuedAt,
     },
     businessName: business.businessName,
   });

@@ -63,20 +63,18 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-6 md:px-5">
+        <div className="relative flex items-center justify-center border-b border-[var(--border)] px-4 py-6 md:px-5">
           <Link
             href="/admin/businesses"
             onClick={onClose}
-            className="min-w-0 flex-1 overflow-visible"
+            className="inline-flex justify-center overflow-visible"
+            aria-label="UPSale Super Admin home"
           >
             <BrandLogo variant="auto" size="lg" />
-            <p className="mt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
-              Super Admin
-            </p>
           </Link>
           <button
             type="button"
-            className="rounded-lg p-2 text-muted hover:bg-[var(--hover-surface)] lg:hidden"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-muted hover:bg-[var(--hover-surface)] lg:hidden md:right-4"
             onClick={onClose}
             aria-label="Close menu"
           >

@@ -26,6 +26,7 @@ export const timezones = timezoneOptions as [string, ...string[]];
 export const dialCodes = WORLD_COUNTRIES.filter((c) => c.name !== "Other").map((c) => ({
   country: c.name,
   code: c.dialCode,
+  phoneExample: c.phoneExample,
 }));
 
 export const countryDefaults: Record<string, { currency: string; timezone: string; dialCode: string }> =

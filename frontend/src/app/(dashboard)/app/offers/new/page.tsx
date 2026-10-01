@@ -5,19 +5,49 @@ import { Input, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+function todayISODate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isPastDate(value: string, today: string) {
+  return Boolean(value) && value < today;
+}
 
 export default function NewOfferPage() {
   const router = useRouter();
+  const minExpiry = useMemo(() => todayISODate(), []);
   const [type, setType] = useState<"percent" | "reward" | "fixed">("percent");
+  const [expires, setExpires] = useState("");
+  const [expiryError, setExpiryError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  function validateExpiry(value: string) {
+    if (isPastDate(value, minExpiry)) {
+      setExpiryError("Expiry date cannot be in the past.");
+      return false;
+    }
+    setExpiryError("");
+    return true;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
+
     const form = new FormData(e.currentTarget);
+    const expiresValue = String(form.get("expires") ?? "").trim();
+    if (!validateExpiry(expiresValue)) {
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const res = await fetch("/api/offers", {
         method: "POST",
@@ -29,7 +59,7 @@ export default function NewOfferPage() {
           type,
           value: Number(form.get("discount") ?? 0),
           rewardLabel: String(form.get("reward") ?? "") || null,
-          expiresAt: String(form.get("expires") ?? "") || null,
+          expiresAt: expiresValue || null,
         }),
       });
       const data = (await res.json()) as { ok: boolean; offer?: { _id: string }; message?: string };
@@ -49,7 +79,7 @@ export default function NewOfferPage() {
     <div className="mx-auto max-w-2xl">
       <Reveal>
         <div className="card-interactive p-6 md:p-8">
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
             <Input label="Offer title" name="title" placeholder="e.g. 10% off lunch" required />
             <TextArea
               label="Description"
@@ -90,10 +120,29 @@ export default function NewOfferPage() {
                 placeholder="Free dessert, VIP access…"
               />
             )}
-            <Input label="Expiry date" name="expires" type="date" />
+            <div className="space-y-1.5">
+              <Input
+                label="Expiry date"
+                name="expires"
+                type="date"
+                min={minExpiry}
+                value={expires}
+                aria-invalid={Boolean(expiryError)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setExpires(next);
+                  validateExpiry(next);
+                }}
+              />
+              {expiryError ? (
+                <p className="text-sm text-red-300" role="alert">
+                  {expiryError}
+                </p>
+              ) : null}
+            </div>
             {error ? <p className="text-sm text-red-300">{error}</p> : null}
             <div className="flex flex-wrap gap-3 pt-2">
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting || Boolean(expiryError)}>
                 {submitting ? "Publishing…" : "Publish offer"}
               </Button>
               <Link

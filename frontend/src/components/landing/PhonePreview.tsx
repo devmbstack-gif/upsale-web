@@ -7,11 +7,27 @@ import styles from "./landing.module.css";
 
 type PreviewStep = 0 | 1 | 2 | 3;
 
-const PREVIEW_LABELS = [
-  "QR scan",
-  "Discount form",
-  "Coupon code",
-  "WhatsApp approval",
+const PREVIEW_STEPS = [
+  {
+    label: "Scan QR Code at Counter",
+    kicker: "Step 1 of 4",
+    title: "Scan QR Code at Counter",
+  },
+  {
+    label: "Enter WhatsApp Number",
+    kicker: "Step 2 of 4",
+    title: "Enter WhatsApp Number",
+  },
+  {
+    label: "Receive Instant WhatsApp Discount Code",
+    kicker: "Step 3 of 4",
+    title: "Instant WhatsApp Discount",
+  },
+  {
+    label: "Approved & Verified on Counter",
+    kicker: "Step 4 of 4",
+    title: "Approved & Verified",
+  },
 ] as const;
 
 const QR_ROWS = [
@@ -47,6 +63,50 @@ export function QrMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
+const slideTransition = {
+  duration: 0.4,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+
+function StatusBar() {
+  return (
+    <div className={styles.statusBar} aria-hidden="true">
+      <span className={styles.statusTime}>9:41</span>
+      <div className={styles.statusIcons}>
+        <svg className={styles.statusSignal} viewBox="0 0 18 12" fill="currentColor">
+          <rect x="0" y="8" width="3" height="4" rx="0.6" opacity="0.35" />
+          <rect x="4.5" y="5.5" width="3" height="6.5" rx="0.6" opacity="0.55" />
+          <rect x="9" y="3" width="3" height="9" rx="0.6" opacity="0.75" />
+          <rect x="13.5" y="0.5" width="3" height="11.5" rx="0.6" />
+        </svg>
+        <svg className={styles.statusWifi} viewBox="0 0 16 12" fill="none">
+          <path
+            d="M8 10.6a1.15 1.15 0 1 0 0-2.3 1.15 1.15 0 0 0 0 2.3Z"
+            fill="currentColor"
+          />
+          <path
+            d="M3.2 6.2a7.2 7.2 0 0 1 9.6 0"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M1 3.4a10.4 10.4 0 0 1 14 0"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+        </svg>
+        <span className={styles.statusBattery}>
+          <span className={styles.statusBatteryLevel} />
+          <span className={styles.statusBatteryCap} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function PhonePreview({ compact = false }: { compact?: boolean }) {
   const reduceMotion = useReducedMotion();
   const [step, setStep] = useState<PreviewStep>(0);
@@ -55,107 +115,160 @@ export default function PhonePreview({ compact = false }: { compact?: boolean })
     if (reduceMotion) return;
     const id = window.setInterval(() => {
       setStep((current) => ((current + 1) % 4) as PreviewStep);
-    }, 3400);
+    }, 3800);
     return () => window.clearInterval(id);
   }, [reduceMotion, step]);
 
+  function goToStep(value: PreviewStep) {
+    setStep(value);
+  }
+
   return (
     <div className={`${styles.heroStage} ${compact ? styles.heroStageCompact : ""}`}>
-      <div className={`${styles.phone} ${compact ? styles.phoneCompact : ""}`}>
-        <div className={styles.notch} aria-hidden="true" />
-        <div className={styles.screen} aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              className={styles.pane}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -18 }}
-              transition={{ duration: 0.35 }}
-            >
-              {step === 0 && (
-                <>
-                  <p className={styles.paneKicker}>Step 1</p>
-                  <h3 className={styles.paneTitle}>Scan the counter code</h3>
-                  <div className={styles.qrWrap}>
-                    <QrPlaceholder
-                      compact
-                      size={compact ? 140 : 168}
-                      value="https://upsale.app/o/demo-offer"
-                      title=""
-                    />
-                    <span className={styles.scan} />
-                  </div>
-                </>
-              )}
-              {step === 1 && (
-                <>
-                  <p className={styles.paneKicker}>Step 2</p>
-                  <h3 className={styles.paneTitle}>Claim 15% off</h3>
-                  <div className={styles.fakeField}>
-                    <span>Name</span>
-                    <strong>Ayesha Khan</strong>
-                  </div>
-                  <div className={styles.fakeField}>
-                    <span>WhatsApp</span>
-                    <strong>+92 300 555 0142</strong>
-                  </div>
-                  <span className={styles.offerChip}>First visit · today only</span>
-                  <div className={styles.claim}>Get my code</div>
-                </>
-              )}
-              {step === 2 && (
-                <>
-                  <p className={styles.paneKicker}>Step 3</p>
-                  <h3 className={styles.paneTitle}>Your coupon is ready</h3>
-                  <div className={styles.coupon}>
-                    <span>Walk-in reward</span>
-                    <strong>15% off</strong>
-                    <code>AYE-15-4K</code>
-                    <span>Single use · show at the counter</span>
-                  </div>
-                </>
-              )}
-              {step === 3 && (
-                <>
-                  <p className={styles.paneKicker}>Step 4</p>
-                  <h3 className={styles.paneTitle}>Approved on WhatsApp</h3>
-                  <div className={styles.waCard}>
-                    <div className={styles.waTop}>
-                      <span className={styles.waAvatar}>B</span>
-                      <div>
-                        <strong>Brew & Co</strong>
-                        <span>now</span>
+      <div className={`${styles.phoneShell} ${compact ? styles.phoneShellCompact : ""}`}>
+        <span className={`${styles.sideBtn} ${styles.sideBtnSilent}`} aria-hidden="true" />
+        <span className={`${styles.sideBtn} ${styles.sideBtnVolUp}`} aria-hidden="true" />
+        <span className={`${styles.sideBtn} ${styles.sideBtnVolDown}`} aria-hidden="true" />
+        <span className={`${styles.sideBtn} ${styles.sideBtnPower}`} aria-hidden="true" />
+
+        <div className={`${styles.phone} ${compact ? styles.phoneCompact : ""}`}>
+          <div className={styles.phoneInner}>
+            <div className={styles.screen} aria-live="polite">
+              <StatusBar />
+
+              <div className={styles.dynamicIsland} aria-hidden="true">
+                <span className={styles.islandCamera} />
+                <span className={styles.islandSpeaker} />
+              </div>
+
+              <div className={styles.previewProgress} aria-hidden="true">
+                {PREVIEW_STEPS.map((item, index) => (
+                  <span
+                    key={item.label}
+                    className={`${styles.previewProgressSeg} ${
+                      index <= step ? styles.previewProgressSegOn : ""
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className={styles.screenContent}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={step}
+                    className={styles.pane}
+                    initial={
+                      reduceMotion ? false : { opacity: 0, y: 22, filter: "blur(4px)" }
+                    }
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={
+                      reduceMotion
+                        ? undefined
+                        : { opacity: 0, y: -18, filter: "blur(4px)" }
+                    }
+                    transition={slideTransition}
+                  >
+                    {step === 0 && (
+                      <div className={styles.paneScan}>
+                        <div className={styles.paneScanCopy}>
+                          <p className={styles.paneKicker}>{PREVIEW_STEPS[0].kicker}</p>
+                          <h3 className={styles.paneTitle}>{PREVIEW_STEPS[0].title}</h3>
+                          <p className={styles.paneHint}>
+                            Point the camera at the counter QR.
+                          </p>
+                        </div>
+                        <div className={styles.qrWrap}>
+                          <QrPlaceholder
+                            compact
+                            size={compact ? 124 : 152}
+                            value="https://upsale.app/o/demo-offer"
+                            title=""
+                          />
+                          <span className={styles.scan} />
+                        </div>
                       </div>
-                    </div>
-                    <p>
-                      Your 15% code AYE-15-4K is approved. Show this message at the counter. Reply YES
-                      for the next offer.
-                    </p>
-                    <span className={styles.approved}>Approved</span>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <div className={styles.dots}>
-          {PREVIEW_LABELS.map((label, index) => {
-            const value = index as PreviewStep;
-            return (
-              <button
-                key={label}
-                type="button"
-                className={`${styles.dot} ${step === value ? styles.dotOn : ""}`}
-                aria-label={`Show ${label}`}
-                aria-pressed={step === value}
-                onClick={() => setStep(value)}
-              />
-            );
-          })}
+                    )}
+
+                    {step === 1 && (
+                      <>
+                        <p className={styles.paneKicker}>{PREVIEW_STEPS[1].kicker}</p>
+                        <h3 className={styles.paneTitle}>{PREVIEW_STEPS[1].title}</h3>
+                        <p className={styles.paneHint}>
+                          Customer details for the discount claim.
+                        </p>
+                        <div className={styles.fakeField}>
+                          <span>Name</span>
+                          <strong>Ayesha Khan</strong>
+                        </div>
+                        <div className={styles.fakeField}>
+                          <span>WhatsApp</span>
+                          <strong>+92 300 555 0142</strong>
+                        </div>
+                        <span className={styles.offerChip}>First visit · today only</span>
+                        <div className={styles.claim}>Get my code</div>
+                      </>
+                    )}
+
+                    {step === 2 && (
+                      <div className={styles.paneNotify}>
+                        <p className={styles.paneKicker}>{PREVIEW_STEPS[2].kicker}</p>
+                        <h3 className={styles.paneTitle}>{PREVIEW_STEPS[2].title}</h3>
+                        <div className={styles.waPopup}>
+                          <p className={styles.waPopupEyebrow}>WhatsApp</p>
+                          <p>
+                            Your <strong>15% off</strong> code is ready:
+                          </p>
+                          <code className={styles.waCode}>AYE-15-4K</code>
+                          <p>Show this at the counter to redeem.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {step === 3 && (
+                      <div className={styles.paneNotify}>
+                        <p className={styles.paneKicker}>{PREVIEW_STEPS[3].kicker}</p>
+                        <h3 className={styles.paneTitle}>{PREVIEW_STEPS[3].title}</h3>
+                        <div className={`${styles.waPopup} ${styles.waPopupSuccess}`}>
+                          <p className={styles.waPopupEyebrow}>Coupon Approved!</p>
+                          <strong className={styles.waPopupHeadline}>
+                            You&apos;ve received your coupon!
+                          </strong>
+                          <code className={styles.waCode}>AYE-15-4K</code>
+                          <p>
+                            <strong>15% off</strong> verified — enjoy your visit!
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className={styles.homeIndicator} aria-hidden="true" />
+            </div>
+          </div>
         </div>
       </div>
-      <p className={styles.stepLabel}>Live preview · {PREVIEW_LABELS[step]}</p>
+
+      <div className={styles.dots} role="tablist" aria-label="Preview steps">
+        {PREVIEW_STEPS.map((item, index) => {
+          const value = index as PreviewStep;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              role="tab"
+              className={`${styles.dot} ${step === value ? styles.dotOn : ""}`}
+              aria-label={item.label}
+              aria-selected={step === value}
+              title={item.label}
+              onClick={() => goToStep(value)}
+            />
+          );
+        })}
+      </div>
+
+      <p className={styles.stepLabel}>Live preview · {PREVIEW_STEPS[step].label}</p>
     </div>
   );
 }

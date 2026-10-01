@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { WORLD_COUNTRIES } from "@/lib/data/countries";
+import { COUNTRIES_AZ } from "@/lib/data/countries";
 import styles from "./auth.module.css";
 
 type CountrySelectProps = {
@@ -19,8 +19,8 @@ export default function CountrySelect({ value, onChange, error, id }: CountrySel
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return WORLD_COUNTRIES;
-    return WORLD_COUNTRIES.filter(
+    if (!q) return COUNTRIES_AZ;
+    return COUNTRIES_AZ.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.currency.toLowerCase().includes(q) ||
