@@ -1,15 +1,15 @@
 "use client";
 
-import { PanelSkeleton } from "@/components/dashboard/PanelSkeleton";
 import { Reveal } from "@/components/ui/Reveal";
 import type { DashboardCustomer } from "@/components/customers/CustomersTable";
 import { countSegments } from "@/lib/segments";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import CustomersLoading from "./loading";
 
 const CustomersTable = dynamic(
   () => import("@/components/customers/CustomersTable"),
-  { loading: () => <PanelSkeleton rows={6} /> },
+  { loading: () => <CustomersLoading /> },
 );
 
 type ApiCustomer = {
@@ -76,11 +76,7 @@ export default function CustomersPage() {
   }, [customers]);
 
   if (!customers) {
-    return (
-      <div className="mx-auto max-w-6xl">
-        <PanelSkeleton rows={6} />
-      </div>
-    );
+    return <CustomersLoading />;
   }
 
   return (

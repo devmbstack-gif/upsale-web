@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { AI_DEAL_DRAFT_KEY, type AiDealDraft } from "@/lib/ai-deal-maker";
 import { segmentLabel, type SegmentId } from "@/lib/segments";
 import { useRouter } from "next/navigation";
@@ -198,16 +199,32 @@ export default function AiDealMakerPage() {
         <div className="card-interactive space-y-4 p-6 md:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-display text-lg font-semibold">Suggested deal</h3>
-            {loading ? <span className="text-sm text-muted">Generating…</span> : null}
+            {loading ? <Skeleton className="h-4 w-24" /> : null}
           </div>
 
-          {suggestion?.rationale ? (
+          {loading ? (
+            <div className="space-y-3" aria-busy="true">
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <div>
+                <Skeleton className="mb-1 h-3 w-12" />
+                <Skeleton className="h-5 w-48" />
+              </div>
+              <div>
+                <Skeleton className="mb-1 h-3 w-16" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div>
+                <Skeleton className="mb-1 h-3 w-28" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </div>
+          ) : suggestion?.rationale ? (
             <p className="rounded-xl border border-[var(--border)] bg-brand-from/10 px-3 py-2 text-sm text-muted">
               {suggestion.rationale}
             </p>
           ) : null}
 
-          {editing ? (
+          {!loading && editing ? (
             <div className="grid gap-4">
               <Input
                 label="Deal title"
@@ -228,7 +245,9 @@ export default function AiDealMakerPage() {
                 onChange={(e) => setMessage(e.target.value)}
               />
             </div>
-          ) : (
+          ) : null}
+
+          {!loading && !editing ? (
             <div className="space-y-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted">Title</p>
@@ -245,7 +264,7 @@ export default function AiDealMakerPage() {
                 </p>
               </div>
             </div>
-          )}
+          ) : null}
 
           <p className="text-xs text-muted">
             {suggestion?.maxDiscountHint ??

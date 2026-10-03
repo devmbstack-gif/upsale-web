@@ -5,28 +5,23 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import styles from "./landing.module.css";
 
-type PreviewStep = 0 | 1 | 2 | 3;
+type PreviewStep = 0 | 1 | 2;
 
 const PREVIEW_STEPS = [
   {
     label: "Scan QR Code at Counter",
-    kicker: "Step 1 of 4",
+    kicker: "Step 1 of 3",
     title: "Scan QR Code at Counter",
   },
   {
     label: "Enter WhatsApp Number",
-    kicker: "Step 2 of 4",
+    kicker: "Step 2 of 3",
     title: "Enter WhatsApp Number",
   },
   {
-    label: "Receive Instant WhatsApp Discount Code",
-    kicker: "Step 3 of 4",
-    title: "Instant WhatsApp Discount",
-  },
-  {
-    label: "Approved & Verified on Counter",
-    kicker: "Step 4 of 4",
-    title: "Approved & Verified",
+    label: "Coupon Ready",
+    kicker: "Step 3 of 3",
+    title: "Congratulations!",
   },
 ] as const;
 
@@ -114,7 +109,7 @@ export default function PhonePreview({ compact = false }: { compact?: boolean })
   useEffect(() => {
     if (reduceMotion) return;
     const id = window.setInterval(() => {
-      setStep((current) => ((current + 1) % 4) as PreviewStep);
+      setStep((current) => ((current + 1) % PREVIEW_STEPS.length) as PreviewStep);
     }, 3800);
     return () => window.clearInterval(id);
   }, [reduceMotion, step]);
@@ -213,30 +208,13 @@ export default function PhonePreview({ compact = false }: { compact?: boolean })
                       <div className={styles.paneNotify}>
                         <p className={styles.paneKicker}>{PREVIEW_STEPS[2].kicker}</p>
                         <h3 className={styles.paneTitle}>{PREVIEW_STEPS[2].title}</h3>
-                        <div className={styles.waPopup}>
-                          <p className={styles.waPopupEyebrow}>WhatsApp</p>
-                          <p>
-                            Your <strong>15% off</strong> code is ready:
-                          </p>
-                          <code className={styles.waCode}>AYE-15-4K</code>
-                          <p>Show this at the counter to redeem.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {step === 3 && (
-                      <div className={styles.paneNotify}>
-                        <p className={styles.paneKicker}>{PREVIEW_STEPS[3].kicker}</p>
-                        <h3 className={styles.paneTitle}>{PREVIEW_STEPS[3].title}</h3>
                         <div className={`${styles.waPopup} ${styles.waPopupSuccess}`}>
-                          <p className={styles.waPopupEyebrow}>Coupon Approved!</p>
+                          <p className={styles.waPopupEyebrow}>Coupon ready</p>
                           <strong className={styles.waPopupHeadline}>
-                            You&apos;ve received your coupon!
+                            Congratulations! Your coupon code is ready
                           </strong>
                           <code className={styles.waCode}>AYE-15-4K</code>
-                          <p>
-                            <strong>15% off</strong> verified — enjoy your visit!
-                          </p>
+                          <p>Show this at the counter to redeem.</p>
                         </div>
                       </div>
                     )}

@@ -1,12 +1,14 @@
 "use client";
 
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Reveal } from "@/components/ui/Reveal";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { TicketCheck } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import CouponsLoading from "./loading";
 
 type ApiCoupon = {
   _id: string;
@@ -59,7 +61,11 @@ export default function CouponsPage() {
     }
   }
 
-  const list = coupons ?? [];
+  if (coupons === null) {
+    return <CouponsLoading />;
+  }
+
+  const list = coupons;
   const redeemedCount = list.filter((c) => c.status === "redeemed" || c.redeemedAt).length;
 
   return (
@@ -89,13 +95,7 @@ export default function CouponsPage() {
               </tr>
             </THead>
             <TBody>
-              {coupons === null ? (
-                <TR>
-                  <TD colSpan={7} className="py-10 text-center text-muted">
-                    Loading…
-                  </TD>
-                </TR>
-              ) : list.length === 0 ? (
+              {list.length === 0 ? (
                 <TR>
                   <TD colSpan={7} className="py-10 text-center text-muted">
                     No coupons yet — customers receive codes when they claim offers.
@@ -141,14 +141,15 @@ export default function CouponsPage() {
                       <TD>{c.redeemedAt ? formatDateTime(c.redeemedAt) : "—"}</TD>
                       <TD className="text-right">
                         {!redeemed && !expired ? (
-                          <button
-                            type="button"
-                            className="text-sm font-medium text-brand-to hover:underline disabled:opacity-50"
-                            disabled={busyId === c._id}
-                            onClick={() => void redeem(c._id, c.code)}
-                          >
-                            {busyId === c._id ? "Saving…" : "Mark redeemed"}
-                          </button>
+                          <div className="flex justify-end">
+                            <IconButton
+                              icon={TicketCheck}
+                              label="Mark redeemed"
+                              tone="success"
+                              disabled={busyId === c._id}
+                              onClick={() => void redeem(c._id, c.code)}
+                            />
+                          </div>
                         ) : (
                           <span className="text-xs text-muted">—</span>
                         )}

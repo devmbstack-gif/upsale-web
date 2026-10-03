@@ -1,5 +1,6 @@
 "use client";
 
+import AdminAuditSkeleton from "@/components/admin/AdminAuditSkeleton";
 import { Button } from "@/components/ui/Button";
 import { useCallback, useEffect, useState } from "react";
 
@@ -38,6 +39,10 @@ export default function AdminAuditPage() {
     void load();
   }, [load]);
 
+  if (loading && logs.length === 0) {
+    return <AdminAuditSkeleton />;
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -47,7 +52,6 @@ export default function AdminAuditPage() {
         </Button>
       </div>
       {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted">Loading audit logs…</p> : null}
 
       <div className="space-y-2">
         {logs.map((log) => (
@@ -81,7 +85,7 @@ export default function AdminAuditPage() {
             ) : null}
           </div>
         ))}
-        {!loading && logs.length === 0 ? (
+        {logs.length === 0 ? (
           <p className="text-sm text-muted">No audit events yet.</p>
         ) : null}
       </div>

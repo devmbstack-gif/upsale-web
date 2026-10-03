@@ -2,13 +2,13 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { formatDate, formatDateTime } from "@/lib/utils";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { TicketCheck } from "lucide-react";
+import CustomerDetailLoading from "./loading";
 
 type Customer = {
   _id: string;
@@ -133,11 +133,7 @@ export default function CustomerDetailPage() {
   }
 
   if (customer === undefined) {
-    return (
-      <div className="mx-auto max-w-4xl py-12 text-center text-sm text-muted">
-        Loading customer…
-      </div>
-    );
+    return <CustomerDetailLoading />;
   }
 
   if (!customer) {
@@ -300,14 +296,15 @@ export default function CustomerDetailPage() {
                       <TD>{formatDate(c.issuedAt)}</TD>
                       <TD className="text-right">
                         {!redeemed ? (
-                          <button
-                            type="button"
-                            className="text-sm font-medium text-brand-to hover:underline disabled:opacity-50"
-                            disabled={redeeming === c._id}
-                            onClick={() => void redeemCoupon(c._id, c.code)}
-                          >
-                            {redeeming === c._id ? "…" : "Redeem"}
-                          </button>
+                          <div className="flex justify-end">
+                            <IconButton
+                              icon={TicketCheck}
+                              label="Redeem"
+                              tone="success"
+                              disabled={redeeming === c._id}
+                              onClick={() => void redeemCoupon(c._id, c.code)}
+                            />
+                          </div>
                         ) : (
                           "—"
                         )}

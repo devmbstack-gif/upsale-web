@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type TopbarProps = {
   title: string;
@@ -12,9 +12,54 @@ type TopbarProps = {
   onMenuClick: () => void;
 };
 
+type ProfileAvatar = {
+  logoUrl?: string;
+  businessName?: string;
+};
+
+function initialsFromName(name: string | undefined) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+}
+
 export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [avatar, setAvatar] = useState<ProfileAvatar>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/profile", { credentials: "same-origin" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { profile?: ProfileAvatar };
+        if (!cancelled) {
+          setAvatar({
+            logoUrl: data.profile?.logoUrl ?? "",
+            businessName: data.profile?.businessName ?? "",
+          });
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+
+    function onLogoEvent(event: Event) {
+      const detail = (event as CustomEvent<{ logoUrl?: string; businessName?: string }>).detail;
+      setAvatar((current) => ({
+        logoUrl: detail?.logoUrl ?? "",
+        businessName: detail?.businessName ?? current.businessName,
+      }));
+    }
+    window.addEventListener("upsale:logo", onLogoEvent);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("upsale:logo", onLogoEvent);
+    };
+  }, []);
 
   async function signOut() {
     setSigningOut(true);
@@ -29,6 +74,8 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
       setSigningOut(false);
     }
   }
+
+  const logoUrl = avatar.logoUrl?.trim() ?? "";
 
   return (
     <header className="z-30 flex shrink-0 items-center justify-between gap-4 border-b border-[var(--border)] bg-background/80 px-4 py-4 backdrop-blur-md md:px-8">
@@ -66,10 +113,15 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
         </Button>
         <Link
           href="/app/profile"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-surface-elevated text-sm font-medium text-brand-to transition hover:border-[rgba(196,181,253,0.35)]"
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[var(--border)] bg-surface-elevated text-sm font-medium text-brand-to transition hover:border-[rgba(196,181,253,0.35)]"
           aria-label="Profile"
         >
-          LR
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initialsFromName(avatar.businessName)
+          )}
         </Link>
       </div>
     </header>

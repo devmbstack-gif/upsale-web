@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import PlatformLoading from "./loading";
 import { useEffect, useState } from "react";
 
 type Settings = {
@@ -71,7 +72,7 @@ export default function AdminPlatformPage() {
   }
 
   if (!settings && !error) {
-    return <p className="text-sm text-muted">Loading platform settings…</p>;
+    return <PlatformLoading />;
   }
 
   return (

@@ -2,9 +2,11 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
+import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Customer = {
@@ -18,13 +20,18 @@ type Customer = {
 
 export default function RecentCustomersPanel() {
   const [recent, setRecent] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void (async () => {
-      const res = await fetch("/api/customers", { credentials: "same-origin" });
-      if (!res.ok) return;
-      const data = (await res.json()) as { customers: Customer[] };
-      setRecent((data.customers ?? []).slice(0, 5));
+      try {
+        const res = await fetch("/api/customers", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { customers: Customer[] };
+        setRecent((data.customers ?? []).slice(0, 5));
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -51,7 +58,28 @@ export default function RecentCustomersPanel() {
             </tr>
           </THead>
           <TBody>
-            {recent.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <TR key={i}>
+                  <TD>
+                    <Skeleton className="mb-1 h-4 w-28" />
+                    <Skeleton className="h-3 w-24" />
+                  </TD>
+                  <TD>
+                    <Skeleton className="h-4 w-20" />
+                  </TD>
+                  <TD>
+                    <Skeleton className="h-4 w-8" />
+                  </TD>
+                  <TD>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TD>
+                  <TD className="text-right">
+                    <Skeleton className="ml-auto h-4 w-12" />
+                  </TD>
+                </TR>
+              ))
+            ) : recent.length === 0 ? (
               <TR>
                 <TD colSpan={5}>
                   <p className="py-6 text-center text-sm text-muted">
@@ -78,12 +106,14 @@ export default function RecentCustomersPanel() {
                     </div>
                   </TD>
                   <TD className="text-right">
-                    <Link
-                      href={`/app/customers/${c._id}`}
-                      className="text-sm font-medium text-brand-to hover:underline"
-                    >
-                      Open
-                    </Link>
+                    <div className="flex justify-end">
+                      <IconButton
+                        icon={Eye}
+                        label="Open"
+                        tone="primary"
+                        href={`/app/customers/${c._id}`}
+                      />
+                    </div>
                   </TD>
                 </TR>
               ))

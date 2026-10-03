@@ -1,7 +1,10 @@
 "use client";
 
+import AdminListCardsSkeleton from "@/components/admin/AdminListCardsSkeleton";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Input, TextArea } from "@/components/ui/Input";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 type Pkg = {
@@ -148,16 +151,23 @@ export default function AdminPackagesPage() {
     await load();
   }
 
+  if (loading && packages.length === 0) {
+    return <AdminListCardsSkeleton />;
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">All packages</h2>
-          <Button type="button" variant="secondary" onClick={() => startEdit(null)}>
-            New package
-          </Button>
+          <IconButton
+            icon={Plus}
+            label="New package"
+            tone="neutral"
+            size="md"
+            onClick={() => startEdit(null)}
+          />
         </div>
-        {loading ? <p className="text-sm text-muted">Loading…</p> : null}
         {packages.map((pkg) => (
           <div key={pkg.id} className="card-interactive p-4">
             <div className="flex items-start justify-between gap-3">
@@ -192,23 +202,19 @@ export default function AdminPackagesPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="!px-2.5 !py-1.5 text-xs"
+              <div className="flex flex-col gap-1.5">
+                <IconButton
+                  icon={Pencil}
+                  label="Edit"
+                  tone="neutral"
                   onClick={() => startEdit(pkg)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  type="button"
-                  variant="danger"
-                  className="!px-2.5 !py-1.5 text-xs"
+                />
+                <IconButton
+                  icon={Trash2}
+                  label="Delete"
+                  tone="danger"
                   onClick={() => void remove(pkg.id)}
-                >
-                  Delete
-                </Button>
+                />
               </div>
             </div>
           </div>

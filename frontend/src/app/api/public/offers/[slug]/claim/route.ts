@@ -54,7 +54,6 @@ export async function POST(request: Request, ctx: Ctx) {
   const businessId = offer.businessId;
   const phone = parsed.data.phone.replace(/\s+/g, "");
   const email = parsed.data.email?.trim() || null;
-
   let customer = await CustomerModel.findOne({ businessId, phone });
   if (!customer) {
     customer = await CustomerModel.create({

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input, TextArea } from "@/components/ui/Input";
+import TrialLoading from "./loading";
 import { useEffect, useState } from "react";
 
 type Settings = {
@@ -67,7 +68,10 @@ export default function AdminTrialPage() {
   }
 
   if (!settings) {
-    return <p className="text-sm text-muted">{error || "Loading trial settings…"}</p>;
+    if (error) {
+      return <p className="text-sm text-[var(--danger-text)]">{error}</p>;
+    }
+    return <TrialLoading />;
   }
 
   return (

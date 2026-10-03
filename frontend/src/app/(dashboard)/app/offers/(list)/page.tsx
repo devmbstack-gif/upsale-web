@@ -2,12 +2,14 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Reveal } from "@/components/ui/Reveal";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
+import { Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import OffersLoading from "./loading";
 
 type Offer = {
   _id: string;
@@ -21,12 +23,15 @@ type Offer = {
 
 export default function OffersPage() {
   const router = useRouter();
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState<Offer[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadOffers() {
     const res = await fetch("/api/offers", { credentials: "same-origin" });
-    if (!res.ok) return;
+    if (!res.ok) {
+      setOffers([]);
+      return;
+    }
     const data = (await res.json()) as { offers: Offer[] };
     setOffers(data.offers ?? []);
   }
@@ -50,6 +55,10 @@ export default function OffersPage() {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  if (offers === null) {
+    return <OffersLoading />;
   }
 
   return (
@@ -100,21 +109,20 @@ export default function OffersPage() {
                       {offer.expiresAt ? formatDate(offer.expiresAt) : "—"}
                     </TD>
                     <TD className="text-right">
-                      <div className="flex flex-wrap items-center justify-end gap-3">
-                        <Link
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <IconButton
+                          icon={Eye}
+                          label="Open"
+                          tone="primary"
                           href={`/app/offers/${offer._id}`}
-                          className="text-sm font-medium text-brand-to hover:underline"
-                        >
-                          Open
-                        </Link>
-                        <button
-                          type="button"
-                          className="text-sm font-medium text-red-300 hover:text-red-200 disabled:opacity-50"
+                        />
+                        <IconButton
+                          icon={Trash2}
+                          label="Delete"
+                          tone="danger"
                           disabled={deletingId === offer._id}
                           onClick={() => void deleteOffer(offer)}
-                        >
-                          {deletingId === offer._id ? "Deleting…" : "Delete"}
-                        </button>
+                        />
                       </div>
                     </TD>
                   </TR>

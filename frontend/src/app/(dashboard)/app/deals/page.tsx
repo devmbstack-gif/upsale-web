@@ -10,6 +10,7 @@ import { segmentLabel, type SegmentId } from "@/lib/segments";
 import { formatDateTime } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import DealsLoading from "./loading";
 
 type Deal = {
   _id: string;
@@ -337,13 +338,7 @@ function DealsPageInner() {
 
 export default function DealsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-6xl py-12 text-center text-sm text-muted">
-          Loading deals…
-        </div>
-      }
-    >
+    <Suspense fallback={<DealsLoading />}>
       <DealsPageInner />
     </Suspense>
   );

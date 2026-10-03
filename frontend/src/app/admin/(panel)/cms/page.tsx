@@ -1,5 +1,6 @@
 "use client";
 
+import AdminListCardsSkeleton from "@/components/admin/AdminListCardsSkeleton";
 import { Button } from "@/components/ui/Button";
 import { Input, TextArea } from "@/components/ui/Input";
 import { useCallback, useEffect, useState } from "react";
@@ -151,6 +152,10 @@ export default function AdminCmsPage() {
     if (data.section?.id) setSelectedId(data.section.id);
   }
 
+  if (loading && sections.length === 0) {
+    return <AdminListCardsSkeleton cards={4} />;
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
       <div className="space-y-3">
@@ -165,7 +170,6 @@ export default function AdminCmsPage() {
             Add section
           </Button>
         </div>
-        {loading ? <p className="text-sm text-muted">Loading…</p> : null}
         {sections.map((s) => (
           <button
             key={s.id}

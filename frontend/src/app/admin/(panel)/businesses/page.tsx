@@ -1,7 +1,11 @@
 "use client";
 
+import AdminHealthMetrics from "@/components/admin/AdminHealthMetrics";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { BadgeCheck, UserCheck, UserX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 type Business = {
@@ -16,6 +20,48 @@ type Business = {
   isSuspended: boolean;
   createdAt?: string;
 };
+
+function TableSkeleton() {
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md">
+      <table className="min-w-full text-left text-sm">
+        <thead className="border-b border-[var(--border)] text-muted">
+          <tr>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <th key={i} className="px-4 py-3 font-medium">
+                <Skeleton className="h-3 w-16" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <tr key={i} className="border-b border-[var(--border)]/70">
+              <td className="px-4 py-3">
+                <Skeleton className="mb-1 h-4 w-32" />
+                <Skeleton className="mb-1 h-3 w-40" />
+                <Skeleton className="h-3 w-36" />
+              </td>
+              <td className="px-4 py-3">
+                <Skeleton className="h-8 w-28 rounded-xl" />
+              </td>
+              <td className="px-4 py-3">
+                <Skeleton className="mb-1 h-3 w-16" />
+                <Skeleton className="h-3 w-12" />
+              </td>
+              <td className="px-4 py-3">
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function AdminBusinessesPage() {
   const [q, setQ] = useState("");
@@ -66,6 +112,8 @@ export default function AdminBusinessesPage() {
 
   return (
     <div className="space-y-6">
+      <AdminHealthMetrics />
+
       <div className="card-interactive flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
           <Input
@@ -84,88 +132,87 @@ export default function AdminBusinessesPage() {
       </div>
 
       {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted">Loading businesses…</p> : null}
 
-      <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-[var(--border)] text-muted">
-            <tr>
-              <th className="px-4 py-3 font-medium">Business</th>
-              <th className="px-4 py-3 font-medium">Plan</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((b) => (
-              <tr key={b.id} className="border-b border-[var(--border)]/70 align-top">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-foreground">{b.businessName}</p>
-                  <p className="text-xs text-muted">{b.email}</p>
-                  <p className="text-xs text-muted">
-                    {b.category} · {b.city}, {b.country}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    className="input-field max-w-[10rem] py-1.5 text-xs"
-                    value={b.plan}
-                    disabled={busyId === b.id}
-                    onChange={(e) => void patch(b.id, { plan: e.target.value })}
-                  >
-                    <option value="Free Trial">Free Trial</option>
-                    <option value="Starter">Starter</option>
-                    <option value="Growth">Growth</option>
-                    <option value="Pro">Pro</option>
-                    <option value="Enterprise">Enterprise</option>
-                  </select>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-col gap-1 text-xs">
-                    <span className={b.isVerified ? "text-emerald-400" : "text-amber-400"}>
-                      {b.isVerified ? "Verified" : "Unverified"}
-                    </span>
-                    <span className={b.isSuspended ? "text-[var(--danger-text)]" : "text-muted"}>
-                      {b.isSuspended ? "Suspended" : "Active"}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    {!b.isVerified ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="!px-2.5 !py-1.5 text-xs"
-                        disabled={busyId === b.id}
-                        onClick={() => void patch(b.id, { isVerified: true })}
-                      >
-                        Verify
-                      </Button>
-                    ) : null}
-                    <Button
-                      type="button"
-                      variant={b.isSuspended ? "primary" : "danger"}
-                      className="!px-2.5 !py-1.5 text-xs"
-                      disabled={busyId === b.id}
-                      onClick={() => void patch(b.id, { isSuspended: !b.isSuspended })}
-                    >
-                      {b.isSuspended ? "Unsuspend" : "Suspend"}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!loading && items.length === 0 ? (
+      {loading && items.length === 0 ? (
+        <TableSkeleton />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-[var(--border)] text-muted">
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-muted">
-                  No businesses found.
-                </td>
+                <th className="px-4 py-3 font-medium">Business</th>
+                <th className="px-4 py-3 font-medium">Plan</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {items.map((b) => (
+                <tr key={b.id} className="border-b border-[var(--border)]/70 align-top">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-foreground">{b.businessName}</p>
+                    <p className="text-xs text-muted">{b.email}</p>
+                    <p className="text-xs text-muted">
+                      {b.category} · {b.city}, {b.country}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      className="input-field max-w-[10rem] py-1.5 text-xs"
+                      value={b.plan}
+                      disabled={busyId === b.id}
+                      onChange={(e) => void patch(b.id, { plan: e.target.value })}
+                    >
+                      <option value="Free Trial">Free Trial</option>
+                      <option value="Starter">Starter</option>
+                      <option value="Growth">Growth</option>
+                      <option value="Pro">Pro</option>
+                      <option value="Enterprise">Enterprise</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1 text-xs">
+                      <span className={b.isVerified ? "text-emerald-400" : "text-amber-400"}>
+                        {b.isVerified ? "Verified" : "Unverified"}
+                      </span>
+                      <span className={b.isSuspended ? "text-[var(--danger-text)]" : "text-muted"}>
+                        {b.isSuspended ? "Suspended" : "Active"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {!b.isVerified ? (
+                        <IconButton
+                          icon={BadgeCheck}
+                          label="Verify Business"
+                          tone="success"
+                          disabled={busyId === b.id}
+                          onClick={() => void patch(b.id, { isVerified: true })}
+                        />
+                      ) : null}
+                      <IconButton
+                        icon={b.isSuspended ? UserCheck : UserX}
+                        label={b.isSuspended ? "Unsuspend Business" : "Suspend Business"}
+                        tone={b.isSuspended ? "primary" : "danger"}
+                        disabled={busyId === b.id}
+                        onClick={() => void patch(b.id, { isSuspended: !b.isSuspended })}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted">
+                    No businesses found.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

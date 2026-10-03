@@ -5,6 +5,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { StatCard } from "@/components/ui/StatCard";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import DashboardHomeSkeleton from "@/components/dashboard/DashboardHomeSkeleton";
 
 const RecentCustomersPanel = dynamic(
   () => import("@/components/dashboard/RecentCustomersPanel"),
@@ -25,7 +26,7 @@ type Stats = {
 
 export default function OverviewPage() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [businessName, setBusinessName] = useState("Your business");
+  const [businessName, setBusinessName] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -48,17 +49,16 @@ export default function OverviewPage() {
         const data = (await profileRes.json()) as {
           profile?: { businessName?: string };
         };
-        if (data.profile?.businessName) setBusinessName(data.profile.businessName);
+        setBusinessName(data.profile?.businessName ?? "Your business");
+      } else {
+        setBusinessName("Your business");
       }
     })();
   }, []);
 
-  const s = stats ?? {
-    totalCustomers: 0,
-    activeOffers: 0,
-    couponsRedeemed: 0,
-    totalScans: 0,
-  };
+  if (!stats || businessName === null) {
+    return <DashboardHomeSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-10">
@@ -75,7 +75,7 @@ export default function OverviewPage() {
         <Reveal delay={0} className="h-full [&>*]:h-full">
           <StatCard
             label="Customers"
-            value={s.totalCustomers}
+            value={stats.totalCustomers}
             hint="Unique profiles in UPSale"
             icon={<span aria-hidden>◉</span>}
           />
@@ -83,7 +83,7 @@ export default function OverviewPage() {
         <Reveal delay={1} className="h-full [&>*]:h-full">
           <StatCard
             label="Active offers"
-            value={s.activeOffers}
+            value={stats.activeOffers}
             hint="Live QR campaigns"
             icon={<span aria-hidden>◎</span>}
           />
@@ -91,7 +91,7 @@ export default function OverviewPage() {
         <Reveal delay={2} className="h-full [&>*]:h-full">
           <StatCard
             label="Coupons redeemed"
-            value={s.couponsRedeemed}
+            value={stats.couponsRedeemed}
             hint="All time"
             icon={<span aria-hidden>▣</span>}
           />
@@ -99,7 +99,7 @@ export default function OverviewPage() {
         <Reveal delay={3} className="h-full [&>*]:h-full">
           <StatCard
             label="Scans"
-            value={s.totalScans.toLocaleString()}
+            value={stats.totalScans.toLocaleString()}
             hint="Across all offers"
             icon={<span aria-hidden>◫</span>}
           />

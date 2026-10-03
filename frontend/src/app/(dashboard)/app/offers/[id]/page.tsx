@@ -3,12 +3,15 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
+import { IconButton } from "@/components/ui/IconButton";
 import { QrPlaceholder } from "@/components/ui/QrPlaceholder";
 import { Reveal } from "@/components/ui/Reveal";
 import { formatDate } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import OfferDetailLoading from "./loading";
 
 type Offer = {
   _id: string;
@@ -61,11 +64,7 @@ export default function OfferDetailPage() {
   }, [slug]);
 
   if (offer === undefined) {
-    return (
-      <div className="mx-auto max-w-4xl py-12 text-center text-sm text-muted">
-        Loading offer…
-      </div>
-    );
+    return <OfferDetailLoading />;
   }
 
   if (!offer) {
@@ -126,9 +125,14 @@ export default function OfferDetailPage() {
           <Button href="/app/offers" variant="secondary">
             Back to list
           </Button>
-          <Button type="button" variant="danger" disabled={deleting} onClick={() => void deleteOffer()}>
-            {deleting ? "Deleting…" : "Delete offer"}
-          </Button>
+          <IconButton
+            icon={Trash2}
+            label="Delete offer"
+            tone="danger"
+            size="md"
+            disabled={deleting}
+            onClick={() => void deleteOffer()}
+          />
         </div>
       </Reveal>
       {deleteError ? <p className="text-sm text-red-300">{deleteError}</p> : null}

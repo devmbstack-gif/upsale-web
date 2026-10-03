@@ -2,11 +2,12 @@
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { TBody, TD, THead, TH, TR, Table, TableShell } from "@/components/ui/Table";
 import { classifyCustomer, segmentLabel, type SegmentId } from "@/lib/segments";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
+import { Eye } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export type DashboardCustomer = {
@@ -185,12 +186,14 @@ export default function CustomersTable({ customers, segmentCounts }: CustomersTa
                     </div>
                   </TD>
                   <TD className="text-right">
-                    <Link
-                      href={`/app/customers/${c.id}`}
-                      className="text-sm font-medium text-brand-to hover:underline"
-                    >
-                      Details
-                    </Link>
+                    <div className="flex justify-end">
+                      <IconButton
+                        icon={Eye}
+                        label="Details"
+                        tone="primary"
+                        href={`/app/customers/${c.id}`}
+                      />
+                    </div>
                   </TD>
                 </TR>
               );

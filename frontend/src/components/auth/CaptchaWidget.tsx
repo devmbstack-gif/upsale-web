@@ -73,7 +73,13 @@ export default function CaptchaWidget({ solved, onSolvedChange }: CaptchaWidgetP
     <div className={styles.captcha}>
       <span>Confirm you are a person</span>
       <div className={styles.captchaRow}>
-        <div className={styles.puzzle}>{challenge?.prompt ?? (loadError || "Loading question...")}</div>
+        <div className={styles.puzzle}>
+          {challenge?.prompt ??
+            loadError ??
+            (
+              <span className="skeleton inline-block h-4 w-40 align-middle" aria-hidden />
+            )}
+        </div>
         <button
           type="button"
           className={styles.ghost}

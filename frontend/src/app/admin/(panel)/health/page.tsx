@@ -1,6 +1,8 @@
 "use client";
 
+import AdminHealthSkeleton from "@/components/admin/AdminHealthSkeleton";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useEffect, useState } from "react";
 
 type HealthPayload = {
@@ -16,8 +18,9 @@ type HealthPayload = {
 
 export default function AdminHealthPage() {
   const [data, setData] = useState<HealthPayload | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [initial, setInitial] = useState(true);
 
   async function ping() {
     setLoading(true);
@@ -36,12 +39,17 @@ export default function AdminHealthPage() {
       setData(null);
     } finally {
       setLoading(false);
+      setInitial(false);
     }
   }
 
   useEffect(() => {
     void ping();
   }, []);
+
+  if (initial && loading) {
+    return <AdminHealthSkeleton />;
+  }
 
   return (
     <div className="card-interactive mx-auto max-w-2xl space-y-5 p-6 md:p-8">
@@ -53,12 +61,27 @@ export default function AdminHealthPage() {
       </div>
 
       <Button type="button" variant="primary" disabled={loading} onClick={() => void ping()}>
-        {loading ? "Checking…" : "Run health check"}
+        Run health check
       </Button>
 
       {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
 
-      {data?.health ? (
+      {loading ? (
+        <div className="grid gap-3 sm:grid-cols-2" aria-busy="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-[var(--border)] bg-surface-elevated/60 p-4"
+            >
+              <Skeleton className="mb-2 h-3 w-20" />
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="mt-2 h-3 w-16" />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!loading && data?.health ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-[var(--border)] bg-surface-elevated/60 p-4">
             <p className="text-xs uppercase tracking-wide text-muted">MongoDB</p>

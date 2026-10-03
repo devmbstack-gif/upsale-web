@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input, PasswordField, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import ProfileLoading from "./loading";
 
 type Profile = {
   businessName?: string;
@@ -18,10 +19,31 @@ type Profile = {
   email?: string;
   plan?: string;
   description?: string;
+  logoUrl?: string;
 };
 
+function broadcastLogo(logoUrl: string, businessName?: string) {
+  window.dispatchEvent(
+    new CustomEvent("upsale:logo", { detail: { logoUrl, businessName } }),
+  );
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ProfilePage() {
+  const fileRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoMessage, setLogoMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -51,6 +73,7 @@ export default function ProfilePage() {
       const data = (await res.json()) as { profile: Profile };
       const p = data.profile ?? {};
       setProfile(p);
+      setLogoUrl(p.logoUrl ?? "");
       setForm({
         businessName: p.businessName ?? "",
         category: p.category ?? "",
@@ -64,6 +87,83 @@ export default function ProfilePage() {
       });
     })();
   }, []);
+
+  async function onLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setLogoError(null);
+    setLogoMessage(null);
+
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setLogoError("Only PNG, JPG, or WebP images are allowed.");
+      return;
+    }
+    if (file.size > 1_500_000) {
+      setLogoError("Logo must be under 1.5 MB.");
+      return;
+    }
+
+    setLogoBusy(true);
+    try {
+      const logoPreview = await readFileAsDataUrl(file);
+      const res = await fetch("/api/profile/logo", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoPreview }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        logoUrl?: string;
+        message?: string;
+        profile?: Profile;
+      };
+      if (!res.ok || !data.ok) {
+        setLogoError(data.message ?? "Could not update logo.");
+        return;
+      }
+      const nextUrl = data.logoUrl ?? "";
+      setLogoUrl(nextUrl);
+      if (data.profile) setProfile(data.profile);
+      broadcastLogo(nextUrl, form.businessName || profile?.businessName);
+      setLogoMessage("Logo updated.");
+    } catch {
+      setLogoError("Could not update logo.");
+    } finally {
+      setLogoBusy(false);
+    }
+  }
+
+  async function onRemoveLogo() {
+    setLogoBusy(true);
+    setLogoError(null);
+    setLogoMessage(null);
+    try {
+      const res = await fetch("/api/profile/logo", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        message?: string;
+        profile?: Profile;
+      };
+      if (!res.ok || !data.ok) {
+        setLogoError(data.message ?? "Could not remove logo.");
+        return;
+      }
+      setLogoUrl("");
+      if (data.profile) setProfile(data.profile);
+      broadcastLogo("", form.businessName || profile?.businessName);
+      setLogoMessage("Logo removed.");
+    } catch {
+      setLogoError("Could not remove logo.");
+    } finally {
+      setLogoBusy(false);
+    }
+  }
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
@@ -91,6 +191,7 @@ export default function ProfilePage() {
       }
       const data = (await res.json()) as { profile: Profile };
       setProfile(data.profile);
+      broadcastLogo(logoUrl, data.profile.businessName ?? form.businessName);
       setMessage("Saved.");
     } finally {
       setSaving(false);
@@ -122,11 +223,7 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    return (
-      <div className="mx-auto max-w-3xl py-12 text-center text-sm text-muted">
-        Loading profile…
-      </div>
-    );
+    return <ProfileLoading />;
   }
 
   return (
@@ -137,6 +234,51 @@ export default function ProfilePage() {
             <h2 className="font-display text-lg font-semibold">Business details</h2>
             <p className="text-sm text-muted">Shown on offers and customer messages</p>
           </div>
+
+          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/50 p-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-[var(--border)] bg-surface text-sm font-semibold text-brand-to">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Business logo" className="h-full w-full object-cover" />
+              ) : (
+                "Logo"
+              )}
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-medium text-foreground">Business logo</p>
+              <p className="text-xs text-muted">PNG, JPG, or WebP · under 1.5 MB</p>
+              {logoError ? <p className="text-sm text-red-400">{logoError}</p> : null}
+              {logoMessage ? <p className="text-sm text-muted">{logoMessage}</p> : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={onLogoChange}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={logoBusy}
+                onClick={() => fileRef.current?.click()}
+              >
+                {logoBusy ? "Updating…" : logoUrl ? "Change logo" : "Upload logo"}
+              </Button>
+              {logoUrl ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={logoBusy}
+                  onClick={() => void onRemoveLogo()}
+                >
+                  Remove
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
           <form className="grid gap-4 md:grid-cols-2" onSubmit={onSave}>
             <Input
               label="Business name"
