@@ -4,6 +4,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { MailModule } from './modules/mail/mail.module.js';
+import { BillingModule } from './modules/billing/billing.module.js';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module.js';
+import { MediaModule } from './modules/media/media.module.js';
+import { AiModule } from './modules/ai/ai.module.js';
 
 @Module({
   imports: [
@@ -14,11 +19,40 @@ import { UsersModule } from './modules/users/users.module.js';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI', 'mongodb://127.0.0.1:27017/upsale'),
-      }),
+      useFactory: (config: ConfigService) => {
+        const uri = config.getOrThrow<string>('MONGODB_URI');
+        if (/127\.0\.0\.1|localhost/i.test(uri)) {
+          throw new Error(
+            'MONGODB_URI must point to MongoDB Atlas (local database URIs are not allowed).',
+          );
+        }
+        return {
+          uri,
+          connectionFactory: (connection: {
+            on: (event: string, cb: () => void) => void;
+            readyState: number;
+          }) => {
+            connection.on('connected', () => {
+              console.log('MongoDB connected');
+            });
+            connection.on('error', () => {
+              console.error('MongoDB connection error');
+            });
+            // Already open when factory runs in some Nest versions
+            if (connection.readyState === 1) {
+              console.log('MongoDB connected');
+            }
+            return connection;
+          },
+        };
+      },
     }),
     UsersModule,
+    MailModule,
+    BillingModule,
+    WhatsAppModule,
+    MediaModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

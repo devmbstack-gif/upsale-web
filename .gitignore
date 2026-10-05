@@ -9,10 +9,13 @@ build/
 .next/
 out/
 
-# Env
+# Local environment credentials
 .env
 .env.local
 .env.*.local
+
+# Documentation generated locally
+docs/
 
 # Logs
 logs/
