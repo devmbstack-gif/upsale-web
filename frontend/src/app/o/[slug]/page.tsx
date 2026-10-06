@@ -395,7 +395,12 @@ export default function PublicOfferPage() {
                           aria-expanded={countryMenuOpen}
                           onClick={() => setCountryMenuOpen((open) => !open)}
                         >
-                          <span>{selectedCountry.dialCode}</span>
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            <span className="shrink-0 text-base leading-none" aria-hidden="true">
+                              {getCountryFlag(selectedCountry.name)}
+                            </span>
+                            <span className="truncate">{selectedCountry.dialCode}</span>
+                          </span>
                           <span className="text-xs text-muted" aria-hidden="true">⌄</span>
                         </button>
                         {countryMenuOpen ? (

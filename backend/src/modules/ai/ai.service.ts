@@ -1,6 +1,7 @@
 import { BadGatewayException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerateDealDto } from './ai.dto.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 
 type GeminiInteraction = {
   status?: string;
@@ -15,10 +16,10 @@ type GeminiError = { error?: { message?: string } };
 
 @Injectable()
 export class AiService {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService, private readonly platformSettings: PlatformSettingsService) {}
 
   async generateDeal(dto: GenerateDealDto) {
-    const key = this.config.get<string>('GEMINI_API_KEY');
+    const key = await this.platformSettings.geminiApiKey();
     if (!key) throw new ServiceUnavailableException('Gemini AI is not configured.');
     const model = this.config.get('GEMINI_MODEL', 'gemini-3.8-flash');
     const prompt = [

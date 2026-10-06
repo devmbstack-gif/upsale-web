@@ -1,30 +1,59 @@
 import { PlatformSettingsModel } from "@/lib/models/platform-settings";
 import { writeAuditLog } from "@/lib/admin/audit";
-import { maskSecret } from "@/lib/crypto/secrets";
+import { decryptSecret, encryptSecret, maskSecret } from "@/lib/crypto/secrets";
 import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
+
+type StoredSettings = {
+  geminiApiKey?: string;
+  openAiApiKey?: string;
+  waApiBaseUrl?: string;
+  appPublicUrl?: string;
+};
+
+function reveal(value?: string) {
+  if (!value) return "";
+  try {
+    return decryptSecret(value);
+  } catch {
+    return "";
+  }
+}
+
+async function readSettings() {
+  const collection = PlatformSettingsModel.collection;
+  let stored = (await collection.findOne({ key: "default" })) as StoredSettings | null;
+  if (!stored) {
+    await collection.insertOne({
+      key: "default",
+      geminiApiKey: "",
+      openAiApiKey: "",
+      waApiBaseUrl: "",
+      appPublicUrl: "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    stored = (await collection.findOne({ key: "default" })) as StoredSettings;
+  }
+  return {
+    geminiApiKey: reveal(stored.geminiApiKey || stored.openAiApiKey),
+    waApiBaseUrl: reveal(stored.waApiBaseUrl),
+    appPublicUrl: reveal(stored.appPublicUrl),
+  };
+}
+
+function responseSettings(settings: Awaited<ReturnType<typeof readSettings>>) {
+  return {
+    geminiApiKeyMasked: maskSecret(settings.geminiApiKey),
+    geminiApiKeySet: Boolean(settings.geminiApiKey),
+    waApiBaseUrl: settings.waApiBaseUrl,
+    appPublicUrl: settings.appPublicUrl,
+  };
+}
 
 export async function GET() {
   const auth = await withSuperAdmin();
   if ("error" in auth) return auth.error;
-
-  let settings = await PlatformSettingsModel.findOne({ key: "default" });
-  if (!settings) {
-    settings = await PlatformSettingsModel.create({ key: "default" });
-  }
-
-  // getters decrypt — mask for response
-  const openAi = settings.openAiApiKey || "";
-  const wa = settings.waApiBaseUrl || "";
-  const appUrl = settings.appPublicUrl || "";
-
-  return jsonOk({
-    settings: {
-      openAiApiKeyMasked: maskSecret(openAi),
-      openAiApiKeySet: Boolean(openAi),
-      waApiBaseUrl: wa,
-      appPublicUrl: appUrl,
-    },
-  });
+  return jsonOk({ settings: responseSettings(await readSettings()) });
 }
 
 export async function PUT(request: Request) {
@@ -32,54 +61,65 @@ export async function PUT(request: Request) {
   if ("error" in auth) return auth.error;
 
   const body = (await request.json().catch(() => null)) as {
-    openAiApiKey?: string;
+    geminiApiKey?: string;
     waApiBaseUrl?: string;
     appPublicUrl?: string;
-    clearOpenAiApiKey?: boolean;
+    clearGeminiApiKey?: boolean;
   } | null;
-
   if (!body) return jsonError("Invalid body");
 
-  let settings = await PlatformSettingsModel.findOne({ key: "default" });
-  if (!settings) settings = await PlatformSettingsModel.create({ key: "default" });
+  for (const [label, value] of [
+    ["WhatsApp API base URL", body.waApiBaseUrl],
+    ["App public URL", body.appPublicUrl],
+  ] as const) {
+    if (typeof value !== "string" || !value.trim()) continue;
+    try {
+      const url = new URL(value.trim());
+      if (!["http:", "https:"].includes(url.protocol)) throw new Error("Unsupported protocol");
+    } catch {
+      return jsonError(`${label} must be a valid HTTP or HTTPS URL.`);
+    }
+  }
 
-  const previous = {
-    openAiApiKeySet: Boolean(settings.openAiApiKey),
-    waApiBaseUrl: settings.waApiBaseUrl || "",
-    appPublicUrl: settings.appPublicUrl || "",
-  };
+  const previousSettings = await readSettings();
+  const updates: Record<string, string | Date> = { updatedAt: new Date() };
 
-  if (body.clearOpenAiApiKey) settings.openAiApiKey = "";
-  else if (typeof body.openAiApiKey === "string" && body.openAiApiKey.trim()) {
-    settings.openAiApiKey = body.openAiApiKey.trim();
+  if (body.clearGeminiApiKey) {
+    updates.geminiApiKey = "";
+    updates.openAiApiKey = "";
+  } else if (typeof body.geminiApiKey === "string" && body.geminiApiKey.trim()) {
+    updates.geminiApiKey = encryptSecret(body.geminiApiKey.trim());
+    updates.openAiApiKey = "";
   }
   if (typeof body.waApiBaseUrl === "string") {
-    settings.waApiBaseUrl = body.waApiBaseUrl.trim();
+    updates.waApiBaseUrl = body.waApiBaseUrl.trim() ? encryptSecret(body.waApiBaseUrl.trim()) : "";
   }
   if (typeof body.appPublicUrl === "string") {
-    settings.appPublicUrl = body.appPublicUrl.trim();
+    updates.appPublicUrl = body.appPublicUrl.trim() ? encryptSecret(body.appPublicUrl.trim()) : "";
   }
 
-  await settings.save();
+  await PlatformSettingsModel.collection.updateOne(
+    { key: "default" },
+    { $set: updates, $setOnInsert: { key: "default", createdAt: new Date() } },
+    { upsert: true },
+  );
+  const saved = await readSettings();
 
   await writeAuditLog({
     userId: auth.adminId,
     action: "CHANGE_PLATFORM_KEY",
     entity: "PlatformSettings:default",
-    previousValue: previous,
+    previousValue: {
+      geminiApiKeySet: Boolean(previousSettings.geminiApiKey),
+      waApiBaseUrl: previousSettings.waApiBaseUrl,
+      appPublicUrl: previousSettings.appPublicUrl,
+    },
     newValue: {
-      openAiApiKeySet: Boolean(settings.openAiApiKey),
-      waApiBaseUrl: settings.waApiBaseUrl || "",
-      appPublicUrl: settings.appPublicUrl || "",
+      geminiApiKeySet: Boolean(saved.geminiApiKey),
+      waApiBaseUrl: saved.waApiBaseUrl,
+      appPublicUrl: saved.appPublicUrl,
     },
   });
 
-  return jsonOk({
-    settings: {
-      openAiApiKeyMasked: maskSecret(settings.openAiApiKey || ""),
-      openAiApiKeySet: Boolean(settings.openAiApiKey),
-      waApiBaseUrl: settings.waApiBaseUrl || "",
-      appPublicUrl: settings.appPublicUrl || "",
-    },
-  });
+  return jsonOk({ settings: responseSettings(saved) });
 }

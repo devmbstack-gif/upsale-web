@@ -26,6 +26,8 @@ const platformSettingsSchema = new Schema(
   {
     /** Singleton document key */
     key: { type: String, default: "default", unique: true },
+    geminiApiKey: encryptedField(""),
+    // Retained temporarily so existing installations can migrate the old field.
     openAiApiKey: encryptedField(""),
     waApiBaseUrl: encryptedField(""),
     appPublicUrl: encryptedField(""),

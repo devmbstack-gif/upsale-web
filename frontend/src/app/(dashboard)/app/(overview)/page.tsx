@@ -22,6 +22,8 @@ type Stats = {
   activeOffers: number;
   couponsRedeemed: number;
   totalScans: number;
+  usage?: { campaigns: number; aiGenerations: number };
+  limits?: { customers: number; campaignsPerMonth: number; aiGenerations: number } | null;
 };
 
 export default function OverviewPage() {
@@ -105,6 +107,19 @@ export default function OverviewPage() {
           />
         </Reveal>
       </div>
+
+      {stats.limits ? (
+        <Reveal>
+          <section className="card-interactive p-5 md:p-6">
+            <div><h3 className="font-display text-lg font-semibold">Monthly plan usage</h3><p className="mt-1 text-sm text-muted">Your usage resets at the beginning of each month.</p></div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-[var(--border)] p-4"><p className="text-xs uppercase tracking-wide text-muted">Customers</p><p className="font-display mt-1 text-xl font-semibold">{stats.totalCustomers} <span className="text-sm font-normal text-muted">/ {stats.limits.customers || "Unlimited"}</span></p></div>
+              <div className="rounded-xl border border-[var(--border)] p-4"><p className="text-xs uppercase tracking-wide text-muted">Campaigns</p><p className="font-display mt-1 text-xl font-semibold">{stats.usage?.campaigns ?? 0} <span className="text-sm font-normal text-muted">/ {stats.limits.campaignsPerMonth || "Unlimited"}</span></p></div>
+              <div className="rounded-xl border border-[var(--border)] p-4"><p className="text-xs uppercase tracking-wide text-muted">AI deals</p><p className="font-display mt-1 text-xl font-semibold">{stats.usage?.aiGenerations ?? 0} <span className="text-sm font-normal text-muted">/ {stats.limits.aiGenerations || "Unlimited"}</span></p></div>
+            </div>
+          </section>
+        </Reveal>
+      ) : null}
 
       <Reveal delay={1} variant="scale">
         <RecentCustomersPanel />

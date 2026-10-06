@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import type { Connection } from 'mongoose';
 import Stripe from 'stripe';
 import { ConfirmCheckoutDto, CreateCheckoutDto } from './billing.dto.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 
 type Pricing = { currency: string; amount: number; interval: 'month' | 'year' };
 type PackageRecord = {
@@ -24,6 +25,7 @@ export class BillingService {
   constructor(
     private readonly config: ConfigService,
     @InjectConnection() private readonly connection: Connection,
+    private readonly platformSettings: PlatformSettingsService,
   ) {
     this.stripe = new Stripe(config.getOrThrow<string>('STRIPE_SECRET_KEY'));
   }
@@ -51,6 +53,13 @@ export class BillingService {
 
   async createCheckout(dto: CreateCheckoutDto) {
     const { business, plan, pricing } = await this.businessAndPackage(dto.businessId, dto.planSlug);
+    const appUrl = await this.platformSettings.appPublicUrl();
+    const successPath = new URL(dto.successUrl, appUrl);
+    const cancelPath = new URL(dto.cancelUrl, appUrl);
+    const allowedOrigin = new URL(appUrl).origin;
+    if (successPath.origin !== allowedOrigin || cancelPath.origin !== allowedOrigin) {
+      throw new BadRequestException('Checkout return URLs must use the configured app public URL.');
+    }
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
       client_reference_id: dto.businessId,
@@ -72,8 +81,8 @@ export class BillingService {
       ],
       metadata: { businessId: dto.businessId, planSlug: plan.slug },
       subscription_data: { metadata: { businessId: dto.businessId, planSlug: plan.slug } },
-      success_url: `${dto.successUrl}${dto.successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: dto.cancelUrl,
+      success_url: `${successPath.toString()}${successPath.search ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelPath.toString(),
     });
     if (!session.url) throw new BadRequestException('Stripe did not return a checkout URL.');
     return { url: session.url };

@@ -9,6 +9,7 @@ import { BillingModule } from './modules/billing/billing.module.js';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
+import { PlatformSettingsModule } from './modules/platform-settings/platform-settings.module.js';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AiModule } from './modules/ai/ai.module.js';
         };
       },
     }),
+    PlatformSettingsModule,
     UsersModule,
     MailModule,
     BillingModule,

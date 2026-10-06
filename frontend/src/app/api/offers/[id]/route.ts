@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { CouponModel } from "@/lib/models/coupon";
 import { OfferModel } from "@/lib/models/offer";
+import { offerNameSlug } from "@/lib/offer-slug";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -10,11 +11,21 @@ export async function GET(_req: Request, ctx: Ctx) {
   if ("error" in auth && auth.error) return auth.error;
   const { businessId } = auth as { businessId: string };
   const { id } = await ctx.params;
-  const offer = await OfferModel.findOne({ _id: id, businessId }).lean();
+  let offer = await OfferModel.findOne({ _id: id, businessId });
   if (!offer) {
     return NextResponse.json({ ok: false, message: "Not found" }, { status: 404 });
   }
-  return NextResponse.json({ ok: true, offer });
+  if (/^o-[a-f0-9]{8}$/i.test(offer.shareSlug)) {
+    const base = offerNameSlug(offer.title);
+    let candidate = base;
+    let suffix = 2;
+    while (await OfferModel.exists({ shareSlug: candidate, _id: { $ne: offer._id } })) {
+      candidate = `${base}-${suffix++}`;
+    }
+    offer.shareSlug = candidate;
+    await offer.save();
+  }
+  return NextResponse.json({ ok: true, offer: offer.toObject() });
 }
 
 export async function PATCH(request: Request, ctx: Ctx) {

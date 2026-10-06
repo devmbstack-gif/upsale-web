@@ -45,6 +45,15 @@ export async function assertCustomerCapacity(businessId: string, owner: Paramete
 
 function period() { return new Date().toISOString().slice(0, 7); }
 
+export async function getMonthlyUsage(businessId: string) {
+  const usage = await UsageCounterModel.findOne({ businessId, period: period() }).lean();
+  return {
+    period: period(),
+    campaigns: usage?.campaigns ?? 0,
+    aiGenerations: usage?.aiGenerations ?? 0,
+  };
+}
+
 export async function reserveMonthlyUsage(
   businessId: string,
   owner: Parameters<typeof getBusinessLimits>[0],

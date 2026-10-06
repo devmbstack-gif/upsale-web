@@ -62,7 +62,7 @@ export default function OfferDetailPage() {
       setShareUrl("");
       return;
     }
-    setShareUrl(`${window.location.origin}/o/${slug}`);
+    setShareUrl(`${window.location.origin}/${slug}`);
   }, [slug]);
 
   if (offer === undefined) {
@@ -121,7 +121,7 @@ export default function OfferDetailPage() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button href={`/o/${slug}`} variant="primary">
+          <Button href={`/${slug}`} variant="primary">
             Preview claim page
           </Button>
           <Button href="/app/offers" variant="secondary">
@@ -158,11 +158,10 @@ export default function OfferDetailPage() {
             <h3 className="font-display font-semibold">Shareable link</h3>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <code className="flex-1 truncate rounded-xl border border-[var(--border)] bg-[var(--code-bg)] px-3 py-2.5 text-sm text-brand-to">
-                {shareUrl || `/o/${slug}`}
+                {shareUrl || `/${slug}`}
               </code>
-              <CopyButton value={shareUrl || `/o/${slug}`} label="Copy link" />
+              <CopyButton value={shareUrl || `/${slug}`} label="Copy link" />
             </div>
-            <CopyButton value={offer.title} label="Copy offer name" />
           </div>
 
           <div className="card-interactive grid gap-4 p-6 sm:grid-cols-2">

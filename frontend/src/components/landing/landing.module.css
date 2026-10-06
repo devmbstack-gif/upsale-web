@@ -1930,6 +1930,57 @@
   background: #090612;
 }
 
+.videoFloating {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 70;
+  width: min(380px, calc(100vw - 32px));
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(196, 181, 253, 0.48);
+  border-radius: 18px;
+  box-shadow: 0 22px 70px rgba(5, 4, 12, 0.72), 0 0 32px rgba(124, 58, 237, 0.2);
+  animation: floatingVideoIn 0.28s ease-out both;
+}
+
+.videoFloatingClose {
+  position: fixed;
+  right: 28px;
+  bottom: min(222px, calc((100vw - 32px) * 0.5625 + 12px));
+  z-index: 71;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 7, 18, 0.88);
+  color: white;
+  font-size: 1.2rem;
+  line-height: 1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes floatingVideoIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 540px) {
+  .videoFloating {
+    right: 12px;
+    bottom: 12px;
+    width: min(320px, calc(100vw - 24px));
+    border-radius: 14px;
+  }
+
+  .videoFloatingClose {
+    right: 18px;
+    bottom: min(190px, calc((100vw - 24px) * 0.5625 + 6px));
+  }
+}
+
 .play {
   position: absolute;
   inset: 0;
@@ -2192,13 +2243,34 @@
 }
 
 .priceCard .btn {
-  margin-top: auto;
+  margin-top: 22px;
   transition:
     transform 0.25s ease,
     background 0.25s ease,
     color 0.25s ease,
     border-color 0.25s ease,
     box-shadow 0.25s ease;
+}
+
+.planLimits {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
+  margin-bottom: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-elevated) 68%, transparent);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.planLimits strong {
+  margin-bottom: 2px;
+  color: var(--foreground);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .priceCard .btnPrimary:hover {

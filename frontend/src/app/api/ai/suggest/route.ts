@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { CustomerModel } from "@/lib/models/customer";
-import { computeSegmentStats } from "@/lib/ai-deal-maker";
+import { computeSegmentStats, suggestDeal } from "@/lib/ai-deal-maker";
 import { filterBySegment, type SegmentId } from "@/lib/segments";
 import { callBackend } from "@/lib/server/backend";
 import { reserveMonthlyUsage, UsageLimitError } from "@/lib/billing/usage";
@@ -55,10 +55,25 @@ export async function POST(request: Request) {
     suggestion = generated.data;
   } catch (error) {
     await usage.release();
-    return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Gemini generation failed." },
-      { status: 502 },
-    );
+    suggestion = {
+      ...suggestDeal({
+        stats,
+        business: {
+          businessName: owner.businessName ?? "our shop",
+          category: owner.category,
+          currency: owner.currency,
+        },
+        variant,
+      }),
+      provider: "local-fallback",
+    };
+    return NextResponse.json({
+      ok: true,
+      stats,
+      suggestion,
+      usage: usage.unlimited ? { unlimited: true } : { used: Math.max(0, usage.used - 1), limit: usage.limit },
+      note: "Gemini is temporarily unavailable or has reached its provider quota. A safe local suggestion was generated and your AI plan usage was not charged.",
+    });
   }
 
   return NextResponse.json({

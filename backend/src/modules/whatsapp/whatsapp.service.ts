@@ -7,6 +7,7 @@ import type { Connection } from 'mongoose';
 import { ConnectWhatsAppDto, ScheduleCampaignDto, SendCampaignDto } from './whatsapp.dto.js';
 import { decryptWhatsAppSecret, encryptWhatsAppSecret } from './whatsapp.crypto.js';
 import { MailService } from '../mail/mail.service.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 
 type WaConnection = {
   businessId: Types.ObjectId;
@@ -26,7 +27,7 @@ type WaConnection = {
 @Injectable()
 export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
   private scheduler?: NodeJS.Timeout;
-  constructor(private readonly config: ConfigService, @InjectConnection() private readonly db: Connection, private readonly mail: MailService) {}
+  constructor(private readonly config: ConfigService, @InjectConnection() private readonly db: Connection, private readonly mail: MailService, private readonly platformSettings: PlatformSettingsService) {}
 
   onModuleInit() {
     this.scheduler = setInterval(() => void this.processScheduledCampaign(), 30_000);
@@ -38,8 +39,9 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
     if (this.scheduler) clearInterval(this.scheduler);
   }
 
-  private get baseUrl() {
-    return `${this.config.get('WHATSAPP_API_BASE_URL', 'https://graph.facebook.com')}/${this.config.get('WHATSAPP_API_VERSION', 'v23.0')}`;
+  private async baseUrl() {
+    const base = await this.platformSettings.whatsAppApiBaseUrl();
+    return `${base.replace(/\/$/, '')}/${this.config.get('WHATSAPP_API_VERSION', 'v23.0')}`;
   }
 
   private masterKey() {
@@ -47,7 +49,7 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async graph<T>(path: string, token: string, init?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseUrl}/${path}`, {
+    const response = await fetch(`${await this.baseUrl()}/${path}`, {
       ...init,
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...init?.headers },
       signal: AbortSignal.timeout(15000),

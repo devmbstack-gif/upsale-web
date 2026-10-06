@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { OfferModel } from "@/lib/models/offer";
 import { randomBytes } from "crypto";
+import { offerNameSlug } from "@/lib/offer-slug";
+
+async function availableSlug(title: string) {
+  const base = offerNameSlug(title);
+  for (let suffix = 1; suffix <= 100; suffix += 1) {
+    const candidate = suffix === 1 ? base : `${base}-${suffix}`;
+    if (!(await OfferModel.exists({ shareSlug: candidate }))) return candidate;
+  }
+  return `${base}-${randomBytes(3).toString("hex")}`;
+}
 
 export async function GET() {
   const auth = await requireBusiness();
@@ -43,7 +53,7 @@ export async function POST(request: Request) {
     expiresAt = parsed;
   }
 
-  const shareSlug = `o-${randomBytes(4).toString("hex")}`;
+  const shareSlug = await availableSlug(body.title);
   const offer = await OfferModel.create({
     businessId,
     title: body.title.trim(),

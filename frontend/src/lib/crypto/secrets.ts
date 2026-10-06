@@ -3,8 +3,8 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypt
 const PREFIX = "v1";
 
 function encryptionKey(): Buffer {
-  const secret = process.env.PLATFORM_SECRETS_KEY || process.env.JWT_SECRET;
-  if (!secret) throw new Error("PLATFORM_SECRETS_KEY or JWT_SECRET must be configured.");
+  const secret = process.env.INTERNAL_API_SECRET || process.env.PLATFORM_SECRETS_KEY || process.env.JWT_SECRET;
+  if (!secret) throw new Error("INTERNAL_API_SECRET, PLATFORM_SECRETS_KEY, or JWT_SECRET must be configured.");
   return scryptSync(secret, "upsale-platform-secrets-v1", 32);
 }
 

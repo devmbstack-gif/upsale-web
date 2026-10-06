@@ -6,15 +6,15 @@ import PlatformLoading from "./loading";
 import { useEffect, useState } from "react";
 
 type Settings = {
-  openAiApiKeyMasked: string;
-  openAiApiKeySet: boolean;
+  geminiApiKeyMasked: string;
+  geminiApiKeySet: boolean;
   waApiBaseUrl: string;
   appPublicUrl: string;
 };
 
 export default function AdminPlatformPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [openAiApiKey, setOpenAiApiKey] = useState("");
+  const [geminiApiKey, setGeminiApiKey] = useState("");
   const [waApiBaseUrl, setWaApiBaseUrl] = useState("");
   const [appPublicUrl, setAppPublicUrl] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,7 +37,7 @@ export default function AdminPlatformPage() {
     void load();
   }, []);
 
-  async function save(extra?: { clearOpenAiApiKey?: boolean }) {
+  async function save(extra?: { clearGeminiApiKey?: boolean }) {
     setSaving(true);
     setError("");
     setMessage("");
@@ -46,8 +46,8 @@ export default function AdminPlatformPage() {
         waApiBaseUrl,
         appPublicUrl,
       };
-      if (openAiApiKey.trim()) body.openAiApiKey = openAiApiKey.trim();
-      if (extra?.clearOpenAiApiKey) body.clearOpenAiApiKey = true;
+      if (geminiApiKey.trim()) body.geminiApiKey = geminiApiKey.trim();
+      if (extra?.clearGeminiApiKey) body.clearGeminiApiKey = true;
 
       const res = await fetch("/api/admin/platform", {
         method: "PUT",
@@ -58,8 +58,8 @@ export default function AdminPlatformPage() {
       const data = (await res.json()) as { ok: boolean; settings?: Settings; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.message ?? "Save failed");
       setSettings(data.settings ?? null);
-      setOpenAiApiKey("");
-      setMessage("Platform settings saved (secrets encrypted at rest).");
+      setGeminiApiKey("");
+      setMessage("Platform settings saved. Backend integrations use the new values immediately.");
       if (data.settings) {
         setWaApiBaseUrl(data.settings.waApiBaseUrl);
         setAppPublicUrl(data.settings.appPublicUrl);
@@ -78,27 +78,27 @@ export default function AdminPlatformPage() {
   return (
     <div className="card-interactive mx-auto max-w-2xl space-y-4 p-6">
       <div>
-        <p className="text-sm font-medium text-foreground/90">OpenAI API key</p>
+        <p className="text-sm font-medium text-foreground/90">Gemini API key</p>
         <p className="mt-1 text-xs text-muted">
-          {settings?.openAiApiKeySet
-            ? `Stored: ${settings.openAiApiKeyMasked}`
+          {settings?.geminiApiKeySet
+            ? `Stored: ${settings.geminiApiKeyMasked}`
             : "Not set"}
         </p>
         <Input
           className="mt-2"
           type="password"
           placeholder="Paste new key to replace"
-          value={openAiApiKey}
-          onChange={(e) => setOpenAiApiKey(e.target.value)}
+          value={geminiApiKey}
+          onChange={(e) => setGeminiApiKey(e.target.value)}
           autoComplete="off"
         />
-        {settings?.openAiApiKeySet ? (
+        {settings?.geminiApiKeySet ? (
           <Button
             type="button"
             variant="danger"
             className="mt-2 !px-2.5 !py-1.5 text-xs"
             disabled={saving}
-            onClick={() => void save({ clearOpenAiApiKey: true })}
+            onClick={() => void save({ clearGeminiApiKey: true })}
           >
             Clear key
           </Button>

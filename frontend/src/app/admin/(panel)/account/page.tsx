@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { PasswordField } from "@/components/ui/Input";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { type FormEvent, useState } from "react";
 
 export default function AdminAccountPage() {
@@ -29,7 +30,12 @@ export default function AdminAccountPage() {
 
   return <div className="mx-auto max-w-2xl">
     <form onSubmit={submit} className="card-interactive space-y-5 p-6 md:p-8">
-      <div><h2 className="font-display text-xl font-semibold">Change admin password</h2><p className="mt-1 text-sm text-muted">Use at least 8 characters with one uppercase letter and one number.</p></div>
+      <div className="flex flex-col items-start gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-center">
+        <BrandLogo variant="auto" size="lg" priority />
+        <div className="hidden h-10 w-px bg-[var(--border)] sm:block" aria-hidden="true" />
+        <div><h2 className="font-display text-xl font-semibold">Super Admin Account</h2><p className="mt-1 text-sm text-muted">Platform owner and security settings</p></div>
+      </div>
+      <div><h3 className="font-display text-lg font-semibold">Change admin password</h3><p className="mt-1 text-sm text-muted">Use at least 8 characters with one uppercase letter and one number.</p></div>
       <PasswordField label="Current password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
       <PasswordField label="New password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required />
       <PasswordField label="Confirm new password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />

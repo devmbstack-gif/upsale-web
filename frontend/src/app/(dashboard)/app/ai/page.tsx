@@ -95,11 +95,6 @@ export default function AiDealMakerPage() {
     [],
   );
 
-  useEffect(() => {
-    void generate("all", 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial suggestion only
-  }, []);
-
   function onRegenerate() {
     const nextVariant = ((suggestion?.variant ?? 0) + 1) % 3;
     void generate(audience, nextVariant);
@@ -247,7 +242,7 @@ export default function AiDealMakerPage() {
             </div>
           ) : null}
 
-          {!loading && !editing ? (
+          {!loading && !editing && suggestion ? (
             <div className="space-y-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted">Title</p>
@@ -266,12 +261,24 @@ export default function AiDealMakerPage() {
             </div>
           ) : null}
 
+          {!loading && !suggestion ? (
+            <div className="rounded-xl border border-dashed border-[var(--border)] px-5 py-8 text-center">
+              <p className="font-medium">No suggestion generated yet</p>
+              <p className="mt-1 text-sm text-muted">Choose an audience, then generate a deal when you are ready.</p>
+            </div>
+          ) : null}
+
           <p className="text-xs text-muted">
             {suggestion?.maxDiscountHint ??
               "Approve opens the Deals form with this draft. You still choose send now or schedule."}
           </p>
 
           <div className="flex flex-wrap gap-2">
+            {!suggestion ? (
+              <Button type="button" disabled={loading} onClick={() => void generate(audience, 0)}>
+                Generate suggestion
+              </Button>
+            ) : null}
             <Button type="button" disabled={loading || !suggestion} onClick={onApprove}>
               Approve → Deals
             </Button>

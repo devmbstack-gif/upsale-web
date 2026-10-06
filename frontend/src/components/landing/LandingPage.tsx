@@ -6,6 +6,8 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import {
+  useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -45,6 +47,7 @@ type Plan = {
   summary: string;
   features: string[];
   popular?: boolean;
+  limits: { customers: number; campaigns: number; aiGenerations: number };
 };
 
 const FLOW = [
@@ -155,6 +158,7 @@ const PLANS: Plan[] = [
       "Unique one-time coupons",
       "Manual WhatsApp handoff",
     ],
+    limits: { customers: 500, campaigns: 10, aiGenerations: 30 },
   },
   {
     id: "growth",
@@ -168,6 +172,7 @@ const PLANS: Plan[] = [
       "New, Repeat, VIP, At Risk",
       "Scheduled WhatsApp campaigns",
     ],
+    limits: { customers: 5000, campaigns: 60, aiGenerations: 200 },
   },
   {
     id: "pro",
@@ -180,6 +185,7 @@ const PLANS: Plan[] = [
       "Custom offer rules",
       "Customer export",
     ],
+    limits: { customers: 0, campaigns: 0, aiGenerations: 0 },
   },
 ];
 
@@ -459,6 +465,12 @@ function Pricing() {
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>
+              <div className={styles.planLimits}>
+                <strong>Monthly usage limits</strong>
+                <span>{plan.limits.customers ? `${plan.limits.customers.toLocaleString()} customers` : "Unlimited customers"}</span>
+                <span>{plan.limits.campaigns ? `${plan.limits.campaigns} campaigns` : "Unlimited campaigns"}</span>
+                <span>{plan.limits.aiGenerations ? `${plan.limits.aiGenerations} AI generations` : "Unlimited AI generations"}</span>
+              </div>
               <Link href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>
                 {plan.popular ? "Start with Growth" : "Sign up"}
               </Link>
@@ -586,7 +598,38 @@ function ContactForm() {
 }
 
 export default function LandingPage() {
-  const [playing, setPlaying] = useState(false);
+  const demoVideoRef = useRef<HTMLVideoElement>(null);
+  const demoFrameRef = useRef<HTMLElement>(null);
+  const videoStartedRef = useRef(false);
+  const [videoFloating, setVideoFloating] = useState(false);
+  const [videoDismissed, setVideoDismissed] = useState(false);
+
+  useEffect(() => {
+    const video = demoVideoRef.current;
+    const frame = demoFrameRef.current;
+    if (!video || !frame) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.9) {
+          videoStartedRef.current = true;
+          setVideoFloating(false);
+          void video.play().catch(() => undefined);
+        } else if (videoStartedRef.current && entry.boundingClientRect.bottom < 0 && !videoDismissed) {
+          setVideoFloating(true);
+          void video.play().catch(() => undefined);
+        } else {
+          setVideoFloating(false);
+          video.pause();
+        }
+      },
+      { threshold: [0, 0.9, 1] },
+    );
+    observer.observe(frame);
+    return () => {
+      observer.disconnect();
+      video.pause();
+    };
+  }, [videoDismissed]);
 
   return (
     <div className={styles.page}>
@@ -655,17 +698,33 @@ export default function LandingPage() {
               <h2>Watch a walk-in become a contact</h2>
             </Reveal>
             <Reveal>
-              <figure className={`${styles.video} ${styles.videoCompact}`}>
-                {playing ? (
-                  <video className={styles.videoElement} src={process.env.NEXT_PUBLIC_DEMO_VIDEO_URL} controls autoPlay playsInline preload="metadata">
-                    Your browser does not support HTML video.
-                  </video>
-                ) : (
-                  <button type="button" className={styles.play} aria-label="Play product demo" onClick={() => setPlaying(true)}>
-                    <span className={styles.playPulse} aria-hidden="true" />
-                    <span className={styles.playIcon} aria-hidden="true" />
+              <figure ref={demoFrameRef} className={`${styles.video} ${styles.videoCompact}`}>
+                <video
+                  ref={demoVideoRef}
+                  className={`${styles.videoElement} ${videoFloating ? styles.videoFloating : ""}`}
+                  src={process.env.NEXT_PUBLIC_DEMO_VIDEO_URL}
+                  poster="/video-thumbnail.png"
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                >
+                  Your browser does not support HTML video.
+                </video>
+                {videoFloating ? (
+                  <button
+                    type="button"
+                    className={styles.videoFloatingClose}
+                    aria-label="Close floating video"
+                    onClick={() => {
+                      setVideoDismissed(true);
+                      setVideoFloating(false);
+                      demoVideoRef.current?.pause();
+                    }}
+                  >
+                    ×
                   </button>
-                )}
+                ) : null}
               </figure>
             </Reveal>
           </section>
