@@ -12,7 +12,7 @@ type Plan = {
   features: string[];
   popular: boolean;
   price: { amount: number; currency: string; interval: string } | null;
-  limits: { customers: number; campaignsPerMonth: number; aiGenerations: number };
+  limits: { offers: number; customers: number; campaignsPerMonth: number; aiGenerations: number };
 };
 
 type Usage = { campaigns: number; aiGenerations: number };
@@ -119,7 +119,8 @@ export default function BillingPage() {
         </div>
       ) : null}
       {currentLimits ? (
-        <section className="card-interactive grid gap-4 p-5 sm:grid-cols-3">
+        <section className="card-interactive grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div><p className="text-xs uppercase tracking-wide text-muted">QR offer limit</p><p className="font-display mt-1 text-xl font-semibold">{currentLimits.offers || "Unlimited"}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Customers limit</p><p className="font-display mt-1 text-xl font-semibold">{currentLimits.customers || "Unlimited"}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Campaigns this month</p><p className="font-display mt-1 text-xl font-semibold">{usage.campaigns} <span className="text-sm font-normal text-muted">/ {currentLimits.campaignsPerMonth || "Unlimited"}</span></p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">AI deals this month</p><p className="font-display mt-1 text-xl font-semibold">{usage.aiGenerations} <span className="text-sm font-normal text-muted">/ {currentLimits.aiGenerations || "Unlimited"}</span></p></div>
@@ -144,7 +145,7 @@ export default function BillingPage() {
             </ul>
             <div className="rounded-xl border border-[var(--border)] bg-[var(--hover-surface)]/40 p-3 text-sm">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Usage limits</p>
-              <div className="space-y-1"><p>{plan.limits.customers || "Unlimited"} customers</p><p>{plan.limits.campaignsPerMonth || "Unlimited"} campaigns / month</p><p>{plan.limits.aiGenerations || "Unlimited"} AI generations / month</p></div>
+              <div className="space-y-1"><p>{plan.limits.offers || "Unlimited"} QR offers</p><p>{plan.limits.customers || "Unlimited"} customers</p><p>{plan.limits.campaignsPerMonth || "Unlimited"} campaigns / month</p><p>{plan.limits.aiGenerations || "Unlimited"} AI generations / month</p></div>
             </div>
             <Button className="w-full" disabled={!plan.price || busy !== "" || currentPlan === plan.name} onClick={() => void checkout(plan.slug)}>
               {currentPlan === plan.name ? "Current plan" : busy === plan.slug ? "Opening Stripe…" : "Choose plan"}

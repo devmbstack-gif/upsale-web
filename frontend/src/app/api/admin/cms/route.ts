@@ -4,6 +4,20 @@ import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
 
 const DEFAULT_SECTIONS = [
   {
+    sectionKey: "seo",
+    locale: "en",
+    content: {
+      siteName: "UPSale",
+      title: "UPSale — Turn walk-ins into customers",
+      description: "Turn counter QR scans into permission-based WhatsApp customer relationships, one-time coupons, and repeat visits.",
+      keywords: ["QR offers", "WhatsApp marketing", "customer retention", "digital coupons", "local business marketing"],
+      canonicalUrl: "",
+      ogImage: "/icon-192.png",
+      robotsIndex: true,
+      robotsFollow: true,
+    },
+  },
+  {
     sectionKey: "hero",
     locale: "en",
     content: {
@@ -34,18 +48,16 @@ export async function GET() {
   const auth = await withSuperAdmin();
   if ("error" in auth) return auth.error;
 
-  let sections = await SiteSectionCMSModel.find().sort({ sectionKey: 1, locale: 1 }).lean();
-  if (sections.length === 0) {
-    await SiteSectionCMSModel.insertMany(
-      DEFAULT_SECTIONS.map((s) => ({
-        ...s,
-        isPublished: false,
-        updatedBy: auth.adminId,
-        versionHistory: [],
-      })),
-    );
-    sections = await SiteSectionCMSModel.find().sort({ sectionKey: 1, locale: 1 }).lean();
-  }
+  await Promise.all(
+    DEFAULT_SECTIONS.map((section) =>
+      SiteSectionCMSModel.findOneAndUpdate(
+        { sectionKey: section.sectionKey, locale: section.locale },
+        { $setOnInsert: { ...section, isPublished: false } },
+        { upsert: true, setDefaultsOnInsert: true },
+      ),
+    ),
+  );
+  const sections = await SiteSectionCMSModel.find().sort({ sectionKey: 1, locale: 1 }).lean();
 
   return jsonOk({
     sections: sections.map((s) => ({

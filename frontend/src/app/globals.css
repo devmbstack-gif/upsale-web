@@ -618,4 +618,38 @@ html.light .ambient-soft-glow--c {
     min-width: 0;
     font-size: 1rem;
   }
+
+  .app-sidebar a:hover,
+  .app-sidebar button:hover {
+    transform: none;
+  }
+
+  .app-main > .page-enter,
+  .app-main section,
+  .app-main form,
+  .app-main article {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  dialog,
+  [role="dialog"] {
+    max-height: calc(100dvh - 2rem);
+    max-width: calc(100vw - 1.5rem);
+    overflow-y: auto;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .app-sidebar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app-topbar {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .app-main {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
 }

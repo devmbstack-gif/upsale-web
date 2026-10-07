@@ -7,7 +7,6 @@ export type SessionPayload = {
   sub: string;
   email: string;
   businessName: string;
-  businessUsername?: string;
   plan: string;
   category: string;
   country: string;

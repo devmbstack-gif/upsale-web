@@ -168,15 +168,15 @@ export default function CustomersTable({ customers, segmentCounts }: CustomersTa
               });
               return (
                 <TR key={c.id}>
-                  <TD>
+                  <TD label="Customer">
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-muted">{c.phone}</p>
                   </TD>
-                  <TD>{formatDate(c.joinedAt)}</TD>
-                  <TD>{formatDate(c.lastVisitAt)}</TD>
-                  <TD>{c.scans}</TD>
-                  <TD>{c.couponsRedeemed}</TD>
-                  <TD>
+                  <TD label="Joined">{formatDate(c.joinedAt)}</TD>
+                  <TD label="Last visit">{formatDate(c.lastVisitAt)}</TD>
+                  <TD label="Scans">{c.scans}</TD>
+                  <TD label="Redeemed">{c.couponsRedeemed}</TD>
+                  <TD label="Segment">
                     <div className="flex flex-wrap gap-1">
                       {segs.length === 0 ? <Badge>standard</Badge> : null}
                       {segs.map((s) => (
@@ -185,7 +185,7 @@ export default function CustomersTable({ customers, segmentCounts }: CustomersTa
                       {c.optedOut ? <Badge variant="paused">opted out</Badge> : null}
                     </div>
                   </TD>
-                  <TD className="text-right">
+                  <TD label="Actions" className="text-right">
                     <div className="flex justify-end">
                       <IconButton
                         icon={Eye}

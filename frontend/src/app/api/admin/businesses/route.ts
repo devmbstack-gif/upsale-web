@@ -33,6 +33,7 @@ export async function GET(request: Request) {
       country: b.country,
       city: b.city,
       plan: b.plan,
+      planSlug: b.planSlug,
       isVerified: b.isVerified,
       isSuspended: Boolean(b.isSuspended),
       whatsapp: b.whatsapp,

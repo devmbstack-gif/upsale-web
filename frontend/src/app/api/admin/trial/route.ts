@@ -26,11 +26,9 @@ export async function GET() {
       unlockedPackageId: settings.unlockedPackageId
         ? String(settings.unlockedPackageId)
         : null,
-      fairUsageCaps: settings.fairUsageCaps ?? {
-        customers: 100,
-        campaignsPerMonth: 5,
-        aiGenerations: 20,
-      },
+      fairUsageCaps: settings.fairUsageCaps
+        ? { ...settings.fairUsageCaps, offers: settings.fairUsageCaps.offers ?? 1 }
+        : { offers: 1, customers: 100, campaignsPerMonth: 5, aiGenerations: 20 },
       paywallMessage: settings.paywallMessage,
     },
     packages: packages.map((p) => ({
@@ -50,6 +48,7 @@ export async function PUT(request: Request) {
     trialDays?: number;
     unlockedPackageId?: string | null;
     fairUsageCaps?: {
+      offers?: number;
       customers?: number;
       campaignsPerMonth?: number;
       aiGenerations?: number;
@@ -72,6 +71,7 @@ export async function PUT(request: Request) {
   }
   if (body.fairUsageCaps) {
     update.fairUsageCaps = {
+      offers: Number(body.fairUsageCaps.offers ?? 1),
       customers: Number(body.fairUsageCaps.customers ?? 100),
       campaignsPerMonth: Number(body.fairUsageCaps.campaignsPerMonth ?? 5),
       aiGenerations: Number(body.fairUsageCaps.aiGenerations ?? 20),
@@ -102,7 +102,7 @@ export async function PUT(request: Request) {
       unlockedPackageId: next!.unlockedPackageId
         ? String(next!.unlockedPackageId)
         : null,
-      fairUsageCaps: next!.fairUsageCaps,
+      fairUsageCaps: { ...next!.fairUsageCaps, offers: next!.fairUsageCaps.offers ?? 1 },
       paywallMessage: next!.paywallMessage,
     },
   });

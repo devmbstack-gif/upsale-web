@@ -32,6 +32,20 @@ export default function AdminCmsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const selectedSection = sections.find((section) => section.id === selectedId);
+  const isSeoSection = selectedSection?.sectionKey === "seo";
+
+  function seoContent() {
+    try {
+      return JSON.parse(jsonText) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+
+  function updateSeoField(key: string, value: unknown) {
+    setJsonText(JSON.stringify({ ...seoContent(), [key]: value }, null, 2));
+  }
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -191,9 +205,24 @@ export default function AdminCmsPage() {
       </div>
 
       <div className="card-interactive space-y-3 p-5">
-        <h2 className="font-display text-lg font-semibold">Edit content (JSON)</h2>
+        <h2 className="font-display text-lg font-semibold">{isSeoSection ? "Website SEO" : "Edit content (JSON)"}</h2>
+        {isSeoSection ? (
+          <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--hover-surface)]/30 p-4">
+            <p className="text-sm text-muted">Published values control homepage search metadata and social sharing previews.</p>
+            <Input label="Site name" value={String(seoContent().siteName ?? "")} onChange={(e) => updateSeoField("siteName", e.target.value)} />
+            <Input label="SEO title" value={String(seoContent().title ?? "")} onChange={(e) => updateSeoField("title", e.target.value)} />
+            <TextArea label="Meta description" value={String(seoContent().description ?? "")} onChange={(e) => updateSeoField("description", e.target.value)} />
+            <Input label="Keywords (comma separated)" value={Array.isArray(seoContent().keywords) ? (seoContent().keywords as unknown[]).join(", ") : ""} onChange={(e) => updateSeoField("keywords", e.target.value.split(",").map((item) => item.trim()).filter(Boolean))} />
+            <Input label="Canonical production URL" placeholder="https://upsale.app" value={String(seoContent().canonicalUrl ?? "")} onChange={(e) => updateSeoField("canonicalUrl", e.target.value)} />
+            <Input label="Social sharing image URL" placeholder="/social-preview.jpg or https://…" value={String(seoContent().ogImage ?? "")} onChange={(e) => updateSeoField("ogImage", e.target.value)} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-sm"><input type="checkbox" checked={seoContent().robotsIndex !== false} onChange={(e) => updateSeoField("robotsIndex", e.target.checked)} />Allow search indexing</label>
+              <label className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-sm"><input type="checkbox" checked={seoContent().robotsFollow !== false} onChange={(e) => updateSeoField("robotsFollow", e.target.checked)} />Allow link following</label>
+            </div>
+          </div>
+        ) : null}
         <TextArea
-          label="Content JSON"
+          label={isSeoSection ? "Advanced SEO JSON" : "Content JSON"}
           className="min-h-[220px] font-mono text-xs"
           value={jsonText}
           onChange={(e) => setJsonText(e.target.value)}

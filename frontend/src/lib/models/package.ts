@@ -17,6 +17,7 @@ const countryPricingSchema = new Schema(
 
 const packageLimitsSchema = new Schema(
   {
+    offers: { type: Number, required: true, min: 0, default: 1 },
     customers: { type: Number, required: true, min: 0 },
     campaignsPerMonth: { type: Number, required: true, min: 0 },
     aiGenerations: { type: Number, required: true, min: 0 },

@@ -7,23 +7,19 @@ import { createSessionToken, SESSION_COOKIE, type SessionPayload } from "@/lib/a
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { connectDB } from "@/lib/mongodb";
 import { submittedCategorySchema } from "@/lib/validations/auth";
-import { verifyWhatsAppProof } from "@/lib/auth/whatsapp-proof";
 import { callBackend } from "@/lib/server/backend";
+import { escapeRegex, normalizeBusinessName } from "@/lib/business-name";
 
 const bodySchema = z.object({
   email: z.string().trim().email(),
   code: z.string().regex(/^\d{6}$/),
   businessName: z.string().trim().min(1),
-  businessUsername: z.string().trim().toLowerCase().min(3).max(30).regex(/^[a-z0-9._]+$/),
   password: z.string().min(8).regex(/[A-Z]/).regex(/[0-9]/),
-  supportEmail: z.string().trim().email(),
   category: submittedCategorySchema,
   country: z.string().trim().min(1),
   currency: z.string().trim().min(1),
   timezone: z.string().trim().min(1),
   city: z.string().trim().min(2),
-  whatsapp: z.string().trim().min(8),
-  whatsappProof: z.string().min(20),
   termsAccepted: z.literal(true),
   marketingConsent: z.literal(true),
   logoPreview: z.string().optional(),
@@ -36,9 +32,6 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
-  if (!verifyWhatsAppProof(data.whatsappProof, data.email, data.whatsapp)) {
-    return NextResponse.json({ ok: false, message: "Confirm this WhatsApp number again before creating the account." }, { status: 400 });
-  }
   let otp: Awaited<ReturnType<typeof checkOtp>>;
   try {
     // Validate first, but keep the OTP available until external WhatsApp
@@ -90,31 +83,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const usernameOwner = await BusinessOwnerModel.exists({
-      businessUsername: data.businessUsername,
+    const businessName = data.businessName.trim().replace(/\s+/g, " ");
+    const businessNameKey = normalizeBusinessName(businessName);
+    const nameOwner = await BusinessOwnerModel.exists({
       email: { $ne: email },
+      $or: [
+        { businessNameKey },
+        { businessName: { $regex: `^${escapeRegex(businessName)}$`, $options: "i" } },
+      ],
     });
-    if (usernameOwner) {
-      return NextResponse.json({ ok: false, message: "Username not available." }, { status: 409 });
+    if (nameOwner) {
+      return NextResponse.json({ ok: false, message: "A business with this name already exists." }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(data.password, 12);
     const owner = await BusinessOwnerModel.findOneAndUpdate(
       { email },
       {
-        businessName: data.businessName,
-        businessUsername: data.businessUsername,
+        businessName,
+        businessNameKey,
         email,
         passwordHash,
         isVerified: true,
-        supportEmail: data.supportEmail.toLowerCase(),
+        supportEmail: "",
         category: data.category,
         country: data.country,
         currency: data.currency,
         timezone: data.timezone,
         city: data.city,
         logoUrl: "",
-        whatsapp: data.whatsapp,
+        whatsapp: "",
         termsAccepted: true,
         marketingConsent: true,
         plan: "Plan not selected",
@@ -152,15 +150,14 @@ export async function POST(request: Request) {
     const payload: SessionPayload = {
       sub: String(owner._id),
       email,
-      businessName: data.businessName,
-      businessUsername: data.businessUsername,
+      businessName,
       plan: "Plan not selected",
       category: data.category,
       country: data.country,
       currency: data.currency,
       timezone: data.timezone,
       city: data.city,
-      whatsapp: data.whatsapp,
+      whatsapp: "",
       exp: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
     };
 
@@ -176,7 +173,10 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    if (typeof error === "object" && error && "code" in error && error.code === 11000) {
+      return NextResponse.json({ ok: false, message: "A business with this name already exists." }, { status: 409 });
+    }
     return NextResponse.json(
       { ok: false, message: "The account could not be saved. Check MongoDB and try again." },
       { status: 503 },

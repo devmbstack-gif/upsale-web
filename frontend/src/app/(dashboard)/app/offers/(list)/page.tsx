@@ -94,21 +94,21 @@ export default function OffersPage() {
               ) : (
                 offers.map((offer) => (
                   <TR key={offer._id}>
-                    <TD>
+                    <TD label="Offer">
                       <p className="font-medium">{offer.title}</p>
                     </TD>
-                    <TD>
+                    <TD label="Type">
                       <Badge>{offer.type}</Badge>
                     </TD>
-                    <TD>
+                    <TD label="Status">
                       <Badge variant={offer.status}>{offer.status}</Badge>
                     </TD>
-                    <TD>{offer.scans}</TD>
-                    <TD>{offer.redemptions}</TD>
-                    <TD>
+                    <TD label="Scans">{offer.scans}</TD>
+                    <TD label="Redemptions">{offer.redemptions}</TD>
+                    <TD label="Expires">
                       {offer.expiresAt ? formatDate(offer.expiresAt) : "—"}
                     </TD>
-                    <TD className="text-right">
+                    <TD label="Actions" className="text-right">
                       <div className="flex flex-wrap items-center justify-end gap-1.5">
                         <IconButton
                           icon={Eye}

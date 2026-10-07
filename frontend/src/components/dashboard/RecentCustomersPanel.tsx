@@ -61,7 +61,7 @@ export default function RecentCustomersPanel() {
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <TR key={i}>
-                  <TD>
+                  <TD label="Customer">
                     <Skeleton className="mb-1 h-4 w-28" />
                     <Skeleton className="h-3 w-24" />
                   </TD>
@@ -96,16 +96,16 @@ export default function RecentCustomersPanel() {
                       <p className="text-xs text-muted">{c.phone}</p>
                     </div>
                   </TD>
-                  <TD>{c.lastVisitAt ? formatDate(c.lastVisitAt) : "—"}</TD>
-                  <TD>{c.scans ?? 0}</TD>
-                  <TD>
+                  <TD label="Last visit">{c.lastVisitAt ? formatDate(c.lastVisitAt) : "—"}</TD>
+                  <TD label="Scans">{c.scans ?? 0}</TD>
+                  <TD label="Tags">
                     <div className="flex flex-wrap gap-1">
                       {(c.tags ?? []).slice(0, 2).map((tag) => (
                         <Badge key={tag}>{tag}</Badge>
                       ))}
                     </div>
                   </TD>
-                  <TD className="text-right">
+                  <TD label="Actions" className="text-right">
                     <div className="flex justify-end">
                       <IconButton
                         icon={Eye}

@@ -12,7 +12,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div key={key} className="page-enter">
+    <div key={key} className="page-enter min-w-0 w-full">
       {children}
     </div>
   );

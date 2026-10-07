@@ -3,6 +3,7 @@ import { requireBusiness } from "@/lib/auth/require-business";
 import { OfferModel } from "@/lib/models/offer";
 import { randomBytes } from "crypto";
 import { offerNameSlug } from "@/lib/offer-slug";
+import { assertOfferCapacity, UsageLimitError } from "@/lib/billing/usage";
 
 async function availableSlug(title: string) {
   const base = offerNameSlug(title);
@@ -15,16 +16,16 @@ async function availableSlug(title: string) {
 
 export async function GET() {
   const auth = await requireBusiness();
-  if ("error" in auth && auth.error) return auth.error;
-  const { businessId } = auth as { businessId: string };
+  if ("error" in auth) return auth.error;
+  const { businessId } = auth;
   const offers = await OfferModel.find({ businessId }).sort({ createdAt: -1 }).lean();
   return NextResponse.json({ ok: true, offers });
 }
 
 export async function POST(request: Request) {
   const auth = await requireBusiness();
-  if ("error" in auth && auth.error) return auth.error;
-  const { businessId } = auth as { businessId: string };
+  if ("error" in auth) return auth.error;
+  const { businessId, owner } = auth;
   const body = (await request.json()) as {
     title?: string;
     description?: string;
@@ -37,6 +38,15 @@ export async function POST(request: Request) {
 
   if (!body.title?.trim()) {
     return NextResponse.json({ ok: false, message: "Title is required" }, { status: 400 });
+  }
+
+  try {
+    await assertOfferCapacity(businessId, owner);
+  } catch (error) {
+    if (error instanceof UsageLimitError) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: 403 });
+    }
+    throw error;
   }
 
   let expiresAt: Date | null = null;

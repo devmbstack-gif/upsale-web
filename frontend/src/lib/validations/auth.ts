@@ -50,7 +50,6 @@ const passwordSchema = z
 export const accountSchema = z
   .object({
     businessName: z.string().trim().min(1, "Business name is required"),
-    businessUsername: z.string().trim().toLowerCase().min(3, "Username must be at least 3 characters").max(30, "Username must be 30 characters or fewer").regex(/^[a-z0-9._]+$/, "Use only lowercase letters, numbers, periods, and underscores"),
     email: z.string().trim().email("Enter a valid business email"),
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Confirm your password"),
@@ -70,7 +69,6 @@ const timezoneSet = new Set(timezones);
 
 export const businessSchema = z
   .object({
-    supportEmail: z.string().trim().email("Enter a valid support email"),
     category: z.enum(businessCategories, enumError("Select a business category")),
     categoryOther: z.string().optional(),
     country: z
@@ -119,14 +117,6 @@ export const submittedCategorySchema = z
   .refine((value) => value !== "Other", "Specify your business type");
 
 export const confirmSchema = z.object({
-  dialCode: z.string().min(1, "Select a country code"),
-  whatsappNumber: z
-    .string()
-    .trim()
-    .refine(
-      (value) => /^[0-9]{6,14}$/.test(value.replace(/\D/g, "")),
-      "Enter a valid WhatsApp number",
-    ),
   acceptTerms: z.literal(true, enumError("Accept the terms and privacy policy to continue")),
   acceptConsent: z.literal(
     true,
@@ -143,14 +133,12 @@ export type SignUpValues = z.infer<typeof signUpSchema>;
 
 export const accountFields = [
   "businessName",
-  "businessUsername",
   "email",
   "password",
   "confirmPassword",
 ] as const;
 
 export const businessFields = [
-  "supportEmail",
   "category",
   "categoryOther",
   "country",
@@ -160,8 +148,6 @@ export const businessFields = [
 ] as const;
 
 export const confirmFields = [
-  "dialCode",
-  "whatsappNumber",
   "acceptTerms",
   "acceptConsent",
 ] as const;

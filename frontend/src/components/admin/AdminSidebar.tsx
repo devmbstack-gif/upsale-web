@@ -6,16 +6,16 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserCog } from "lucide-react";
+import { Activity, Building2, FilePenLine, History, PackageOpen, Settings, ShieldCheck, UserCog, X } from "lucide-react";
 
 export const ADMIN_NAV = [
-  { href: "/admin/businesses", label: "Businesses / Tenants", icon: "▣" },
-  { href: "/admin/packages", label: "Packages Manager", icon: "◈" },
-  { href: "/admin/trial", label: "Trial Settings", icon: "◷" },
-  { href: "/admin/cms", label: "Site Sections CMS", icon: "✎" },
-  { href: "/admin/platform", label: "Platform Settings", icon: "⚙" },
-  { href: "/admin/health", label: "System Health", icon: "♡" },
-  { href: "/admin/audit", label: "Audit Logs", icon: "☰" },
+  { href: "/admin/businesses", label: "Businesses / Tenants", icon: Building2 },
+  { href: "/admin/packages", label: "Packages Manager", icon: PackageOpen },
+  { href: "/admin/trial", label: "Trial Settings", icon: ShieldCheck },
+  { href: "/admin/cms", label: "Site Sections CMS", icon: FilePenLine },
+  { href: "/admin/platform", label: "Platform Settings", icon: Settings },
+  { href: "/admin/health", label: "System Health", icon: Activity },
+  { href: "/admin/audit", label: "Audit Logs", icon: History },
   { href: "/admin/account", label: "Admin Account", icon: UserCog },
 ] as const;
 
@@ -61,7 +61,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(300px,88vw)] flex-col border-r border-[var(--border)] bg-surface/95 backdrop-blur-xl transition-transform duration-300 lg:static lg:z-0 lg:h-full lg:w-72 lg:shrink-0 lg:translate-x-0",
+          "app-sidebar fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(300px,88vw)] flex-col border-r border-[var(--border)] bg-surface/95 backdrop-blur-xl transition-transform duration-300 lg:static lg:z-0 lg:h-full lg:w-72 lg:shrink-0 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -80,7 +80,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
             onClick={onClose}
             aria-label="Close menu"
           >
-            ✕
+            <X size={20} aria-hidden />
           </button>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
@@ -93,16 +93,16 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
                 onClick={onClose}
                 style={{ transitionDelay: `${index * 30}ms` }}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  "group flex min-h-11 min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   active
                     ? "sidebar-link-active translate-x-0.5 text-foreground"
                     : "text-muted hover:translate-x-1 hover:bg-[var(--hover-surface)] hover:text-foreground",
                 )}
               >
-                <span className="text-base opacity-90" aria-hidden>
-                  {typeof item.icon === "string" ? item.icon : <item.icon size={16} strokeWidth={2} />}
+                <span className="grid h-6 w-6 shrink-0 place-items-center opacity-90 transition-transform group-hover:scale-110" aria-hidden>
+                  <item.icon size={19} strokeWidth={1.9} />
                 </span>
-                {item.label}
+                <span className="min-w-0 truncate leading-5">{item.label}</span>
               </Link>
             );
           })}

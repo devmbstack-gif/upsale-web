@@ -10,6 +10,7 @@ import { CustomerModel } from "@/lib/models/customer";
 import { OfferModel } from "@/lib/models/offer";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { assertCustomerCapacity, UsageLimitError } from "@/lib/billing/usage";
+import { ensureCustomerTenantIndexes } from "@/lib/customers/indexes";
 
 type Ctx = { params: Promise<{ slug: string }> };
 
@@ -53,6 +54,7 @@ export async function POST(request: Request, ctx: Ctx) {
   }
 
   await connectDB();
+  await ensureCustomerTenantIndexes();
   const businessId = offer.businessId;
   const phone = parsed.data.phone.replace(/\s+/g, "");
   const phoneNormalized = phone.replace(/\D/g, "");
@@ -94,7 +96,6 @@ export async function POST(request: Request, ctx: Ctx) {
     businessId,
     offerId: offer._id,
     customerId: customer._id,
-    status: "issued",
   }).lean()) as (FlattenMaps<CouponDoc> & { _id: Types.ObjectId; code: string }) | null;
 
   if (existingCoupon) {

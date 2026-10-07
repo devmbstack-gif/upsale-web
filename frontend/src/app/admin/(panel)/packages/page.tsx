@@ -13,7 +13,7 @@ type Pkg = {
   slug: string;
   shortDescription: string;
   featureBullets: string[];
-  limits: { customers: number; campaignsPerMonth: number; aiGenerations: number };
+  limits: { offers: number; customers: number; campaignsPerMonth: number; aiGenerations: number };
   sortOrder: number;
   isMostPopular: boolean;
   isEnterprise: boolean;
@@ -31,6 +31,7 @@ const emptyForm = {
   slug: "",
   shortDescription: "",
   featureBulletsText: "",
+  offers: 1,
   customers: 500,
   campaignsPerMonth: 10,
   aiGenerations: 30,
@@ -85,6 +86,7 @@ export default function AdminPackagesPage() {
       slug: pkg.slug,
       shortDescription: pkg.shortDescription,
       featureBulletsText: pkg.featureBullets.join("\n"),
+      offers: pkg.limits.offers,
       customers: pkg.limits.customers,
       campaignsPerMonth: pkg.limits.campaignsPerMonth,
       aiGenerations: pkg.limits.aiGenerations,
@@ -110,6 +112,7 @@ export default function AdminPackagesPage() {
         .map((s) => s.trim())
         .filter(Boolean),
       limits: {
+        offers: Number(form.offers),
         customers: Number(form.customers),
         campaignsPerMonth: Number(form.campaignsPerMonth),
         aiGenerations: Number(form.aiGenerations),
@@ -196,7 +199,8 @@ export default function AdminPackagesPage() {
                 </p>
                 <p className="mt-2 min-h-10 text-sm leading-relaxed text-muted">{pkg.shortDescription || "No description added."}</p>
                 <p className="mt-4 border-y border-[var(--border)] py-3 text-xs leading-6 text-muted">
-                  Limits: {pkg.limits.customers || "∞"} customers ·{" "}
+                  Limits: {pkg.limits.offers || "∞"} QR offers ·{" "}
+                  {pkg.limits.customers || "∞"} customers ·{" "}
                   {pkg.limits.campaignsPerMonth || "∞"} campaigns ·{" "}
                   {pkg.limits.aiGenerations || "∞"} AI
                 </p>
@@ -318,7 +322,14 @@ export default function AdminPackagesPage() {
 
         <div className="space-y-4 border-t border-[var(--border)] pt-6">
           <div><h3 className="font-display text-base font-semibold">Usage limits</h3><p className="mt-1 text-sm text-muted">Enter 0 for unlimited access.</p></div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Input
+            label="QR offers"
+            type="number"
+            min={0}
+            value={form.offers}
+            onChange={(e) => setForm((f) => ({ ...f, offers: Number(e.target.value) }))}
+          />
           <Input
             label="Customers"
             type="number"

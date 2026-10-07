@@ -21,6 +21,11 @@ const customerSchema = new Schema(
   { timestamps: { createdAt: "joinedAt", updatedAt: true } },
 );
 
+customerSchema.index(
+  { businessId: 1, phoneNormalized: 1 },
+  { unique: true, partialFilterExpression: { phoneNormalized: { $type: "string", $gt: "" } } },
+);
+
 export type CustomerDoc = InferSchemaType<typeof customerSchema>;
 export const CustomerModel =
   (models.Customer as Model<CustomerDoc> | undefined) ||

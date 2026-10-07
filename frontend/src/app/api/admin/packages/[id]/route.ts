@@ -10,7 +10,7 @@ function serializePackage(doc: {
   slug: string;
   shortDescription: string;
   featureBullets?: string[];
-  limits: { customers: number; campaignsPerMonth: number; aiGenerations: number };
+  limits: { offers?: number; customers: number; campaignsPerMonth: number; aiGenerations: number };
   sortOrder?: number;
   isMostPopular?: boolean;
   isEnterprise?: boolean;
@@ -28,7 +28,7 @@ function serializePackage(doc: {
     slug: doc.slug,
     shortDescription: doc.shortDescription,
     featureBullets: doc.featureBullets ?? [],
-    limits: doc.limits,
+    limits: { ...doc.limits, offers: doc.limits.offers ?? (doc.slug === "starter" ? 1 : 0) },
     sortOrder: doc.sortOrder ?? 0,
     isMostPopular: Boolean(doc.isMostPopular),
     isEnterprise: Boolean(doc.isEnterprise),

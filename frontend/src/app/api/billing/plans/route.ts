@@ -30,7 +30,7 @@ export async function GET() {
         description: plan.shortDescription,
         features: plan.featureBullets,
         popular: plan.isMostPopular,
-        limits: plan.limits,
+        limits: { ...plan.limits, offers: plan.limits.offers ?? (plan.slug === "starter" ? 1 : 0) },
         price: price ? { amount: price.amount, currency: price.currency, interval: price.interval } : null,
       };
     }),

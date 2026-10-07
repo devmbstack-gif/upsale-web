@@ -1,5 +1,6 @@
 import "server-only";
 import { CustomerModel } from "@/lib/models/customer";
+import { OfferModel } from "@/lib/models/offer";
 import { PackageModel } from "@/lib/models/package";
 import { TrialSettingsModel } from "@/lib/models/trial-settings";
 import { UsageCounterModel } from "@/lib/models/usage-counter";
@@ -22,7 +23,16 @@ export async function getBusinessLimits(owner: {
     }
     const trial = await TrialSettingsModel.findOne({ key: "default" }).lean();
     if (!trial?.enabled) throw new UsageLimitError("The free trial is no longer active. Choose a plan to continue.");
-    return trial.fairUsageCaps;
+    if (owner.trialPackageId) {
+      const trialPackage = await PackageModel.findOne({ _id: owner.trialPackageId, isActive: true }).lean();
+      if (trialPackage) {
+        return {
+          ...trialPackage.limits,
+          offers: trialPackage.limits.offers ?? (trialPackage.slug === "starter" ? 1 : 0),
+        };
+      }
+    }
+    return { ...trial.fairUsageCaps, offers: trial.fairUsageCaps.offers ?? 1 };
   }
   if (owner.subscriptionStatus !== "active") {
     throw new UsageLimitError(
@@ -33,7 +43,10 @@ export async function getBusinessLimits(owner: {
   }
   const plan = await PackageModel.findOne({ slug: owner.planSlug, isActive: true }).lean();
   if (!plan) throw new UsageLimitError("Your subscription plan is unavailable. Choose an active plan.");
-  return plan.limits;
+  return {
+    ...plan.limits,
+    offers: plan.limits.offers ?? (plan.slug === "starter" ? 1 : 0),
+  };
 }
 
 export async function assertCustomerCapacity(businessId: string, owner: Parameters<typeof getBusinessLimits>[0]) {
@@ -41,6 +54,17 @@ export async function assertCustomerCapacity(businessId: string, owner: Paramete
   if (!limits.customers) return;
   const count = await CustomerModel.countDocuments({ businessId });
   if (count >= limits.customers) throw new UsageLimitError(`Your plan allows ${limits.customers} customers. Upgrade to capture more customers.`);
+}
+
+export async function assertOfferCapacity(businessId: string, owner: Parameters<typeof getBusinessLimits>[0]) {
+  const limits = await getBusinessLimits(owner);
+  if (!limits.offers) return;
+  const count = await OfferModel.countDocuments({ businessId });
+  if (count >= limits.offers) {
+    throw new UsageLimitError(
+      `Your plan allows ${limits.offers} QR ${limits.offers === 1 ? "offer" : "offers"}. Upgrade your plan to create more.`,
+    );
+  }
 }
 
 function period() { return new Date().toISOString().slice(0, 7); }

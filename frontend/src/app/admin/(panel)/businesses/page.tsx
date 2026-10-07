@@ -16,14 +16,28 @@ type Business = {
   country: string;
   city: string;
   plan: string;
+  planSlug: string;
   isVerified: boolean;
   isSuspended: boolean;
   createdAt?: string;
 };
 
+type PlanOption = { id: string; name: string; slug: string; isActive: boolean };
+
 function TableSkeleton() {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md">
+    <>
+    <div className="grid gap-4 md:hidden">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="card-interactive space-y-4 p-4">
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-11 w-full rounded-xl" />
+          <div className="flex justify-between"><Skeleton className="h-7 w-32 rounded-full" /><Skeleton className="h-9 w-9 rounded-lg" /></div>
+        </div>
+      ))}
+    </div>
+    <div className="hidden rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md md:block">
       <table className="min-w-full text-left text-sm">
         <thead className="border-b border-[var(--border)] text-muted">
           <tr>
@@ -60,12 +74,14 @@ function TableSkeleton() {
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 
 export default function AdminBusinessesPage() {
   const [q, setQ] = useState("");
   const [items, setItems] = useState<Business[]>([]);
+  const [plans, setPlans] = useState<PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
@@ -74,12 +90,17 @@ export default function AdminBusinessesPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/businesses?q=${encodeURIComponent(query)}`, {
-        credentials: "same-origin",
-      });
+      const [res, plansRes] = await Promise.all([
+        fetch(`/api/admin/businesses?q=${encodeURIComponent(query)}`, { credentials: "same-origin" }),
+        fetch("/api/admin/packages", { credentials: "same-origin" }),
+      ]);
       const data = (await res.json()) as { ok: boolean; businesses?: Business[]; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.message ?? "Failed to load");
       setItems(data.businesses ?? []);
+      if (plansRes.ok) {
+        const plansData = (await plansRes.json()) as { packages?: PlanOption[] };
+        setPlans((plansData.packages ?? []).filter((plan) => plan.isActive));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -136,38 +157,75 @@ export default function AdminBusinessesPage() {
       {loading && items.length === 0 ? (
         <TableSkeleton />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md">
-          <table className="min-w-full text-left text-sm">
+        <>
+        <div className="grid gap-4 md:hidden">
+          {items.map((b) => (
+            <article key={b.id} className="card-interactive min-w-0 space-y-4 p-4">
+              <div className="min-w-0 border-b border-[var(--border)] pb-3">
+                <p className="font-display text-base font-semibold text-foreground">{b.businessName}</p>
+                <p className="mt-1 break-all text-xs text-muted">{b.email}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{b.category} · {b.city}, {b.country}</p>
+              </div>
+              <label className="block min-w-0 space-y-1.5 text-sm font-medium">
+                <span>Plan</span>
+                <select
+                  className="input-field w-full py-2.5 text-sm"
+                  value={b.planSlug || ""}
+                  disabled={busyId === b.id}
+                  onChange={(e) => void patch(b.id, { planSlug: e.target.value })}
+                >
+                  {!b.planSlug ? <option value="">Plan not selected</option> : null}
+                  {b.planSlug && b.planSlug !== "free-trial" && !plans.some((plan) => plan.slug === b.planSlug) ? <option value={b.planSlug}>{b.plan || b.planSlug} (Unavailable)</option> : null}
+                  <option value="free-trial">Free Trial</option>
+                  {plans.map((plan) => <option key={plan.id} value={plan.slug}>{plan.name}</option>)}
+                </select>
+              </label>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className={`rounded-full border px-2.5 py-1 ${b.isVerified ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400" : "border-amber-500/25 bg-amber-500/10 text-amber-400"}`}>{b.isVerified ? "Verified" : "Unverified"}</span>
+                  <span className={`rounded-full border px-2.5 py-1 ${b.isSuspended ? "border-red-500/25 bg-red-500/10 text-[var(--danger-text)]" : "border-[var(--border)] text-muted"}`}>{b.isSuspended ? "Suspended" : "Active"}</span>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {!b.isVerified ? <IconButton icon={BadgeCheck} label="Verify Business" tone="success" disabled={busyId === b.id} onClick={() => void patch(b.id, { isVerified: true })} /> : null}
+                  <IconButton icon={b.isSuspended ? UserCheck : UserX} label={b.isSuspended ? "Unsuspend Business" : "Suspend Business"} tone={b.isSuspended ? "primary" : "danger"} disabled={busyId === b.id} onClick={() => void patch(b.id, { isSuspended: !b.isSuspended })} />
+                </div>
+              </div>
+            </article>
+          ))}
+          {items.length === 0 ? <div className="card-interactive p-8 text-center text-sm text-muted">No businesses found.</div> : null}
+        </div>
+
+        <div className="hidden rounded-2xl border border-[var(--border)] bg-surface/80 backdrop-blur-md md:block">
+          <table className="w-full table-fixed text-left text-sm">
             <thead className="border-b border-[var(--border)] text-muted">
               <tr>
-                <th className="px-4 py-3 font-medium">Business</th>
-                <th className="px-4 py-3 font-medium">Plan</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
+                <th className="w-[42%] px-4 py-3 font-medium">Business</th>
+                <th className="w-[25%] px-4 py-3 font-medium">Plan</th>
+                <th className="w-[18%] px-4 py-3 font-medium">Status</th>
+                <th className="w-[15%] px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.map((b) => (
                 <tr key={b.id} className="border-b border-[var(--border)]/70 align-top">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{b.businessName}</p>
-                    <p className="text-xs text-muted">{b.email}</p>
-                    <p className="text-xs text-muted">
+                    <p className="truncate font-medium text-foreground" title={b.businessName}>{b.businessName}</p>
+                    <p className="break-all text-xs text-muted">{b.email}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">
                       {b.category} · {b.city}, {b.country}
                     </p>
                   </td>
                   <td className="px-4 py-3">
                     <select
-                      className="input-field max-w-[10rem] py-1.5 text-xs"
-                      value={b.plan}
+                      className="input-field min-w-[9rem] py-2 text-sm"
+                      value={b.planSlug || ""}
                       disabled={busyId === b.id}
-                      onChange={(e) => void patch(b.id, { plan: e.target.value })}
+                      onChange={(e) => void patch(b.id, { planSlug: e.target.value })}
                     >
-                      <option value="Free Trial">Free Trial</option>
-                      <option value="Starter">Starter</option>
-                      <option value="Growth">Growth</option>
-                      <option value="Pro">Pro</option>
-                      <option value="Enterprise">Enterprise</option>
+                      {!b.planSlug ? <option value="">Plan not selected</option> : null}
+                      {b.planSlug && b.planSlug !== "free-trial" && !plans.some((plan) => plan.slug === b.planSlug) ? <option value={b.planSlug}>{b.plan || b.planSlug} (Unavailable)</option> : null}
+                      <option value="free-trial">Free Trial</option>
+                      {plans.map((plan) => <option key={plan.id} value={plan.slug}>{plan.name}</option>)}
                     </select>
                   </td>
                   <td className="px-4 py-3">
@@ -212,6 +270,7 @@ export default function AdminBusinessesPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

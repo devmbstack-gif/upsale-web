@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { TrialSettingsModel } from "@/lib/models/trial-settings";
+import { PackageModel } from "@/lib/models/package";
 
 export async function POST() {
   const auth = await requireBusiness();
@@ -19,19 +20,23 @@ export async function POST() {
   }
 
   const startedAt = new Date();
+  const trialPackage = settings?.unlockedPackageId
+    ? await PackageModel.findOne({ _id: settings.unlockedPackageId, isActive: true }).select("name").lean()
+    : null;
+  const trialPlanName = trialPackage ? `${trialPackage.name} (Free Trial)` : "Free Trial";
   const trialDays = Math.max(1, settings?.trialDays ?? 14);
   const endsAt = new Date(startedAt.getTime() + trialDays * 24 * 60 * 60 * 1000);
   const updated = await BusinessOwnerModel.findOneAndUpdate(
     { _id: auth.businessId, trialGrantedOnce: { $ne: true }, subscriptionStatus: { $ne: "active" } },
     {
       $set: {
-        plan: "Free Trial",
+        plan: trialPlanName,
         planSlug: "free-trial",
         subscriptionStatus: "trial",
         trialStartedAt: startedAt,
         trialEndsAt: endsAt,
         trialGrantedOnce: true,
-        trialPackageId: settings?.unlockedPackageId ?? null,
+        trialPackageId: trialPackage?._id ?? null,
       },
     },
     { new: true },
@@ -40,5 +45,5 @@ export async function POST() {
   if (!updated) {
     return NextResponse.json({ ok: false, message: "The trial could not be activated." }, { status: 409 });
   }
-  return NextResponse.json({ ok: true, trialEndsAt: endsAt.toISOString(), plan: "Free Trial" });
+  return NextResponse.json({ ok: true, trialEndsAt: endsAt.toISOString(), plan: trialPlanName });
 }

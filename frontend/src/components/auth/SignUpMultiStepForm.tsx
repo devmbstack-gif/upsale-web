@@ -21,11 +21,7 @@ import {
 } from "@/lib/validations/auth";
 import {
   currencyOptions,
-  findCountry,
-  formatNationalPhone,
   formatCurrencyLabel,
-  getPhoneDigitCount,
-  getPhoneExample,
   timezoneOptions,
 } from "@/lib/data/countries";
 import CaptchaWidget, { type CaptchaProof } from "./CaptchaWidget";
@@ -39,11 +35,9 @@ import styles from "./auth.module.css";
 
 type SignUpFormValues = {
   businessName: string;
-  businessUsername: string;
   email: string;
   password: string;
   confirmPassword: string;
-  supportEmail: string;
   category: SignUpValues["category"] | "";
   categoryOther: string;
   country: SignUpValues["country"] | "";
@@ -51,8 +45,6 @@ type SignUpFormValues = {
   timezone: SignUpValues["timezone"] | "";
   city: string;
   logoPreview: string;
-  dialCode: string;
-  whatsappNumber: string;
   acceptTerms: boolean;
   acceptConsent: boolean;
 };
@@ -60,7 +52,7 @@ type SignUpFormValues = {
 const steps = [
   { id: 1, label: "Account" },
   { id: 2, label: "Business" },
-  { id: 3, label: "WhatsApp" },
+  { id: 3, label: "Confirm" },
 ] as const;
 
 const slide = {
@@ -99,10 +91,7 @@ export default function SignUpMultiStepForm() {
   const [submitting, setSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(60);
   const [otpSendCount, setOtpSendCount] = useState(0);
-  const [usernameStatus, setUsernameStatus] = useState("");
-  const [whatsappProof, setWhatsappProof] = useState("");
-  const [confirmedPhone, setConfirmedPhone] = useState("");
-  const [checkingWhatsApp, setCheckingWhatsApp] = useState(false);
+  const [businessNameStatus, setBusinessNameStatus] = useState("");
 
   const {
     register,
@@ -118,11 +107,9 @@ export default function SignUpMultiStepForm() {
     mode: "onTouched",
     defaultValues: {
       businessName: "",
-      businessUsername: "",
       email: "",
       password: "",
       confirmPassword: "",
-      supportEmail: "",
       category: "",
       categoryOther: "",
       country: "",
@@ -130,8 +117,6 @@ export default function SignUpMultiStepForm() {
       timezone: "",
       city: "",
       logoPreview: "",
-      dialCode: "+92",
-      whatsappNumber: "",
       acceptTerms: false,
       acceptConsent: false,
     },
@@ -141,10 +126,7 @@ export default function SignUpMultiStepForm() {
   const logoPreview = values.logoPreview;
   const accountReady = accountSchema.safeParse(values).success && captchaSolved;
   const businessReady = businessSchema.safeParse(values).success;
-  const phoneHasExpectedLength =
-    values.whatsappNumber.replace(/\D/g, "").length ===
-    getPhoneDigitCount(values.country || "Pakistan");
-  const confirmReady = confirmSchema.safeParse(values).success && phoneHasExpectedLength;
+  const confirmReady = confirmSchema.safeParse(values).success;
 
   function onCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
     const next = event.target.value;
@@ -164,18 +146,18 @@ export default function SignUpMultiStepForm() {
     setSubmitting(true);
     clearErrors("email");
     try {
-      const [response, usernameResponse] = await Promise.all([
+      const [response, businessNameResponse] = await Promise.all([
         fetch("/api/auth/check-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: getValues("email") }) }),
-        fetch("/api/auth/check-business-username", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: getValues("businessUsername") }) }),
+        fetch("/api/auth/check-business-name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ businessName: getValues("businessName") }) }),
       ]);
       const payload = (await response.json()) as { ok: boolean; available?: boolean; message?: string };
-      const usernamePayload = (await usernameResponse.json()) as { ok: boolean; available?: boolean; message?: string };
-      if (!usernameResponse.ok || !usernamePayload.available) {
-        setUsernameStatus("");
-        setError("businessUsername", { type: "server", message: usernamePayload.message ?? "Username not available." });
+      const businessNamePayload = (await businessNameResponse.json()) as { ok: boolean; available?: boolean; message?: string };
+      if (!businessNameResponse.ok || !businessNamePayload.available) {
+        setBusinessNameStatus("");
+        setError("businessName", { type: "server", message: businessNamePayload.message ?? "Business name is not available." });
         return;
       }
-      setUsernameStatus("Username available.");
+      setBusinessNameStatus("Business name is available.");
       if (!response.ok || !payload.ok || !payload.available) {
         setError("email", {
           type: "server",
@@ -191,37 +173,18 @@ export default function SignUpMultiStepForm() {
     }
   }
 
-  async function confirmWhatsApp() {
-    const valid = await trigger(["dialCode", "whatsappNumber"]);
-    if (!valid || !phoneHasExpectedLength) return;
-    const current = getValues();
-    const phone = `${current.dialCode}${current.whatsappNumber.replace(/\D/g, "")}`;
-    setCheckingWhatsApp(true); setOtpError(""); setWhatsappProof(""); setConfirmedPhone("");
-    try {
-      const response = await fetch("/api/auth/verify-whatsapp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: current.email, phone, captchaToken: captchaProof?.token, captchaAnswer: captchaProof?.answer }) });
-      const payload = (await response.json()) as { ok?: boolean; proof?: string; message?: string };
-      if (!response.ok || !payload.ok || !payload.proof) { setOtpError(payload.message ?? "Could not confirm this WhatsApp number."); return; }
-      setWhatsappProof(payload.proof); setConfirmedPhone(phone); setOtpError(payload.message ?? "WhatsApp number confirmed.");
-    } catch { setOtpError("WhatsApp verification is unavailable."); }
-    finally { setCheckingWhatsApp(false); }
-  }
-
-  async function goToWhatsApp() {
+  async function goToConfirm() {
     const valid = await trigger([...businessFields]);
     if (!valid) return;
     move(3);
   }
 
   function onCountrySelect(selected: string) {
-    setWhatsappProof("");
-    setConfirmedPhone("");
     setValue("country", selected, { shouldValidate: true, shouldTouch: true, shouldDirty: true });
     const defaults = countryDefaults[selected];
     if (!defaults) return;
     setValue("currency", defaults.currency, { shouldValidate: true, shouldTouch: true });
     setValue("timezone", defaults.timezone, { shouldValidate: true, shouldTouch: true });
-    setValue("dialCode", defaults.dialCode, { shouldValidate: true, shouldTouch: true });
-    setValue("whatsappNumber", "", { shouldDirty: true });
   }
 
   function onLogo(event: ChangeEvent<HTMLInputElement>) {
@@ -309,15 +272,11 @@ export default function SignUpMultiStepForm() {
           code,
           password: current.password,
           businessName: current.businessName,
-          businessUsername: current.businessUsername,
-          supportEmail: current.supportEmail,
           category: resolveBusinessCategory(current.category, current.categoryOther),
           country: current.country,
           currency: current.currency,
           timezone: current.timezone,
           city: current.city,
-          whatsapp: `${current.dialCode}${current.whatsappNumber.replace(/\D/g, "")}`,
-          whatsappProof,
           termsAccepted: true,
           marketingConsent: true,
           logoPreview: current.logoPreview,
@@ -402,34 +361,29 @@ export default function SignUpMultiStepForm() {
                 <p className={styles.lede}>This email is how you will sign back in.</p>
                 <div className={`${styles.fields} ${styles.fieldsCompact}`}>
                   <Field label="Business name" error={errors.businessName?.message}>
-                    <input autoComplete="organization" {...register("businessName")} />
-                  </Field>
-                  <Field label="Business username" error={errors.businessUsername?.message}>
                     <input
-                      autoComplete="username"
-                      placeholder="your.business"
-                      {...register("businessUsername", {
-                        onChange: (event) => {
-                          event.target.value = event.target.value.toLowerCase().replace(/[^a-z0-9._]/g, "");
-                          clearErrors("businessUsername");
-                          setUsernameStatus("");
+                      autoComplete="organization"
+                      {...register("businessName", {
+                        onChange: () => {
+                          clearErrors("businessName");
+                          setBusinessNameStatus("");
                         },
                         onBlur: async () => {
-                          const username = getValues("businessUsername");
-                          if (!/^[a-z0-9._]{3,30}$/.test(username)) return;
-                          const response = await fetch("/api/auth/check-business-username", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username }) });
+                          const businessName = getValues("businessName").trim();
+                          if (businessName.length < 2) return;
+                          const response = await fetch("/api/auth/check-business-name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ businessName }) });
                           const payload = (await response.json()) as { available?: boolean; message?: string };
                           if (!response.ok || !payload.available) {
-                            setUsernameStatus("");
-                            setError("businessUsername", { type: "server", message: payload.message ?? "Username not available." });
+                            setBusinessNameStatus("");
+                            setError("businessName", { type: "server", message: payload.message ?? "Business name is not available." });
                           } else {
-                            clearErrors("businessUsername");
-                            setUsernameStatus("Username available.");
+                            clearErrors("businessName");
+                            setBusinessNameStatus("Business name is available.");
                           }
                         },
                       })}
                     />
-                    {usernameStatus ? <span className={styles.success}>{usernameStatus}</span> : null}
+                    {businessNameStatus ? <span className={styles.success}>{businessNameStatus}</span> : null}
                   </Field>
                   <Field label="Business email" error={errors.email?.message}>
                     <input
@@ -471,9 +425,6 @@ export default function SignUpMultiStepForm() {
                 <h1>Where should this account live?</h1>
                 <p className={styles.lede}>Currency and timezone follow the country. You can change the timezone.</p>
                 <div className={`${styles.fields} ${styles.fieldsCompact}`}>
-                  <Field label="Business support email" error={errors.supportEmail?.message}>
-                    <input type="email" autoComplete="email" {...register("supportEmail")} />
-                  </Field>
                   <div className={styles.row}>
                     <Field label="Business category" error={errors.category?.message}>
                       <select
@@ -561,8 +512,8 @@ export default function SignUpMultiStepForm() {
                   <button type="button" className={styles.ghost} onClick={() => move(1)}>
                     Back
                   </button>
-                  <button type="button" className={styles.primary} disabled={!businessReady} onClick={goToWhatsApp}>
-                    Next: WhatsApp & Confirm
+                  <button type="button" className={styles.primary} disabled={!businessReady} onClick={goToConfirm}>
+                    Next: Confirm
                   </button>
                 </div>
               </section>
@@ -570,60 +521,12 @@ export default function SignUpMultiStepForm() {
 
             {step === 3 ? (
               <section className={styles.card}>
-                <p className={styles.eyebrow}>WhatsApp and confirmation</p>
-                <h1>How should customers hear from you?</h1>
+                <p className={styles.eyebrow}>Email confirmation</p>
+                <h1>Confirm your account</h1>
                 <p className={styles.lede}>
-                  WhatsApp is saved for later customer messages. To create your account we email a
-                  6-digit code to <strong>{values.email || "your business email"}</strong> — not to
-                  WhatsApp.
+                  We will email a 6-digit verification code to <strong>{values.email || "your business email"}</strong>.
                 </p>
                 <div className={styles.fields}>
-                  <div className={styles.field}>
-                    WhatsApp Business number
-                    <div className={styles.phoneRow}>
-                      <span className={styles.dialCodeBadge} aria-label="Country code">
-                        {values.dialCode || findCountry(values.country)?.dialCode || "+"}
-                      </span>
-                      <input
-                        type="tel"
-                        inputMode="numeric"
-                        autoComplete="tel-national"
-                        placeholder={getPhoneExample(values.country || "Pakistan")}
-                        aria-label="WhatsApp number"
-                        {...register("whatsappNumber")}
-                        value={values.whatsappNumber}
-                        onChange={(event) => {
-                          setWhatsappProof("");
-                          setConfirmedPhone("");
-                          setOtpError("");
-                          setValue(
-                            "whatsappNumber",
-                            formatNationalPhone(values.country || "Pakistan", event.target.value),
-                            { shouldDirty: true, shouldValidate: true },
-                          );
-                        }}
-                      />
-                    </div>
-                    <span className={styles.hint}>
-                      Format for {values.country || "your country"}:{" "}
-                      <strong>
-                        {values.dialCode || "+…"}{" "}
-                        {getPhoneExample(values.country || "Pakistan")}
-                      </strong>
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.ghost}
-                      disabled={!phoneHasExpectedLength || checkingWhatsApp}
-                      onClick={() => void confirmWhatsApp()}
-                    >
-                      {checkingWhatsApp ? "Confirming..." : whatsappProof ? "WhatsApp confirmed" : "Confirm WhatsApp number"}
-                    </button>
-                    {errors.dialCode?.message ? <span className={styles.error}>{errors.dialCode.message}</span> : null}
-                    {errors.whatsappNumber?.message ? (
-                      <span className={styles.error}>{errors.whatsappNumber.message}</span>
-                    ) : null}
-                  </div>
                   <label className={styles.check}>
                     <input type="checkbox" {...register("acceptTerms")} />
                     <span>
@@ -660,7 +563,7 @@ export default function SignUpMultiStepForm() {
                   {errors.acceptConsent?.message ? (
                     <span className={styles.error}>{errors.acceptConsent.message}</span>
                   ) : null}
-                  {otpError && !otpOpen ? <p className={whatsappProof ? styles.success : styles.error}>{otpError}</p> : null}
+                  {otpError && !otpOpen ? <p className={styles.error}>{otpError}</p> : null}
                 </div>
                 <div className={styles.actions}>
                   <button type="button" className={styles.ghost} onClick={() => move(2)} disabled={submitting}>
@@ -669,7 +572,7 @@ export default function SignUpMultiStepForm() {
                   <button
                     type="button"
                     className={styles.primary}
-                    disabled={!confirmReady || !whatsappProof || confirmedPhone !== `${values.dialCode}${values.whatsappNumber.replace(/\D/g, "")}` || submitting}
+                    disabled={!confirmReady || submitting}
                     onClick={createAccount}
                   >
                     {submitting ? "Sending code…" : "Create Account"}

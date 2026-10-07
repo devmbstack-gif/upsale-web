@@ -3,7 +3,7 @@ import { Schema, model, models, type InferSchemaType, type Model } from "mongoos
 const businessOwnerSchema = new Schema(
   {
     businessName: { type: String, required: true, trim: true },
-    businessUsername: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
+    businessNameKey: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
@@ -13,7 +13,7 @@ const businessOwnerSchema = new Schema(
       default: "business_owner",
       required: true,
     },
-    supportEmail: { type: String, required: true, lowercase: true, trim: true },
+    supportEmail: { type: String, default: "", lowercase: true, trim: true },
     category: { type: String, required: true },
     country: { type: String, required: true },
     currency: { type: String, required: true },
@@ -21,7 +21,7 @@ const businessOwnerSchema = new Schema(
     city: { type: String, required: true, trim: true },
     logoUrl: { type: String, default: "" },
     logoPublicId: { type: String, default: "" },
-    whatsapp: { type: String, required: true },
+    whatsapp: { type: String, default: "" },
     termsAccepted: { type: Boolean, required: true },
     marketingConsent: { type: Boolean, required: true },
     plan: { type: String, default: "Free Trial" },

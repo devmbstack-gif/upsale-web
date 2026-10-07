@@ -295,21 +295,21 @@ function DealsPageInner() {
               <TBody>
                 {deals.map((d) => (
                   <TR key={d._id}>
-                    <TD>
+                    <TD label="Deal">
                       <p className="font-medium">{d.title}</p>
                       {d.discountLabel ? (
                         <p className="text-xs text-muted">{d.discountLabel}</p>
                       ) : null}
                     </TD>
-                    <TD>
+                    <TD label="Segment">
                       <Badge>
                         {d.audience === "custom"
                           ? "custom"
                           : segmentLabel(d.audience as SegmentId)}
                       </Badge>
                     </TD>
-                    <TD className="capitalize">{d.scheduleType}</TD>
-                    <TD>
+                    <TD label="Schedule" className="capitalize">{d.scheduleType}</TD>
+                    <TD label="Status">
                       <Badge
                         variant={
                           d.status === "sent"
@@ -322,8 +322,8 @@ function DealsPageInner() {
                         {d.status}
                       </Badge>
                     </TD>
-                    <TD>{d.recipientCount ?? 0}</TD>
-                    <TD>
+                    <TD label="Recipients">{d.recipientCount ?? 0}</TD>
+                    <TD label="Actions">
                       {d.sentAt
                         ? formatDateTime(d.sentAt)
                         : d.scheduledAt

@@ -2,6 +2,7 @@ import { Schema, model, models, type InferSchemaType, type Model } from "mongoos
 
 const fairUsageCapsSchema = new Schema(
   {
+    offers: { type: Number, default: 1, min: 0 },
     customers: { type: Number, default: 100, min: 0 },
     campaignsPerMonth: { type: Number, default: 5, min: 0 },
     aiGenerations: { type: Number, default: 20, min: 0 },

@@ -7,6 +7,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import ProfileLoading from "./loading";
 
+const whatsAppFeatureEnabled = process.env.NEXT_PUBLIC_WHATSAPP_ENABLED === "true";
+
 type Profile = {
   businessName?: string;
   category?: string;
@@ -94,7 +96,7 @@ export default function ProfilePage() {
         timezone: p.timezone ?? "",
         city: p.city ?? "",
         whatsapp: p.whatsapp ?? "",
-        supportEmail: p.supportEmail ?? p.email ?? "",
+        supportEmail: p.supportEmail ?? "",
         description: p.description ?? "",
       });
     })();
@@ -125,6 +127,7 @@ export default function ProfilePage() {
       setWaConnection(data);
       setWaCredentials((current) => ({ ...current, accessToken: "" }));
       setWaMessage("WhatsApp Cloud API connected. Send a test message to finish verification.");
+      window.dispatchEvent(new Event("upsale:whatsapp-connected"));
     } finally {
       setWaBusy(false);
     }
@@ -245,7 +248,8 @@ export default function ProfilePage() {
         }),
       });
       if (!res.ok) {
-        setMessage("Could not save changes.");
+        const errorData = (await res.json().catch(() => ({}))) as { message?: string };
+        setMessage(errorData.message ?? "Could not save changes.");
         return;
       }
       const data = (await res.json()) as { profile: Profile };
@@ -377,9 +381,10 @@ export default function ProfilePage() {
               onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
             />
             <Input
-              label="Support email"
+              label="Support email (optional)"
               name="supportEmail"
               value={form.supportEmail}
+              placeholder="support@yourbusiness.com"
               onChange={(e) => setForm((f) => ({ ...f, supportEmail: e.target.value }))}
             />
             <div className="md:col-span-2">
@@ -402,10 +407,14 @@ export default function ProfilePage() {
 
       <Reveal delay={1}>
         <div className="card-interactive space-y-6 p-6 md:p-8">
-          <div>
-            <h2 className="font-display text-lg font-semibold">WhatsApp Cloud API</h2>
-            <p className="text-sm text-muted">Connect this business&apos;s own Meta credentials. The token is encrypted and never returned to the browser.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold">WhatsApp Cloud API</h2>
+              <p className="text-sm text-muted">Connect this business&apos;s own Meta credentials. The token is encrypted and never returned to the browser.</p>
+            </div>
+            {!whatsAppFeatureEnabled ? <span className="rounded-full border border-brand-from/30 bg-brand-from/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-to">Coming Soon</span> : null}
           </div>
+          <fieldset disabled={!whatsAppFeatureEnabled} className={!whatsAppFeatureEnabled ? "space-y-6 opacity-50" : "space-y-6"}>
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant={waConnection.status === "connected" ? "active" : "paused"}>
               {waConnection.status === "connected" ? "Connected" : "Not connected"}
@@ -430,6 +439,7 @@ export default function ProfilePage() {
           </div>
           {waConnection.lastError ? <p className="text-sm text-red-300">{waConnection.lastError}</p> : null}
           {waMessage ? <p className="text-sm text-muted">{waMessage}</p> : null}
+          </fieldset>
         </div>
       </Reveal>
 

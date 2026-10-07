@@ -1,6 +1,7 @@
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { writeAuditLog } from "@/lib/admin/audit";
 import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
+import { PackageModel } from "@/lib/models/package";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -11,7 +12,7 @@ export async function PATCH(request: Request, context: Ctx) {
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as {
     isSuspended?: boolean;
-    plan?: string;
+    planSlug?: string;
     isVerified?: boolean;
   } | null;
 
@@ -23,7 +24,20 @@ export async function PATCH(request: Request, context: Ctx) {
   const update: Record<string, unknown> = {};
   if (typeof body.isSuspended === "boolean") update.isSuspended = body.isSuspended;
   if (typeof body.isVerified === "boolean") update.isVerified = body.isVerified;
-  if (typeof body.plan === "string" && body.plan.trim()) update.plan = body.plan.trim();
+  if (typeof body.planSlug === "string" && body.planSlug.trim()) {
+    const planSlug = body.planSlug.trim().toLowerCase();
+    if (planSlug === "free-trial") {
+      update.plan = "Free Trial";
+      update.planSlug = "free-trial";
+      update.subscriptionStatus = "trial";
+    } else {
+      const plan = await PackageModel.findOne({ slug: planSlug, isActive: true }).select("name slug").lean();
+      if (!plan) return jsonError("Select an active package", 400);
+      update.plan = plan.name;
+      update.planSlug = plan.slug;
+      update.subscriptionStatus = "active";
+    }
+  }
 
   if (Object.keys(update).length === 0) return jsonError("No changes provided");
 
@@ -38,6 +52,7 @@ export async function PATCH(request: Request, context: Ctx) {
     previousValue: {
       isSuspended: previous.isSuspended,
       plan: previous.plan,
+      planSlug: previous.planSlug,
       isVerified: previous.isVerified,
     },
     newValue: update,
@@ -49,6 +64,7 @@ export async function PATCH(request: Request, context: Ctx) {
       businessName: next!.businessName,
       email: next!.email,
       plan: next!.plan,
+      planSlug: next!.planSlug,
       isVerified: next!.isVerified,
       isSuspended: Boolean(next!.isSuspended),
     },

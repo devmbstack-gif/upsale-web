@@ -263,10 +263,10 @@ export default function CustomerDetailPage() {
               <TBody>
                 {visits.map((v) => (
                   <TR key={v._id}>
-                    <TD>{formatDateTime(v.visitedAt)}</TD>
-                    <TD>{(v.amount ?? 0).toLocaleString()}</TD>
-                    <TD>{v.category || "—"}</TD>
-                    <TD>{v.note || "—"}</TD>
+                    <TD label="Visited">{formatDateTime(v.visitedAt)}</TD>
+                    <TD label="Amount">{(v.amount ?? 0).toLocaleString()}</TD>
+                    <TD label="Category">{v.category || "—"}</TD>
+                    <TD label="Note">{v.note || "—"}</TD>
                   </TR>
                 ))}
                 {visits.length === 0 ? (
@@ -303,15 +303,15 @@ export default function CustomerDetailPage() {
                   const redeemed = c.status === "redeemed" || Boolean(c.redeemedAt);
                   return (
                     <TR key={c._id}>
-                      <TD className="font-mono text-xs">{c.code}</TD>
-                      <TD>{offerTitle}</TD>
-                      <TD>
+                      <TD label="Code" className="font-mono text-xs">{c.code}</TD>
+                      <TD label="Offer">{offerTitle}</TD>
+                      <TD label="Status">
                         <Badge variant={redeemed ? "redeemed" : "pending"}>
                           {redeemed ? "Redeemed" : "Pending"}
                         </Badge>
                       </TD>
-                      <TD>{formatDate(c.issuedAt)}</TD>
-                      <TD className="text-right">
+                      <TD label="Issued">{formatDate(c.issuedAt)}</TD>
+                      <TD label="Actions" className="text-right">
                         {!redeemed ? (
                           <div className="flex justify-end">
                             <IconButton

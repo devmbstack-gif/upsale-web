@@ -3,8 +3,8 @@
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Menu, Plus } from "lucide-react";
 
 type TopbarProps = {
   title: string;
@@ -25,8 +25,6 @@ function initialsFromName(name: string | undefined) {
 }
 
 export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
-  const router = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
   const [avatar, setAvatar] = useState<ProfileAvatar>({});
 
   useEffect(() => {
@@ -61,32 +59,18 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
     };
   }, []);
 
-  async function signOut() {
-    setSigningOut(true);
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "same-origin",
-      });
-      router.push("/login");
-      router.refresh();
-    } finally {
-      setSigningOut(false);
-    }
-  }
-
   const logoUrl = avatar.logoUrl?.trim() ?? "";
 
   return (
-    <header className="z-30 flex shrink-0 items-center justify-between gap-4 border-b border-[var(--border)] bg-background/80 px-4 py-4 backdrop-blur-md md:px-8">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="app-topbar z-30 flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-background/80 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-4 md:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
         <button
           type="button"
-          className="rounded-xl border border-[var(--border)] p-2.5 text-muted transition hover:bg-[var(--hover-surface)] lg:hidden"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--border)] p-0 text-muted transition hover:bg-[var(--hover-surface)] lg:hidden"
           onClick={onMenuClick}
           aria-label="Open menu"
         >
-          ☰
+          <Menu size={20} aria-hidden />
         </button>
         <div className="min-w-0">
           <h1 className="font-display truncate text-lg font-semibold tracking-tight md:text-xl">
@@ -97,19 +81,12 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
           ) : null}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <ThemeToggle />
-        <Button href="/app/offers/new" variant="primary" className="hidden sm:inline-flex">
-          New offer
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          className="hidden sm:inline-flex"
-          disabled={signingOut}
-          onClick={() => void signOut()}
-        >
-          {signingOut ? "Signing out…" : "Sign out"}
+        <Button href="/app/offers/new" variant="primary" className="h-10 w-10 !p-0 sm:w-auto sm:!px-4" aria-label="Create new offer">
+          <Plus size={19} aria-hidden />
+          <span className="sr-only sm:hidden">Create new offer</span>
+          <span className="hidden sm:inline">New offer</span>
         </Button>
         <Link
           href="/app/profile"

@@ -16,7 +16,7 @@ type Plan = {
   features: string[];
   popular: boolean;
   price: { amount: number; currency: string; interval: string } | null;
-  limits: { customers: number; campaignsPerMonth: number; aiGenerations: number };
+  limits: { offers: number; customers: number; campaignsPerMonth: number; aiGenerations: number };
 };
 
 function limit(value: number, suffix: string) {
@@ -145,7 +145,7 @@ export default function ChoosePlanClient() {
                     <h2 className="font-display text-xl font-semibold">{plan.name}</h2><p className="mt-2 min-h-10 text-sm leading-relaxed text-muted">{plan.description}</p>
                     <p className="font-display mt-5 text-3xl font-semibold">{plan.price ? new Intl.NumberFormat(undefined, { style: "currency", currency: plan.price.currency, maximumFractionDigits: 0 }).format(plan.price.amount) : "Unavailable"}{plan.price ? <span className="text-sm font-normal text-muted"> / {plan.price.interval}</span> : null}</p>
                     <ul className="mt-5 flex-1 space-y-2 text-sm">{plan.features.map(feature => <li key={feature} className="flex gap-2"><Check size={17} className="mt-0.5 shrink-0 text-emerald-300" /> <span>{feature}</span></li>)}</ul>
-                    <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--hover-surface)]/50 p-3 text-sm"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Monthly limits</p><p>{limit(plan.limits.customers, "customers")}</p><p>{limit(plan.limits.campaignsPerMonth, "campaigns")}</p><p>{limit(plan.limits.aiGenerations, "AI generations")}</p></div>
+                    <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--hover-surface)]/50 p-3 text-sm"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Plan limits</p><p>{limit(plan.limits.offers, "QR offers")}</p><p>{limit(plan.limits.customers, "customers")}</p><p>{limit(plan.limits.campaignsPerMonth, "campaigns / month")}</p><p>{limit(plan.limits.aiGenerations, "AI generations / month")}</p></div>
                     <Button className="mt-5 w-full" disabled={!plan.price || busy !== ""} onClick={() => void checkout(plan.slug)}>{busy === plan.slug ? "Opening checkout…" : `Choose ${plan.name}`}</Button>
                   </motion.article>)}
                 </div>

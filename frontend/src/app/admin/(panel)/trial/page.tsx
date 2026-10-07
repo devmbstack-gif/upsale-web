@@ -10,6 +10,7 @@ type Settings = {
   trialDays: number;
   unlockedPackageId: string | null;
   fairUsageCaps: {
+    offers: number;
     customers: number;
     campaignsPerMonth: number;
     aiGenerations: number;
@@ -113,7 +114,22 @@ export default function AdminTrialPage() {
           ))}
         </select>
       </label>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Fair use · QR offers"
+          type="number"
+          min={0}
+          value={settings.fairUsageCaps.offers}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              fairUsageCaps: {
+                ...settings.fairUsageCaps,
+                offers: Number(e.target.value),
+              },
+            })
+          }
+        />
         <Input
           label="Fair use · customers"
           type="number"

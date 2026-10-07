@@ -4,19 +4,24 @@ import { OfferModel } from "@/lib/models/offer";
 import { CustomerModel } from "@/lib/models/customer";
 import { CouponModel } from "@/lib/models/coupon";
 import { getBusinessLimits, getMonthlyUsage } from "@/lib/billing/usage";
+import { PackageModel } from "@/lib/models/package";
 
 export async function GET() {
   const auth = await requireBusiness();
   if ("error" in auth) return auth.error;
   const { businessId, owner } = auth;
 
-  const [customers, activeOffers, couponsRedeemed, offers, usage, limits] = await Promise.all([
+  const [customers, totalOffers, activeOffers, couponsRedeemed, offers, usage, limits, plan] = await Promise.all([
     CustomerModel.countDocuments({ businessId }),
+    OfferModel.countDocuments({ businessId }),
     OfferModel.countDocuments({ businessId, status: "active" }),
     CouponModel.countDocuments({ businessId, status: "redeemed" }),
     OfferModel.find({ businessId }).select("scans").lean(),
     getMonthlyUsage(businessId),
     getBusinessLimits(owner).catch(() => null),
+    owner.subscriptionStatus === "trial" && owner.trialPackageId
+      ? PackageModel.findById(owner.trialPackageId).select("name featureBullets").lean()
+      : owner.planSlug ? PackageModel.findOne({ slug: owner.planSlug }).select("name featureBullets").lean() : null,
   ]);
 
   const totalScans = offers.reduce((sum, o) => sum + (o.scans ?? 0), 0);
@@ -25,11 +30,17 @@ export async function GET() {
     ok: true,
     stats: {
       totalCustomers: customers,
+      totalOffers,
       activeOffers,
       couponsRedeemed,
       totalScans,
       usage,
       limits,
+      plan: {
+        name: owner.subscriptionStatus === "trial" && plan ? `${plan.name} (Free Trial)` : plan?.name ?? owner.plan ?? "Free Trial",
+        status: owner.subscriptionStatus ?? "inactive",
+        features: plan?.featureBullets ?? [],
+      },
     },
   });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
+import { escapeRegex, normalizeBusinessName } from "@/lib/business-name";
 
 export async function GET() {
   const auth = await requireBusiness();
@@ -32,6 +33,32 @@ export async function PATCH(request: Request) {
   const update: Record<string, unknown> = {};
   for (const key of allowed) {
     if (body[key] !== undefined) update[key] = body[key];
+  }
+  if (typeof body.supportEmail === "string") {
+    const supportEmail = body.supportEmail.trim().toLowerCase();
+    if (supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+      return NextResponse.json({ ok: false, message: "Enter a valid support email or leave it empty." }, { status: 400 });
+    }
+    update.supportEmail = supportEmail;
+  }
+  if (typeof body.businessName === "string") {
+    const businessName = body.businessName.trim().replace(/\s+/g, " ");
+    if (businessName.length < 2) {
+      return NextResponse.json({ ok: false, message: "Business name is required." }, { status: 400 });
+    }
+    const businessNameKey = normalizeBusinessName(businessName);
+    const duplicate = await BusinessOwnerModel.exists({
+      _id: { $ne: businessId },
+      $or: [
+        { businessNameKey },
+        { businessName: { $regex: `^${escapeRegex(businessName)}$`, $options: "i" } },
+      ],
+    });
+    if (duplicate) {
+      return NextResponse.json({ ok: false, message: "A business with this name already exists." }, { status: 409 });
+    }
+    update.businessName = businessName;
+    update.businessNameKey = businessNameKey;
   }
   const profile = await BusinessOwnerModel.findByIdAndUpdate(
     businessId,
