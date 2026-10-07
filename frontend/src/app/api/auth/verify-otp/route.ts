@@ -8,7 +8,6 @@ import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { connectDB } from "@/lib/mongodb";
 import { submittedCategorySchema } from "@/lib/validations/auth";
 import { verifyWhatsAppProof } from "@/lib/auth/whatsapp-proof";
-import { TrialSettingsModel } from "@/lib/models/trial-settings";
 import { callBackend } from "@/lib/server/backend";
 
 const bodySchema = z.object({
@@ -100,13 +99,6 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(data.password, 12);
-    const trialSettings = await TrialSettingsModel.findOne({ key: "default" }).lean();
-    const trialEnabled = trialSettings?.enabled !== false;
-    const trialDays = Math.max(1, trialSettings?.trialDays ?? 14);
-    const trialStartedAt = new Date();
-    const trialEndsAt = trialEnabled
-      ? new Date(trialStartedAt.getTime() + trialDays * 24 * 60 * 60 * 1000)
-      : trialStartedAt;
     const owner = await BusinessOwnerModel.findOneAndUpdate(
       { email },
       {
@@ -125,13 +117,13 @@ export async function POST(request: Request) {
         whatsapp: data.whatsapp,
         termsAccepted: true,
         marketingConsent: true,
-        plan: "Free Trial",
-        planSlug: "free-trial",
-        subscriptionStatus: trialEnabled ? "trial" : "trial_expired",
-        trialStartedAt,
-        trialEndsAt,
-        trialGrantedOnce: true,
-        trialPackageId: trialSettings?.unlockedPackageId ?? null,
+        plan: "Plan not selected",
+        planSlug: "",
+        subscriptionStatus: "onboarding_pending",
+        trialStartedAt: null,
+        trialEndsAt: null,
+        trialGrantedOnce: false,
+        trialPackageId: null,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
@@ -162,7 +154,7 @@ export async function POST(request: Request) {
       email,
       businessName: data.businessName,
       businessUsername: data.businessUsername,
-      plan: "Free Trial",
+      plan: "Plan not selected",
       category: data.category,
       country: data.country,
       currency: data.currency,

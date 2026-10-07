@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { CheckCircle2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type Plan = {
@@ -19,6 +19,7 @@ type Usage = { campaigns: number; aiGenerations: number };
 type Limits = Plan["limits"];
 
 export default function BillingPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentPlan, setCurrentPlan] = useState("Free Trial");
@@ -27,10 +28,11 @@ export default function BillingPage() {
   const [error, setError] = useState("");
   const [usage, setUsage] = useState<Usage>({ campaigns: 0, aiGenerations: 0 });
   const [currentLimits, setCurrentLimits] = useState<Limits | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState("");
 
   const loadPlans = useCallback(async () => {
     const response = await fetch("/api/billing/plans", { cache: "no-store" });
-    const data = (await response.json()) as { ok: boolean; currentPlan?: string; plans?: Plan[]; usage?: Usage; currentLimits?: Limits | null; message?: string };
+    const data = (await response.json()) as { ok: boolean; currentPlan?: string; subscriptionStatus?: string; plans?: Plan[]; usage?: Usage; currentLimits?: Limits | null; message?: string };
     if (!response.ok || !data.ok) {
       setError(data.message ?? "Could not load plans.");
       return;
@@ -39,6 +41,7 @@ export default function BillingPage() {
     setPlans(data.plans ?? []);
     setUsage(data.usage ?? { campaigns: 0, aiGenerations: 0 });
     setCurrentLimits(data.currentLimits ?? null);
+    setSubscriptionStatus(data.subscriptionStatus ?? "");
   }, []);
 
   useEffect(() => {
@@ -87,12 +90,34 @@ export default function BillingPage() {
     window.location.assign(data.url);
   }
 
+  async function startTrial() {
+    setBusy("trial");
+    setError("");
+    const response = await fetch("/api/billing/trial", { method: "POST", credentials: "same-origin" });
+    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; message?: string };
+    if (!response.ok || !data.ok) {
+      setError(data.message ?? "Could not activate the free trial.");
+      setBusy("");
+      return;
+    }
+    router.replace("/app");
+    router.refresh();
+  }
+
+  const selectingAfterSignup = searchParams.get("onboarding") === "1" || subscriptionStatus === "onboarding_pending";
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h2 className="font-display text-2xl font-semibold">Plans and billing</h2>
-        <p className="mt-1 text-muted">Current plan: <strong className="text-foreground">{currentPlan}</strong></p>
+        <h2 className="font-display text-2xl font-semibold">{selectingAfterSignup ? "Choose your plan" : "Plans and billing"}</h2>
+        <p className="mt-1 text-muted">{selectingAfterSignup ? "Select a paid plan now, or skip to activate your free trial." : <>Current plan: <strong className="text-foreground">{currentPlan}</strong></>}</p>
       </div>
+      {selectingAfterSignup ? (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-from/30 bg-brand-from/10 p-4">
+          <div><p className="font-medium">Not ready to subscribe?</p><p className="mt-1 text-sm text-muted">Skip plan selection and start the administrator-configured free trial.</p></div>
+          <Button type="button" variant="secondary" disabled={busy !== ""} onClick={() => void startTrial()}>{busy === "trial" ? "Starting trial…" : "Skip and start free trial"}</Button>
+        </div>
+      ) : null}
       {currentLimits ? (
         <section className="card-interactive grid gap-4 p-5 sm:grid-cols-3">
           <div><p className="text-xs uppercase tracking-wide text-muted">Customers limit</p><p className="font-display mt-1 text-xl font-semibold">{currentLimits.customers || "Unlimited"}</p></div>

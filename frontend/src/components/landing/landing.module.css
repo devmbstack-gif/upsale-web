@@ -2579,6 +2579,47 @@
   }
 }
 
+@media (max-width: 560px) {
+  .container {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .nav {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .headline {
+    font-size: clamp(2.35rem, 12vw, 3.4rem);
+  }
+
+  .heroActions,
+  .heroActions .btn,
+  .enterprise .btn,
+  .contact .btn {
+    width: 100%;
+  }
+
+  .tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+  }
+
+  .priceCard,
+  .card,
+  .setupItem,
+  .enterprise,
+  .contact {
+    min-width: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orbA,
   .orbB,

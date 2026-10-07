@@ -147,6 +147,11 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
   }
 
   async verifyNumber(phone: string) {
+    // Testing switch: keep the production verification flow below intact.
+    // Set WHATSAPP_NUMBER_VERIFICATION_ENABLED=true to re-enable real Meta delivery verification.
+    if (this.config.get<string>('WHATSAPP_NUMBER_VERIFICATION_ENABLED', 'true').toLowerCase() === 'false') {
+      return { accepted: true, bypassed: true, phone: this.normalize(phone) };
+    }
     const token = this.config.get<string>('WHATSAPP_ACCESS_TOKEN');
     const phoneNumberId = this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID');
     if (!token || !phoneNumberId) throw new ServiceUnavailableException('WhatsApp number verification is not configured.');

@@ -328,7 +328,7 @@ export default function SignUpMultiStepForm() {
         setOtpError(payload.message ?? "That code does not match.");
         return;
       }
-      router.push("/app");
+      router.push("/choose-plan?welcome=1");
       router.refresh();
     } catch {
       setOtpError("Could not verify the code.");

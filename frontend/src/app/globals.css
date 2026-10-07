@@ -80,12 +80,17 @@ html.light {
 }
 
 html {
+  max-width: 100%;
+  overflow-x: clip;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
@@ -93,6 +98,50 @@ body {
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+li,
+code {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .card-interactive {
+    border-radius: 1rem;
+  }
+
+  .card-interactive:hover {
+    transform: none;
+  }
+
+  .input-field {
+    font-size: 1rem;
+  }
 }
 
 .font-display {
@@ -555,5 +604,18 @@ html.light .ambient-soft-glow--c {
   .reveal,
   .reveal-scale {
     opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .card-interactive,
+  .card-interactive:hover {
+    border-radius: 1rem;
+    transform: none;
+  }
+
+  .input-field {
+    min-width: 0;
+    font-size: 1rem;
   }
 }

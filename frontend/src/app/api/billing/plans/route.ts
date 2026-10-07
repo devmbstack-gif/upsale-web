@@ -17,6 +17,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     currentPlan: auth.owner.plan ?? "Free Trial",
+    subscriptionStatus: auth.owner.subscriptionStatus ?? "onboarding_pending",
     usage,
     currentLimits,
     plans: packages.map((plan) => {
