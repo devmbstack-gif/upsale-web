@@ -413,7 +413,7 @@ export default function SignUpMultiStepForm() {
                 </div>
                 <div className={styles.actions}>
                   <button type="button" className={styles.primary} disabled={!accountReady || submitting} onClick={goToBusiness}>
-                    {submitting ? "Checking email…" : "Next: Business Details"}
+                    {submitting ? "Checking email…" : "Next"}
                   </button>
                 </div>
               </section>
@@ -513,7 +513,7 @@ export default function SignUpMultiStepForm() {
                     Back
                   </button>
                   <button type="button" className={styles.primary} disabled={!businessReady} onClick={goToConfirm}>
-                    Next: Confirm
+                    Next
                   </button>
                 </div>
               </section>

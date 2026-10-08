@@ -37,7 +37,7 @@ export async function GET() {
       usage,
       limits,
       plan: {
-        name: owner.subscriptionStatus === "trial" && plan ? `${plan.name} (Free Trial)` : plan?.name ?? owner.plan ?? "Free Trial",
+        name: plan?.name ?? owner.plan?.replace(/\s*\(Free Trial\)\s*$/i, "") ?? "Free Trial",
         status: owner.subscriptionStatus ?? "inactive",
         features: plan?.featureBullets ?? [],
       },

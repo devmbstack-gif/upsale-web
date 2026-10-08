@@ -4,6 +4,15 @@ import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
 
 const DEFAULT_SECTIONS = [
   {
+    sectionKey: "branding",
+    locale: "en",
+    content: {
+      logoLight: "/logo-light.png",
+      logoDark: "/logo-dark.png",
+      favicon: "/favicon-32.png",
+    },
+  },
+  {
     sectionKey: "seo",
     locale: "en",
     content: {

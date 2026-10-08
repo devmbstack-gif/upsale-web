@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { DM_Sans, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { DynamicFavicon } from "@/components/ui/DynamicFavicon";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans text-foreground">
+        <DynamicFavicon />
         <Script id="upsale-theme-init" strategy="beforeInteractive">
           {themeInitScript}
         </Script>

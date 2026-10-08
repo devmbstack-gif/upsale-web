@@ -3,6 +3,7 @@ import { z } from "zod";
 import { connectDB } from "@/lib/mongodb";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { escapeRegex, normalizeBusinessName } from "@/lib/business-name";
+import { offerNameSlug } from "@/lib/offer-slug";
 
 const schema = z.object({ businessName: z.string().trim().min(2).max(100) });
 
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     $or: [
       { businessNameKey: key },
       { businessName: { $regex: `^${escapeRegex(businessName)}$`, $options: "i" } },
+      { businessSlug: offerNameSlug(businessName) },
     ],
   });
   return NextResponse.json(

@@ -15,6 +15,8 @@ import OfferDetailLoading from "./loading";
 
 type Offer = {
   _id: string;
+  businessId: string;
+  businessSlug: string;
   title: string;
   description?: string;
   type: string;
@@ -62,8 +64,9 @@ export default function OfferDetailPage() {
       setShareUrl("");
       return;
     }
-    setShareUrl(`${window.location.origin}/${slug}`);
-  }, [slug]);
+    if (!offer?.businessSlug) return;
+    setShareUrl(`${window.location.origin}/${offer.businessSlug}/${slug}`);
+  }, [slug, offer?.businessSlug]);
 
   if (offer === undefined) {
     return <OfferDetailLoading />;
@@ -121,7 +124,7 @@ export default function OfferDetailPage() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button href={`/${slug}`} variant="primary">
+          <Button href={`/${offer.businessSlug}/${slug}`} variant="primary">
             Preview claim page
           </Button>
           <Button href="/app/offers" variant="secondary">

@@ -4,6 +4,7 @@ const businessOwnerSchema = new Schema(
   {
     businessName: { type: String, required: true, trim: true },
     businessNameKey: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
+    businessSlug: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     isVerified: { type: Boolean, default: false },

@@ -18,13 +18,15 @@ const offerSchema = new Schema(
       enum: ["draft", "active", "paused", "expired"],
       default: "active",
     },
-    shareSlug: { type: String, required: true, unique: true },
+    shareSlug: { type: String, required: true },
     scans: { type: Number, default: 0 },
     redemptions: { type: Number, default: 0 },
     expiresAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
+
+offerSchema.index({ businessId: 1, shareSlug: 1 }, { unique: true });
 
 export type OfferDoc = InferSchemaType<typeof offerSchema>;
 export const OfferModel = models.Offer || model("Offer", offerSchema, "offers");

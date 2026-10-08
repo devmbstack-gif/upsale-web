@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth/require-business";
 import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { escapeRegex, normalizeBusinessName } from "@/lib/business-name";
+import { offerNameSlug } from "@/lib/offer-slug";
 
 export async function GET() {
   const auth = await requireBusiness();
@@ -47,11 +48,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ ok: false, message: "Business name is required." }, { status: 400 });
     }
     const businessNameKey = normalizeBusinessName(businessName);
+    const businessSlug = offerNameSlug(businessName);
     const duplicate = await BusinessOwnerModel.exists({
       _id: { $ne: businessId },
       $or: [
         { businessNameKey },
         { businessName: { $regex: `^${escapeRegex(businessName)}$`, $options: "i" } },
+        { businessSlug },
       ],
     });
     if (duplicate) {
@@ -59,6 +62,7 @@ export async function PATCH(request: Request) {
     }
     update.businessName = businessName;
     update.businessNameKey = businessNameKey;
+    update.businessSlug = businessSlug;
   }
   const profile = await BusinessOwnerModel.findByIdAndUpdate(
     businessId,

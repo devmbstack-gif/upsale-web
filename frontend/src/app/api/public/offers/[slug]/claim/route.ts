@@ -39,7 +39,8 @@ export async function POST(request: Request, ctx: Ctx) {
     );
   }
 
-  const found = await findOfferByPublicSlug(slug);
+  const query = new URL(request.url).searchParams;
+  const found = await findOfferByPublicSlug(slug, query.get("business"), query.get("businessSlug"));
   if (!found) {
     return NextResponse.json({ ok: false, message: "Offer not found" }, { status: 404 });
   }

@@ -23,7 +23,7 @@ export async function POST() {
   const trialPackage = settings?.unlockedPackageId
     ? await PackageModel.findOne({ _id: settings.unlockedPackageId, isActive: true }).select("name").lean()
     : null;
-  const trialPlanName = trialPackage ? `${trialPackage.name} (Free Trial)` : "Free Trial";
+  const trialPlanName = trialPackage?.name ?? "Free Trial";
   const trialDays = Math.max(1, settings?.trialDays ?? 14);
   const endsAt = new Date(startedAt.getTime() + trialDays * 24 * 60 * 60 * 1000);
   const updated = await BusinessOwnerModel.findOneAndUpdate(

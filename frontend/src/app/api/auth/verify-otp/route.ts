@@ -8,6 +8,7 @@ import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { connectDB } from "@/lib/mongodb";
 import { submittedCategorySchema } from "@/lib/validations/auth";
 import { callBackend } from "@/lib/server/backend";
+import { offerNameSlug } from "@/lib/offer-slug";
 import { escapeRegex, normalizeBusinessName } from "@/lib/business-name";
 
 const bodySchema = z.object({
@@ -85,11 +86,13 @@ export async function POST(request: Request) {
 
     const businessName = data.businessName.trim().replace(/\s+/g, " ");
     const businessNameKey = normalizeBusinessName(businessName);
+    const businessSlug = offerNameSlug(businessName);
     const nameOwner = await BusinessOwnerModel.exists({
       email: { $ne: email },
       $or: [
         { businessNameKey },
         { businessName: { $regex: `^${escapeRegex(businessName)}$`, $options: "i" } },
+        { businessSlug },
       ],
     });
     if (nameOwner) {
@@ -102,6 +105,7 @@ export async function POST(request: Request) {
       {
         businessName,
         businessNameKey,
+        businessSlug,
         email,
         passwordHash,
         isVerified: true,

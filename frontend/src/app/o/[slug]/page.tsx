@@ -12,7 +12,7 @@ import {
 } from "@/lib/data/countries";
 import confetti from "canvas-confetti";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ClaimPageLoading from "./loading";
 
@@ -123,7 +123,13 @@ function ConsentDialog({
 
 export default function PublicOfferPage() {
   const params = useParams();
-  const slug = String(params.slug ?? "");
+  const searchParams = useSearchParams();
+  const businessSlug = String(params.offer ? params.slug ?? "" : "");
+  const slug = String(params.offer ?? params.slug ?? "");
+  const businessQuery = searchParams.get("business");
+  const apiQuery = businessSlug
+    ? `?businessSlug=${encodeURIComponent(businessSlug)}`
+    : businessQuery ? `?business=${encodeURIComponent(businessQuery)}` : "";
   const scanRecorded = useRef(false);
 
   const [loading, setLoading] = useState(true);
@@ -202,7 +208,7 @@ export default function PublicOfferPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/public/offers/${encodeURIComponent(slug)}`);
+        const res = await fetch(`/api/public/offers/${encodeURIComponent(slug)}${apiQuery}`);
         const data = (await res.json()) as {
           ok: boolean;
           offer?: PublicOfferPayload;
@@ -222,13 +228,13 @@ export default function PublicOfferPage() {
         setLoading(false);
       }
     })();
-  }, [slug]);
+  }, [slug, apiQuery]);
 
   useEffect(() => {
     if (!slug || !offer || unavailable || scanRecorded.current) return;
     scanRecorded.current = true;
-    void fetch(`/api/public/offers/${encodeURIComponent(slug)}/scan`, { method: "POST" });
-  }, [slug, offer, unavailable]);
+    void fetch(`/api/public/offers/${encodeURIComponent(slug)}/scan${apiQuery}`, { method: "POST" });
+  }, [slug, offer, unavailable, apiQuery]);
 
   async function onClaim(e: React.FormEvent) {
     e.preventDefault();
@@ -240,7 +246,7 @@ export default function PublicOfferPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/public/offers/${encodeURIComponent(slug)}/claim`, {
+      const res = await fetch(`/api/public/offers/${encodeURIComponent(slug)}/claim${apiQuery}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

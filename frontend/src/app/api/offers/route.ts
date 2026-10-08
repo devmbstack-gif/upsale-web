@@ -5,11 +5,46 @@ import { randomBytes } from "crypto";
 import { offerNameSlug } from "@/lib/offer-slug";
 import { assertOfferCapacity, UsageLimitError } from "@/lib/billing/usage";
 
-async function availableSlug(title: string) {
+let indexMigration: Promise<void> | null = null;
+function ensureBusinessScopedSlugIndex() {
+  if (!indexMigration) {
+    indexMigration = (async () => {
+      const indexes = await OfferModel.collection.indexes();
+      const legacy = indexes.find((index) => index.name === "shareSlug_1");
+      if (legacy) await OfferModel.collection.dropIndex("shareSlug_1");
+      await OfferModel.collection.createIndex({ businessId: 1, shareSlug: 1 }, { unique: true, name: "businessId_1_shareSlug_1" });
+    })().catch((error) => {
+      indexMigration = null;
+      throw error;
+    });
+  }
+  return indexMigration;
+}
+
+async function availableSlug(title: string, businessId: string) {
   const base = offerNameSlug(title);
+  const now = new Date();
+  // Release the human-readable name when an older offer has ended. Historical
+  // records keep a private archival slug, while the new offer gets the exact name.
+  const ended = await OfferModel.find({
+    businessId,
+    shareSlug: base,
+    $or: [{ status: "expired" }, { expiresAt: { $lte: now } }],
+  }).select("_id").lean();
+  for (const oldOffer of ended) {
+    await OfferModel.updateOne(
+      { _id: oldOffer._id },
+      { $set: { shareSlug: `${base}-expired-${String(oldOffer._id).slice(-8)}`, status: "expired" } },
+    );
+  }
   for (let suffix = 1; suffix <= 100; suffix += 1) {
     const candidate = suffix === 1 ? base : `${base}-${suffix}`;
-    if (!(await OfferModel.exists({ shareSlug: candidate }))) return candidate;
+    if (!(await OfferModel.exists({
+      businessId,
+      shareSlug: candidate,
+      status: { $ne: "expired" },
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }],
+    }))) return candidate;
   }
   return `${base}-${randomBytes(3).toString("hex")}`;
 }
@@ -26,6 +61,7 @@ export async function POST(request: Request) {
   const auth = await requireBusiness();
   if ("error" in auth) return auth.error;
   const { businessId, owner } = auth;
+  await ensureBusinessScopedSlugIndex();
   const body = (await request.json()) as {
     title?: string;
     description?: string;
@@ -63,7 +99,7 @@ export async function POST(request: Request) {
     expiresAt = parsed;
   }
 
-  const shareSlug = await availableSlug(body.title);
+  const shareSlug = await availableSlug(body.title, businessId);
   const offer = await OfferModel.create({
     businessId,
     title: body.title.trim(),

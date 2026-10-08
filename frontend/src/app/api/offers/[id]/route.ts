@@ -9,23 +9,40 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, ctx: Ctx) {
   const auth = await requireBusiness();
   if ("error" in auth && auth.error) return auth.error;
-  const { businessId } = auth as { businessId: string };
+  const { businessId, owner } = auth as { businessId: string; owner: { businessName: string; businessSlug?: string } };
   const { id } = await ctx.params;
   let offer = await OfferModel.findOne({ _id: id, businessId });
   if (!offer) {
     return NextResponse.json({ ok: false, message: "Not found" }, { status: 404 });
   }
-  if (/^o-[a-f0-9]{8}$/i.test(offer.shareSlug)) {
+  const indexes = await OfferModel.collection.indexes();
+  if (indexes.some((index) => index.name === "shareSlug_1")) {
+    await OfferModel.collection.dropIndex("shareSlug_1");
+  }
+  await OfferModel.collection.createIndex({ businessId: 1, shareSlug: 1 }, { unique: true, name: "businessId_1_shareSlug_1" });
+  const expectedSlug = offerNameSlug(offer.title);
+  if (offer.shareSlug !== expectedSlug) {
     const base = offerNameSlug(offer.title);
     let candidate = base;
     let suffix = 2;
-    while (await OfferModel.exists({ shareSlug: candidate, _id: { $ne: offer._id } })) {
+    while (await OfferModel.exists({
+      businessId,
+      shareSlug: candidate,
+      _id: { $ne: offer._id },
+      status: { $ne: "expired" },
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+    })) {
       candidate = `${base}-${suffix++}`;
     }
     offer.shareSlug = candidate;
     await offer.save();
   }
-  return NextResponse.json({ ok: true, offer: offer.toObject() });
+  const businessSlug = owner.businessSlug || offerNameSlug(owner.businessName);
+  if (!owner.businessSlug) {
+    const { BusinessOwnerModel } = await import("@/lib/models/business-owner");
+    await BusinessOwnerModel.updateOne({ _id: businessId }, { $set: { businessSlug } });
+  }
+  return NextResponse.json({ ok: true, offer: { ...offer.toObject(), businessSlug } });
 }
 
 export async function PATCH(request: Request, ctx: Ctx) {

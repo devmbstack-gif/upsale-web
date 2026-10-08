@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type BrandLogoProps = {
@@ -23,6 +24,8 @@ const sizeStyles = {
   xl: { wrap: "h-12", height: 48 },
 } as const;
 
+let cachedBranding: { logoLight?: string; logoDark?: string } | null = null;
+
 export function BrandLogo({
   variant = "auto",
   size = "md",
@@ -30,10 +33,23 @@ export function BrandLogo({
   priority = false,
 }: BrandLogoProps) {
   const { theme } = useTheme();
+  const [branding, setBranding] = useState(cachedBranding);
+  useEffect(() => {
+    if (cachedBranding) return;
+    void fetch("/api/public/branding")
+      .then((response) => response.json())
+      .then((data) => {
+        cachedBranding = data.branding ?? {};
+        setBranding(cachedBranding);
+      })
+      .catch(() => undefined);
+  }, []);
   const resolved =
     variant === "auto" ? (theme === "light" ? "light" : "dark") : variant;
   const s = sizeStyles[size];
-  const src = resolved === "light" ? "/logo-light.png" : "/logo-dark.png";
+  const src = resolved === "light"
+    ? branding?.logoLight || "/logo-light.png"
+    : branding?.logoDark || "/logo-dark.png";
   const width = Math.round((s.height * LOGO_WIDTH) / LOGO_HEIGHT);
 
   return (

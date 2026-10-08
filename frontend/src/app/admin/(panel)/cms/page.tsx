@@ -32,8 +32,10 @@ export default function AdminCmsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [previewImage, setPreviewImage] = useState<{ src: string; label: string } | null>(null);
   const selectedSection = sections.find((section) => section.id === selectedId);
   const isSeoSection = selectedSection?.sectionKey === "seo";
+  const isBrandingSection = selectedSection?.sectionKey === "branding";
 
   function seoContent() {
     try {
@@ -45,6 +47,23 @@ export default function AdminCmsPage() {
 
   function updateSeoField(key: string, value: unknown) {
     setJsonText(JSON.stringify({ ...seoContent(), [key]: value }, null, 2));
+  }
+
+  async function uploadBrandingImage(type: "logoLight" | "logoDark" | "favicon", file?: File) {
+    if (!file) return;
+    setSaving(true); setError(""); setMessage("");
+    try {
+      if (!file.type.match(/^image\/(png|jpeg|webp)$/) || file.size > 1_500_000) throw new Error("Use a PNG, JPG, or WebP image under 1.5 MB.");
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(file);
+      });
+      const response = await fetch("/api/admin/branding/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, dataUrl }) });
+      const data = await response.json() as { ok?: boolean; url?: string; message?: string };
+      if (!response.ok || !data.url) throw new Error(data.message ?? "Upload failed.");
+      updateSeoField(type, data.url);
+      setMessage("Image uploaded. Save and publish to apply it across the website.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed."); }
+    finally { setSaving(false); }
   }
 
   const loadList = useCallback(async () => {
@@ -205,7 +224,7 @@ export default function AdminCmsPage() {
       </div>
 
       <div className="card-interactive space-y-3 p-5">
-        <h2 className="font-display text-lg font-semibold">{isSeoSection ? "Website SEO" : "Edit content (JSON)"}</h2>
+        <h2 className="font-display text-lg font-semibold">{isSeoSection ? "Website SEO" : isBrandingSection ? "Website branding" : "Edit content (JSON)"}</h2>
         {isSeoSection ? (
           <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--hover-surface)]/30 p-4">
             <p className="text-sm text-muted">Published values control homepage search metadata and social sharing previews.</p>
@@ -221,12 +240,34 @@ export default function AdminCmsPage() {
             </div>
           </div>
         ) : null}
-        <TextArea
+        {isBrandingSection ? (
+          <div className="space-y-4 rounded-2xl border border-[var(--border)] p-4">
+            <p className="text-sm text-muted">Upload the website wordmarks and browser favicon. Save and publish after uploading.</p>
+            {([['logoLight', 'Logo for light backgrounds'], ['logoDark', 'Logo for dark backgrounds'], ['favicon', 'Browser favicon']] as const).map(([key, label]) => (
+              <div key={key} className="space-y-3 rounded-xl border border-[var(--border)] p-3">
+                <p className="text-sm font-medium">{label}</p>
+                <div className={`flex min-h-24 items-center justify-center overflow-hidden rounded-xl border border-[var(--border)] p-4 ${key === "logoLight" ? "bg-white" : "bg-[#100d1c]"}`}>
+                  {String(seoContent()[key] ?? "") ? (
+                    <img src={String(seoContent()[key])} alt={`${label} preview`} className={key === "favicon" ? "h-16 w-16 object-contain" : "max-h-20 max-w-full object-contain"} />
+                  ) : <span className="text-sm text-muted">No image uploaded</span>}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="cursor-pointer rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--hover-surface)]">
+                    {String(seoContent()[key] ?? "") ? "Replace image" : "Upload image"}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" disabled={saving} onChange={(e) => void uploadBrandingImage(key, e.target.files?.[0])} className="sr-only" />
+                  </label>
+                  <Button type="button" variant="secondary" disabled={!String(seoContent()[key] ?? "")} onClick={() => setPreviewImage({ src: String(seoContent()[key]), label })}>Preview</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {!isBrandingSection ? <TextArea
           label={isSeoSection ? "Advanced SEO JSON" : "Content JSON"}
           className="min-h-[220px] font-mono text-xs"
           value={jsonText}
           onChange={(e) => setJsonText(e.target.value)}
-        />
+        /> : null}
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -248,6 +289,16 @@ export default function AdminCmsPage() {
             Save & publish
           </Button>
         </div>
+        {previewImage ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-label={`${previewImage.label} preview`} onClick={() => setPreviewImage(null)}>
+            <div className="w-full max-w-3xl space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-center justify-between gap-3"><h3 className="font-display text-lg font-semibold">{previewImage.label}</h3><Button type="button" variant="secondary" onClick={() => setPreviewImage(null)}>Close</Button></div>
+              <div className="flex min-h-64 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#fff_0%,#fff_50%,#100d1c_50%,#100d1c_100%)] p-8">
+                <img src={previewImage.src} alt={previewImage.label} className="max-h-[60vh] max-w-full object-contain" />
+              </div>
+            </div>
+          </div>
+        ) : null}
         {error ? <p className="text-sm text-[var(--danger-text)]">{error}</p> : null}
         {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
 
