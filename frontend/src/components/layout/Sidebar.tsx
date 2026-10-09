@@ -12,12 +12,20 @@ import {
   LayoutDashboard,
   X,
   Megaphone,
-  MessageCircle,
   Sparkles,
   TicketCheck,
   UserRound,
   Users,
 } from "lucide-react";
+
+function WhatsAppIcon({ size = 20, className, strokeWidth = 1.9 }: { size?: number; className?: string; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.45L3.5 20.5l1.38-4.25A8.5 8.5 0 1 1 20.5 11.7Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.05 7.75c.18-.4.37-.4.62-.41h.52c.16 0 .37.06.48.32l.82 1.95c.09.22.04.4-.1.58l-.63.76c-.12.15-.13.3-.03.48.53.93 1.32 1.7 2.26 2.22.17.1.33.09.46-.06l.8-.92c.16-.18.35-.23.56-.14l1.9.9c.23.11.35.27.31.53-.08.55-.32 1.08-.72 1.45-.45.42-1.07.65-1.7.61-1.04-.07-2.72-.7-4.25-2.05-1.24-1.1-2.2-2.48-2.49-3.64-.26-1.03-.04-1.82.28-2.35l.91-1.17Z" fill="currentColor" />
+    </svg>
+  );
+}
 
 const nav = [
   { href: "/app", label: "Overview", icon: LayoutDashboard },
@@ -26,7 +34,7 @@ const nav = [
   { href: "/app/coupons", label: "Coupons", icon: TicketCheck },
   { href: "/app/deals", label: "Deals", icon: Megaphone },
   { href: "/app/ai", label: "AI Deal Maker", icon: Sparkles },
-  { href: "/app/whatsapp", label: "WhatsApp", icon: MessageCircle },
+  { href: "/app/whatsapp", label: "WhatsApp", icon: WhatsAppIcon },
   { href: "/app/billing", label: "Plans & Billing", icon: CreditCard },
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];

@@ -25,6 +25,9 @@ const bodySchema = z.object({
   scheduledAt: z.string().nullable().optional(),
   sendNow: z.boolean().optional(),
   templateName: z.string().trim().optional(),
+  productImageUrl: z.union([z.string().url(), z.literal("")]).optional(),
+  postCaption: z.string().trim().max(2200).optional(),
+  includePost: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -64,6 +67,9 @@ export async function POST(request: Request) {
     message: data.message,
     templateName: data.templateName ?? "",
     discountLabel: data.discountLabel ?? "",
+    productImageUrl: data.includePost ? data.productImageUrl ?? "" : "",
+    postCaption: data.includePost ? data.postCaption ?? "" : "",
+    includePost: Boolean(data.includePost && data.productImageUrl),
     audience: data.audience,
     customerIds: data.audience === "custom" ? (data.customerIds ?? []) : [],
     scheduleType: data.scheduleType,
@@ -84,6 +90,8 @@ export async function POST(request: Request) {
         dealId: String(deal._id),
         message: data.message,
         templateName: data.templateName || undefined,
+        productImageUrl: data.includePost ? data.productImageUrl : undefined,
+        postCaption: data.includePost ? data.postCaption : undefined,
         recipients: recipients.map((recipient) => ({
           customerId: String(recipient._id),
           name: recipient.name,
@@ -114,6 +122,8 @@ export async function POST(request: Request) {
           dealId: String(deal._id),
           message: data.message,
           templateName: data.templateName || undefined,
+          productImageUrl: data.includePost ? data.productImageUrl : undefined,
+          postCaption: data.includePost ? data.postCaption : undefined,
           scheduleType: data.scheduleType,
           scheduledAt: scheduledAt?.toISOString(),
           recipients: recipients.map((recipient) => ({

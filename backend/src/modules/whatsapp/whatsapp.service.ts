@@ -131,11 +131,13 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
 
   private normalize(phone: string) { return phone.replace(/\D/g, ''); }
 
-  private async sendTemplate(phoneNumberId: string, token: string, to: string, templateName: string, bodyValues: string[] = []) {
-    const components = bodyValues.length ? [{ type: 'body', parameters: bodyValues.map((text) => ({ type: 'text', text })) }] : undefined;
+  private async sendTemplate(phoneNumberId: string, token: string, to: string, templateName: string, bodyValues: string[] = [], imageUrl?: string) {
+    const components: Array<Record<string, unknown>> = [];
+    if (imageUrl) components.push({ type: 'header', parameters: [{ type: 'image', image: { link: imageUrl } }] });
+    if (bodyValues.length) components.push({ type: 'body', parameters: bodyValues.map((text) => ({ type: 'text', text })) });
     return this.graph<{ messages?: Array<{ id: string }> }>(`${phoneNumberId}/messages`, token, {
       method: 'POST',
-      body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: this.normalize(to), type: 'template', template: { name: templateName, language: { code: this.config.get('WHATSAPP_TEMPLATE_LANGUAGE', 'en_US') }, ...(components ? { components } : {}) } }),
+      body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: this.normalize(to), type: 'template', template: { name: templateName, language: { code: this.config.get('WHATSAPP_TEMPLATE_LANGUAGE', 'en_US') }, ...(components.length ? { components } : {}) } }),
     });
   }
 
@@ -187,7 +189,8 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
     for (const recipient of dto.recipients.slice(0, 500)) {
       try {
         const personalized = dto.message.replace(/\{\{name\}\}/gi, recipient.name);
-        const result = await this.sendTemplate(connection.phoneNumberId, connection.token, recipient.phone, templateName, [personalized]);
+        const body = dto.postCaption ? `${personalized}\n\n${dto.postCaption}` : personalized;
+        const result = await this.sendTemplate(connection.phoneNumberId, connection.token, recipient.phone, templateName, [body], dto.productImageUrl);
         await logs.insertOne({ businessId: new Types.ObjectId(dto.businessId), dealId: new Types.ObjectId(dto.dealId), customerId: new Types.ObjectId(recipient.customerId), recipientName: recipient.name, phone: this.normalize(recipient.phone), messageId: result.messages?.[0]?.id ?? '', status: 'accepted', createdAt: new Date(), updatedAt: new Date() });
         accepted += 1;
       } catch (error) {
@@ -212,7 +215,7 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
     if (scheduledAt.getTime() <= Date.now()) throw new BadRequestException('Scheduled time must be in the future.');
     await this.db.collection('whatsapp_campaign_jobs').insertOne({
       businessId: new Types.ObjectId(dto.businessId), dealId: new Types.ObjectId(dto.dealId),
-      message: dto.message, templateName, recipients: dto.recipients,
+      message: dto.message, templateName, productImageUrl: dto.productImageUrl, postCaption: dto.postCaption, recipients: dto.recipients,
       scheduleType: dto.scheduleType, scheduledAt, status: 'scheduled', attempts: 0,
       createdAt: new Date(), updatedAt: new Date(),
     });
@@ -231,6 +234,8 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
       const result = await this.sendCampaign({
         businessId: String(job.businessId), dealId: String(job.dealId),
         message: String(job.message), templateName: String(job.templateName),
+        productImageUrl: job.productImageUrl ? String(job.productImageUrl) : undefined,
+        postCaption: job.postCaption ? String(job.postCaption) : undefined,
         recipients: job.recipients as SendCampaignDto['recipients'],
       });
       const nextStatus = result.accepted > 0 ? (result.failed > 0 ? 'partial' : 'sent') : 'failed';

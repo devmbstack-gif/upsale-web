@@ -44,6 +44,9 @@ function DealsPageInner() {
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [fromAi, setFromAi] = useState(false);
+  const [productImageUrl, setProductImageUrl] = useState("");
+  const [postCaption, setPostCaption] = useState("");
+  const [includePost, setIncludePost] = useState(false);
 
   async function load() {
     const [dealsRes, segRes] = await Promise.all([
@@ -72,10 +75,16 @@ function DealsPageInner() {
       message?: string;
       discountLabel?: string;
       audience?: string;
+      productImageUrl?: string;
+      postCaption?: string;
+      includePost?: boolean;
     }) => {
       if (draft.title) setTitle(draft.title);
       if (draft.message) setMessage(draft.message);
       if (draft.discountLabel) setDiscountLabel(draft.discountLabel);
+      if (draft.productImageUrl) setProductImageUrl(draft.productImageUrl);
+      if (draft.postCaption) setPostCaption(draft.postCaption);
+      setIncludePost(Boolean(draft.includePost && draft.productImageUrl));
       if (
         draft.audience === "all" ||
         draft.audience === "new" ||
@@ -92,7 +101,10 @@ function DealsPageInner() {
     const qTitle = searchParams.get("title");
     const qMessage = searchParams.get("message");
     if (searchParams.get("fromAi") === "1" && (qTitle || qMessage)) {
+      let stored: AiDealDraft | null = null;
+      try { const raw = sessionStorage.getItem(AI_DEAL_DRAFT_KEY); stored = raw ? JSON.parse(raw) as AiDealDraft : null; } catch { /* ignore */ }
       applyDraft({
+        ...(stored ?? {}),
         title: qTitle ?? undefined,
         message: qMessage ?? undefined,
         discountLabel: searchParams.get("discount") ?? undefined,
@@ -137,6 +149,9 @@ function DealsPageInner() {
           scheduledAt: scheduleType === "now" ? null : scheduledAt || null,
           sendNow: scheduleType === "now",
           templateName,
+          productImageUrl: includePost ? productImageUrl : "",
+          postCaption: includePost ? postCaption : "",
+          includePost,
         }),
       });
       const data = (await res.json()) as { ok: boolean; message?: string; note?: string };
@@ -198,13 +213,20 @@ function DealsPageInner() {
             required
             placeholder="Hi {{name}}, here’s a special offer from us…"
           />
+          <p className="-mt-2 text-xs text-muted">Example: {"{{name}}"} becomes each customer&apos;s name. Add the offer and Reply STOP to opt out.</p>
+          {productImageUrl ? (
+            <div className="space-y-3 rounded-xl border border-[var(--border)] p-4">
+              <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" checked={includePost} onChange={(e) => setIncludePost(e.target.checked)} />Include the approved product post with this deal</label>
+              {includePost ? <div className="grid gap-4 sm:grid-cols-[160px_1fr]"><img src={productImageUrl} alt="Product post preview" className="h-40 w-full rounded-xl object-cover" /><TextArea label="Post caption" value={postCaption} onChange={(e) => setPostCaption(e.target.value)} placeholder="Example: Fresh style, made for you. Visit us this weekend and enjoy 10% off." /></div> : null}
+            </div>
+          ) : null}
           <Input
-            label="Approved Meta template name"
+            label="WhatsApp template name"
             name="templateName"
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
-            placeholder="upsale_marketing_message"
-            hint="The approved template body must contain one variable ({{1}}) for the message above."
+            placeholder="Example: upsale_marketing_message"
+            hint="Use the exact template name approved in Meta Business Manager. Its body should contain {{1}}."
             required
           />
 

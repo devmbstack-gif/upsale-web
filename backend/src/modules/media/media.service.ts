@@ -30,6 +30,17 @@ export class MediaService {
     return { url: result.secure_url, publicId: result.public_id };
   }
 
+  async uploadProduct(dataUrl: string, businessId: string) {
+    if (!/^data:image\/(png|jpeg|webp);base64,/i.test(dataUrl)) throw new BadRequestException('Only PNG, JPG, or WebP images are allowed.');
+    const bytes = Buffer.byteLength(dataUrl.split(',')[1] ?? '', 'base64');
+    if (!bytes || bytes > 8_000_000) throw new BadRequestException('Product photo or generated post must be under 8 MB.');
+    const result = await cloudinary.uploader.upload(dataUrl, {
+      resource_type: 'image', folder: `upsale/product-posts/${businessId}`,
+      public_id: `product-${Date.now()}`, transformation: [{ width: 1400, height: 1400, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+    });
+    return { url: result.secure_url, publicId: result.public_id };
+  }
+
   async deleteLogo(publicId: string) {
     if (!publicId.startsWith('upsale/business-logos/')) throw new BadRequestException('Invalid logo storage key.');
     await cloudinary.uploader.destroy(publicId, { resource_type: 'image', invalidate: true });

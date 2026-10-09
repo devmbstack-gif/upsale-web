@@ -6,10 +6,13 @@ import { computeSegmentStats, suggestDeal } from "@/lib/ai-deal-maker";
 import { filterBySegment, type SegmentId } from "@/lib/segments";
 import { callBackend } from "@/lib/server/backend";
 import { reserveMonthlyUsage, UsageLimitError } from "@/lib/billing/usage";
+import { callWhatsAppBackend } from "@/lib/whatsapp/backend";
 
 const bodySchema = z.object({
   audience: z.enum(["all", "new", "repeat", "vip", "at_risk"]).default("all"),
   variant: z.number().int().min(0).optional(),
+  productDetails: z.string().trim().max(2000).optional(),
+  productImageUrl: z.string().url().optional(),
 });
 
 /** Suggest a deal from segment stats. Never sends messages. */
@@ -38,6 +41,11 @@ export async function POST(request: Request) {
     throw error;
   }
   const variant = parsed.data.variant ?? Math.floor(Date.now() / 1000) % 3;
+  let contactNumber = String(owner.whatsapp ?? "").trim() || "+1 234 567 8900";
+  try {
+    const status = await callWhatsAppBackend<{ displayPhoneNumber?: string }>("status", { businessId });
+    if (status.response.ok && status.data.displayPhoneNumber) contactNumber = status.data.displayPhoneNumber;
+  } catch { /* Demo number remains until this business connects WhatsApp. */ }
   let suggestion: Record<string, unknown>;
   try {
     const generated = await callBackend<Record<string, unknown> & { message?: string }>(
@@ -49,12 +57,14 @@ export async function POST(request: Request) {
         audience,
         stats,
         variant,
+        productDetails: parsed.data.productDetails,
+        productImageUrl: parsed.data.productImageUrl,
+        contactNumber,
       },
     );
     if (!generated.response.ok) throw new Error(generated.data.message ?? "Gemini generation failed.");
-    suggestion = generated.data;
+    suggestion = { ...generated.data, contactNumber };
   } catch (error) {
-    await usage.release();
     suggestion = {
       ...suggestDeal({
         stats,
@@ -66,13 +76,14 @@ export async function POST(request: Request) {
         variant,
       }),
       provider: "local-fallback",
+      contactNumber,
     };
     return NextResponse.json({
       ok: true,
       stats,
       suggestion,
-      usage: usage.unlimited ? { unlimited: true } : { used: Math.max(0, usage.used - 1), limit: usage.limit },
-      note: "Gemini is temporarily unavailable or has reached its provider quota. A safe local suggestion was generated and your AI plan usage was not charged.",
+      usage: usage.unlimited ? { unlimited: true } : { used: usage.used, limit: usage.limit },
+      note: "Gemini was unavailable, so a safe local suggestion and promotional post were generated. This generation counts toward your monthly AI usage.",
     });
   }
 

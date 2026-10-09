@@ -7,6 +7,9 @@ const dealSchema = new Schema(
     message: { type: String, required: true, trim: true },
     templateName: { type: String, default: "", trim: true },
     discountLabel: { type: String, default: "", trim: true },
+    productImageUrl: { type: String, default: "", trim: true },
+    postCaption: { type: String, default: "", trim: true },
+    includePost: { type: Boolean, default: false },
     audience: {
       type: String,
       enum: ["all", "new", "repeat", "vip", "at_risk", "custom"],

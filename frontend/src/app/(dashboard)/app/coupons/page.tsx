@@ -76,9 +76,19 @@ export default function CouponsPage() {
     const needle = query.trim().toLocaleLowerCase();
     const now = new Date();
     const start = new Date(now);
-    if (dateFilter === "today") start.setHours(0, 0, 0, 0);
-    else if (dateFilter === "7days") start.setDate(now.getDate() - 7);
-    else if (dateFilter === "30days") start.setDate(now.getDate() - 30);
+    const end = new Date(now);
+    if (dateFilter === "today") {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(24, 0, 0, 0);
+    } else if (dateFilter === "7days") {
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - 6);
+      end.setHours(24, 0, 0, 0);
+    } else if (dateFilter === "30days") {
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - 29);
+      end.setHours(24, 0, 0, 0);
+    }
 
     return allCoupons.filter((coupon) => {
       const redeemed = coupon.status === "redeemed" || Boolean(coupon.redeemedAt);
@@ -87,8 +97,10 @@ export default function CouponsPage() {
       if (statusFilter === "pending" && !pending) return false;
       if (statusFilter === "expired" && coupon.status !== "expired") return false;
       if (dateFilter !== "all") {
-        const relevantDate = new Date(coupon.redeemedAt || coupon.issuedAt);
-        if (Number.isNaN(relevantDate.getTime()) || relevantDate < start) return false;
+        // Date filters describe when the coupon/customer was issued. Redemption
+        // time is shown separately and must not move an older coupon into Today.
+        const issuedDate = new Date(coupon.issuedAt);
+        if (Number.isNaN(issuedDate.getTime()) || issuedDate < start || issuedDate >= end) return false;
       }
       if (!needle) return true;
       const customerName = typeof coupon.customerId === "object" ? coupon.customerId?.name ?? "" : "";

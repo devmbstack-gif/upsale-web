@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDateString, IsEmail, IsIn, IsMongoId, IsOptional, IsString, Matches, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsEmail, IsIn, IsMongoId, IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ConnectWhatsAppDto {
@@ -28,6 +28,8 @@ export class SendCampaignDto extends BusinessRequestDto {
   @IsMongoId() dealId: string;
   @IsString() @MinLength(1) @MaxLength(4096) message: string;
   @IsOptional() @IsString() templateName?: string;
+  @IsOptional() @IsUrl({ protocols: ['https'], require_protocol: true }) productImageUrl?: string;
+  @IsOptional() @IsString() @MaxLength(2200) postCaption?: string;
   @IsArray() @ValidateNested({ each: true }) @Type(() => CampaignRecipientDto)
   recipients: CampaignRecipientDto[];
 }

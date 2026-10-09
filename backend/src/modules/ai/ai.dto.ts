@@ -7,4 +7,7 @@ export class GenerateDealDto {
   @IsIn(['all', 'new', 'repeat', 'vip', 'at_risk']) audience: string;
   @IsObject() stats: Record<string, unknown>;
   @IsNumber() @Min(0) @Max(20) variant: number;
+  @IsOptional() @IsString() productDetails?: string;
+  @IsOptional() @IsString() productImageUrl?: string;
+  @IsOptional() @IsString() contactNumber?: string;
 }

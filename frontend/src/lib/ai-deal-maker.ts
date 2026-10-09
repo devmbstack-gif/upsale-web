@@ -244,4 +244,8 @@ export type AiDealDraft = {
   discountLabel: string;
   audience: SegmentId;
   fromAi: true;
+  cta?: string;
+  postCaption?: string;
+  productImageUrl?: string;
+  includePost?: boolean;
 };
