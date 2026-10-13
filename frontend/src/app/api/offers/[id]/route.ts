@@ -51,6 +51,17 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const { businessId } = auth as { businessId: string };
   const { id } = await ctx.params;
   const body = await request.json();
+  const currentOffer = (body.value !== undefined && !body.type
+    ? await OfferModel.findOne({ _id: id, businessId }).select("type").lean()
+    : null) as { type?: string } | null;
+  const nextType = body.type ?? currentOffer?.type;
+  if (body.value !== undefined || nextType === "percent" || nextType === "fixed") {
+    const value = Number(body.value);
+    if (!Number.isFinite(value)) return NextResponse.json({ ok: false, message: "Enter a valid discount value." }, { status: 400 });
+    if (nextType === "percent" && (value < 0 || value > 100)) return NextResponse.json({ ok: false, message: "Percentage discount must be between 0 and 100." }, { status: 400 });
+    if (nextType === "fixed" && value < 0) return NextResponse.json({ ok: false, message: "Fixed discount cannot be negative." }, { status: 400 });
+    body.value = value;
+  }
   const offer = await OfferModel.findOneAndUpdate(
     { _id: id, businessId },
     { $set: body },

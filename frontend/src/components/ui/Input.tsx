@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import {
   useState,
+  type FormEvent,
   type InputHTMLAttributes,
   type LabelHTMLAttributes,
   type ReactNode,
@@ -14,8 +15,24 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   hint?: ReactNode;
 };
 
-export function Input({ label, hint, className, id, ...props }: InputProps) {
+function stripNumericLeadingZeros(value: string) {
+  if (!value || value === "-") return value;
+  const sign = value.startsWith("-") ? "-" : "";
+  const unsigned = sign ? value.slice(1) : value;
+  const [integer, ...fraction] = unsigned.split(".");
+  const normalizedInteger = integer.replace(/^0+(?=\d)/, "");
+  return `${sign}${normalizedInteger}${fraction.length ? `.${fraction.join(".")}` : ""}`;
+}
+
+export function Input({ label, hint, className, id, type, onChange, onInput, ...props }: InputProps) {
   const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+
+  function normalizeNumberInput(event: FormEvent<HTMLInputElement>) {
+    if (type !== "number") return;
+    const input = event.currentTarget;
+    const normalized = stripNumericLeadingZeros(input.value);
+    if (normalized !== input.value) input.value = normalized;
+  }
 
   return (
     <div className="space-y-1.5">
@@ -27,7 +44,20 @@ export function Input({ label, hint, className, id, ...props }: InputProps) {
           {label}
         </label>
       ) : null}
-      <input id={inputId} className={cn("input-field", className)} {...props} />
+      <input
+        id={inputId}
+        type={type}
+        className={cn("input-field", className)}
+        onInput={(event) => {
+          normalizeNumberInput(event);
+          onInput?.(event);
+        }}
+        onChange={(event) => {
+          normalizeNumberInput(event);
+          onChange?.(event);
+        }}
+        {...props}
+      />
       {hint ? <p className="text-xs text-muted">{hint}</p> : null}
     </div>
   );

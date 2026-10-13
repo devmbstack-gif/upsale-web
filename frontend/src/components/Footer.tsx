@@ -10,8 +10,8 @@ const productLinks = [
 ] as const;
 
 const accountLinks = [
-  { href: "/login", label: "Sign In" },
-  { href: "/signup", label: "Sign Up" },
+  { href: "/login", label: "Log In to My Account" },
+  { href: "/signup", label: "Create My Account" },
 ] as const;
 
 const legalLinks = [
@@ -76,7 +76,7 @@ export default function Footer() {
             <p className="max-w-xs text-sm leading-relaxed text-slate-500 dark:text-neutral-400">
               QR offers that turn walk-ins into WhatsApp customers.
             </p>
-            <p className="mt-auto pt-2 text-xs text-slate-400 dark:text-neutral-500">
+            <p className="mt-auto hidden pt-2 text-xs text-slate-400 dark:text-neutral-500 lg:block">
               © 2026 UPSale. All rights reserved.
             </p>
           </div>
@@ -99,6 +99,9 @@ export default function Footer() {
             ))}
           </FooterColumn>
         </div>
+        <p className="mt-10 border-t border-slate-200/80 pt-6 text-xs text-slate-400 dark:border-white/10 dark:text-neutral-500 lg:hidden">
+          © 2026 UPSale. All rights reserved.
+        </p>
       </div>
     </footer>
   );

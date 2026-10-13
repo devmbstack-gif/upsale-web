@@ -10,6 +10,7 @@ import { Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import OffersLoading from "./loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Offer = {
   _id: string;
@@ -25,6 +26,7 @@ export default function OffersPage() {
   const router = useRouter();
   const [offers, setOffers] = useState<Offer[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmOffer, setConfirmOffer] = useState<Offer | null>(null);
 
   async function loadOffers() {
     const res = await fetch("/api/offers", { credentials: "same-origin" });
@@ -41,8 +43,6 @@ export default function OffersPage() {
   }, []);
 
   async function deleteOffer(offer: Offer) {
-    const ok = window.confirm(`Delete "${offer.title}"? The QR link will stop working.`);
-    if (!ok) return;
     setDeletingId(offer._id);
     try {
       const res = await fetch(`/api/offers/${offer._id}`, {
@@ -54,6 +54,7 @@ export default function OffersPage() {
       router.refresh();
     } finally {
       setDeletingId(null);
+      setConfirmOffer(null);
     }
   }
 
@@ -121,7 +122,7 @@ export default function OffersPage() {
                           label="Delete"
                           tone="danger"
                           disabled={deletingId === offer._id}
-                          onClick={() => void deleteOffer(offer)}
+                          onClick={() => setConfirmOffer(offer)}
                         />
                       </div>
                     </TD>
@@ -132,6 +133,7 @@ export default function OffersPage() {
           </Table>
         </TableShell>
       </Reveal>
+      <ConfirmDialog open={Boolean(confirmOffer)} title={`Delete “${confirmOffer?.title ?? "offer"}”?`} description="This offer and its issued coupons will be deleted. The QR link will stop working." busy={Boolean(deletingId)} onCancel={() => setConfirmOffer(null)} onConfirm={() => { if (confirmOffer) void deleteOffer(confirmOffer); }} />
     </div>
   );
 }

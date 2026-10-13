@@ -6,10 +6,10 @@ import { getBusinessLimits, getMonthlyUsage } from "@/lib/billing/usage";
 export async function GET() {
   const auth = await requireBusiness();
   if ("error" in auth) return auth.error;
-  const packages = await PackageModel.find({ isActive: true, isEnterprise: false })
+  const packages = await PackageModel.find({ isActive: true })
     .sort({ sortOrder: 1, name: 1 })
     .lean();
-  const ownerCurrency = auth.owner.currency?.toUpperCase();
+  const ownerCurrency = auth.owner.country?.trim().toLowerCase() === "pakistan" ? "PKR" : "USD";
   const [usage, currentLimits] = await Promise.all([
     getMonthlyUsage(auth.businessId),
     getBusinessLimits(auth.owner).catch(() => null),
@@ -21,15 +21,14 @@ export async function GET() {
     usage,
     currentLimits,
     plans: packages.map((plan) => {
-      const price = plan.countryPricing.find((item) => item.currency === ownerCurrency)
-        ?? plan.countryPricing.find((item) => item.currency === "USD")
-        ?? plan.countryPricing[0];
+      const price = plan.countryPricing.find((item) => item.currency.toUpperCase() === ownerCurrency);
       return {
         name: plan.name,
         slug: plan.slug,
         description: plan.shortDescription,
         features: plan.featureBullets,
         popular: plan.isMostPopular,
+        enterprise: plan.isEnterprise,
         limits: { ...plan.limits, offers: plan.limits.offers ?? (plan.slug === "starter" ? 1 : 0) },
         price: price ? { amount: price.amount, currency: price.currency, interval: price.interval } : null,
       };

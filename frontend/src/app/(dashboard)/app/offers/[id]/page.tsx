@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import OfferDetailLoading from "./loading";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Offer = {
   _id: string;
@@ -38,6 +39,7 @@ export default function OfferDetailPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const slug = useMemo(() => {
     if (!offer) return "";
@@ -85,10 +87,6 @@ export default function OfferDetailPage() {
 
   async function deleteOffer() {
     if (!offer) return;
-    const ok = window.confirm(
-      `Delete "${offer.title}"? This removes the offer and its issued coupons. The public QR link will stop working.`,
-    );
-    if (!ok) return;
     setDeleting(true);
     setDeleteError("");
     try {
@@ -136,7 +134,7 @@ export default function OfferDetailPage() {
             tone="danger"
             size="md"
             disabled={deleting}
-            onClick={() => void deleteOffer()}
+            onClick={() => setConfirmDelete(true)}
           />
         </div>
       </Reveal>
@@ -199,6 +197,7 @@ export default function OfferDetailPage() {
           </Link>
         </Reveal>
       </div>
+      <ConfirmDialog open={confirmDelete} title={`Delete “${offer.title}”?`} description="This offer and its issued coupons will be deleted. The public QR link will stop working." busy={deleting} onCancel={() => setConfirmDelete(false)} onConfirm={() => void deleteOffer()} />
     </div>
   );
 }

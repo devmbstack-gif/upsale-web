@@ -33,7 +33,7 @@ function serializePackage(doc: {
     isMostPopular: Boolean(doc.isMostPopular),
     isEnterprise: Boolean(doc.isEnterprise),
     isActive: doc.isActive !== false,
-    countryPricing: doc.countryPricing ?? [],
+    countryPricing: (doc.countryPricing ?? []).filter((price) => ["PKR", "USD"].includes(price.currency.toUpperCase())),
   };
 }
 
@@ -65,6 +65,19 @@ export async function PATCH(request: Request, context: Ctx) {
   }
   if (typeof update.slug === "string") update.slug = update.slug.trim().toLowerCase();
   if (typeof update.name === "string") update.name = update.name.trim();
+  if (Array.isArray(update.countryPricing)) {
+    update.countryPricing = update.countryPricing.filter((price) => {
+      if (!price || typeof price !== "object") return false;
+      const currency = String((price as Record<string, unknown>).currency ?? "").toUpperCase();
+      return currency === "PKR" || currency === "USD";
+    });
+  }
+  const willBeActive = update.isActive !== undefined ? update.isActive === true : previous.isActive !== false;
+  const willBeEnterprise = update.isEnterprise !== undefined ? update.isEnterprise === true : Boolean(previous.isEnterprise);
+  const prices = Array.isArray(update.countryPricing) ? update.countryPricing : previous.countryPricing;
+  if (willBeActive && !willBeEnterprise && !["PKR", "USD"].every((currency) => prices.some((price) => String((price as { currency?: string }).currency).toUpperCase() === currency && Number((price as { amount?: number }).amount) > 0))) {
+    return jsonError("Active self-service packages require positive PKR and USD prices.");
+  }
 
   if (update.isMostPopular === true) {
     await PackageModel.updateMany({ _id: { $ne: id } }, { $set: { isMostPopular: false } });

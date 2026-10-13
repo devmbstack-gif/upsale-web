@@ -16,7 +16,7 @@ type PackageRecord = {
   isEnterprise: boolean;
   countryPricing: Pricing[];
 };
-type BusinessRecord = { email: string; currency?: string };
+type BusinessRecord = { email: string; country?: string; currency?: string };
 
 @Injectable()
 export class BillingService {
@@ -40,11 +40,8 @@ export class BillingService {
     if (!business) throw new NotFoundException('Business account not found.');
     if (!plan) throw new NotFoundException('Plan not found or unavailable.');
 
-    const currency = business.currency?.toUpperCase();
-    const pricing =
-      plan.countryPricing.find((item) => item.currency.toUpperCase() === currency) ??
-      plan.countryPricing.find((item) => item.currency.toUpperCase() === 'USD') ??
-      plan.countryPricing[0];
+    const currency = business.country?.trim().toLowerCase() === 'pakistan' ? 'PKR' : 'USD';
+    const pricing = plan.countryPricing.find((item) => item.currency.toUpperCase() === currency);
     if (!pricing || pricing.amount <= 0) {
       throw new BadRequestException('This plan has no purchasable price for your account.');
     }

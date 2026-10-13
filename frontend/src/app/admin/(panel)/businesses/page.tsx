@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { BadgeCheck, UserCheck, UserX } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { BadgeCheck, Trash2, UserCheck, UserX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 type Business = {
@@ -85,6 +86,7 @@ export default function AdminBusinessesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Business | null>(null);
 
   const load = useCallback(async (query = q) => {
     setLoading(true);
@@ -126,6 +128,26 @@ export default function AdminBusinessesPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function deleteBusiness() {
+    if (!deleteTarget) return;
+    setBusyId(deleteTarget.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/businesses/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = (await res.json()) as { ok: boolean; message?: string };
+      if (!res.ok || !data.ok) throw new Error(data.message ?? "Delete failed");
+      setDeleteTarget(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setBusyId("");
     }
@@ -188,6 +210,7 @@ export default function AdminBusinessesPage() {
                 <div className="flex shrink-0 items-center gap-2">
                   {!b.isVerified ? <IconButton icon={BadgeCheck} label="Verify Business" tone="success" disabled={busyId === b.id} onClick={() => void patch(b.id, { isVerified: true })} /> : null}
                   <IconButton icon={b.isSuspended ? UserCheck : UserX} label={b.isSuspended ? "Unsuspend Business" : "Suspend Business"} tone={b.isSuspended ? "primary" : "danger"} disabled={busyId === b.id} onClick={() => void patch(b.id, { isSuspended: !b.isSuspended })} />
+                  <IconButton icon={Trash2} label="Delete Business" tone="danger" disabled={busyId === b.id} onClick={() => setDeleteTarget(b)} />
                 </div>
               </div>
             </article>
@@ -256,6 +279,7 @@ export default function AdminBusinessesPage() {
                         disabled={busyId === b.id}
                         onClick={() => void patch(b.id, { isSuspended: !b.isSuspended })}
                       />
+                      <IconButton icon={Trash2} label="Delete Business" tone="danger" disabled={busyId === b.id} onClick={() => setDeleteTarget(b)} />
                     </div>
                   </td>
                 </tr>
@@ -272,6 +296,15 @@ export default function AdminBusinessesPage() {
         </div>
         </>
       )}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete business account?"
+        description={`This permanently deletes ${deleteTarget?.businessName ?? "this business"} and its offers, customers, coupons, deals, visits, users, and usage records. This cannot be undone.`}
+        confirmLabel="Delete business"
+        busy={Boolean(deleteTarget && busyId === deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void deleteBusiness()}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import AdminListCardsSkeleton from "@/components/admin/AdminListCardsSkeleton";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input, TextArea } from "@/components/ui/Input";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Power, PowerOff, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Pkg = {
@@ -31,15 +31,18 @@ const emptyForm = {
   slug: "",
   shortDescription: "",
   featureBulletsText: "",
-  offers: 1,
-  customers: 500,
-  campaignsPerMonth: 10,
-  aiGenerations: 30,
+  offers: "1",
+  customers: "500",
+  campaignsPerMonth: "10",
+  aiGenerations: "30",
   sortOrder: 0,
   isMostPopular: false,
   isEnterprise: false,
   isActive: true,
-  countryPricing: [] as Pkg["countryPricing"],
+  countryPricing: [
+    { countryCode: "PK", currency: "PKR", amount: 0, interval: "month" },
+    { countryCode: "INTL", currency: "USD", amount: 0, interval: "month" },
+  ] as Pkg["countryPricing"],
 };
 
 export default function AdminPackagesPage() {
@@ -51,6 +54,13 @@ export default function AdminPackagesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const editorRef = useRef<HTMLElement>(null);
+
+  function parseLimit(value: string) {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || normalized === "unlimited") return 0;
+    if (!/^\d+$/.test(normalized)) return null;
+    return Number(normalized);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,23 +96,44 @@ export default function AdminPackagesPage() {
       slug: pkg.slug,
       shortDescription: pkg.shortDescription,
       featureBulletsText: pkg.featureBullets.join("\n"),
-      offers: pkg.limits.offers,
-      customers: pkg.limits.customers,
-      campaignsPerMonth: pkg.limits.campaignsPerMonth,
-      aiGenerations: pkg.limits.aiGenerations,
+      offers: pkg.limits.offers ? String(pkg.limits.offers) : "",
+      customers: pkg.limits.customers ? String(pkg.limits.customers) : "",
+      campaignsPerMonth: pkg.limits.campaignsPerMonth ? String(pkg.limits.campaignsPerMonth) : "",
+      aiGenerations: pkg.limits.aiGenerations ? String(pkg.limits.aiGenerations) : "",
       sortOrder: pkg.sortOrder,
       isMostPopular: pkg.isMostPopular,
       isEnterprise: pkg.isEnterprise,
       isActive: pkg.isActive,
-      countryPricing: pkg.countryPricing.map((price) => ({ ...price })),
+      countryPricing: ([
+        pkg.countryPricing.find((price) => price.currency.toUpperCase() === "PKR")
+          ?? { countryCode: "PK", currency: "PKR", amount: 0, interval: "month" },
+        pkg.countryPricing.find((price) => price.currency.toUpperCase() === "USD")
+          ?? { countryCode: "INTL", currency: "USD", amount: 0, interval: "month" },
+      ]).map((price) => ({ ...price })),
     });
     requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   async function save() {
-    setSaving(true);
     setError("");
     setMessage("");
+    const hasPkr = form.countryPricing.some((price) => price.currency === "PKR" && Number(price.amount) > 0);
+    const hasUsd = form.countryPricing.some((price) => price.currency === "USD" && Number(price.amount) > 0);
+    if (form.isActive && !form.isEnterprise && (!hasPkr || !hasUsd)) {
+      setError("Active self-service packages require both a PKR price and a USD price.");
+      return;
+    }
+    const parsedLimits = {
+      offers: parseLimit(form.offers),
+      customers: parseLimit(form.customers),
+      campaignsPerMonth: parseLimit(form.campaignsPerMonth),
+      aiGenerations: parseLimit(form.aiGenerations),
+    };
+    if (Object.values(parsedLimits).some((value) => value === null)) {
+      setError('Usage limits accept a whole number or the word "Unlimited".');
+      return;
+    }
+    setSaving(true);
     const payload = {
       name: form.name,
       slug: form.slug,
@@ -112,10 +143,10 @@ export default function AdminPackagesPage() {
         .map((s) => s.trim())
         .filter(Boolean),
       limits: {
-        offers: Number(form.offers),
-        customers: Number(form.customers),
-        campaignsPerMonth: Number(form.campaignsPerMonth),
-        aiGenerations: Number(form.aiGenerations),
+        offers: parsedLimits.offers as number,
+        customers: parsedLimits.customers as number,
+        campaignsPerMonth: parsedLimits.campaignsPerMonth as number,
+        aiGenerations: parsedLimits.aiGenerations as number,
       },
       sortOrder: Number(form.sortOrder),
       isMostPopular: form.isMostPopular,
@@ -147,6 +178,7 @@ export default function AdminPackagesPage() {
       setEditing(null);
       setForm(emptyForm);
       await load();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -163,6 +195,22 @@ export default function AdminPackagesPage() {
     const data = (await res.json()) as { ok: boolean; message?: string };
     if (!res.ok || !data.ok) {
       setError(data.message ?? "Delete failed");
+      return;
+    }
+    await load();
+  }
+
+  async function toggleActive(pkg: Pkg) {
+    setError("");
+    const res = await fetch(`/api/admin/packages/${pkg.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ isActive: !pkg.isActive }),
+    });
+    const data = (await res.json()) as { ok: boolean; message?: string };
+    if (!res.ok || !data.ok) {
+      setError(data.message ?? "Status update failed");
       return;
     }
     await load();
@@ -223,14 +271,17 @@ export default function AdminPackagesPage() {
                     {pkg.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
-                {pkg.countryPricing.length ? (
+                {pkg.countryPricing.some((price) => ["PKR", "USD"].includes(price.currency.toUpperCase())) ? (
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {pkg.countryPricing.map((price) => (
+                    {pkg.countryPricing.filter((price) => ["PKR", "USD"].includes(price.currency.toUpperCase())).map((price) => (
                       <span key={`${price.countryCode}-${price.currency}-${price.interval}`} className="rounded-lg border border-[var(--border)] bg-[var(--hover-surface)] px-2.5 py-1.5 text-xs text-muted">
-                        {price.countryCode}: {price.currency} {price.amount.toLocaleString()} / {price.interval}
+                        {price.currency.toUpperCase()} {price.amount.toLocaleString()} / {price.interval}
                       </span>
                     ))}
                   </div>
+                ) : null}
+                {pkg.isActive && !pkg.isEnterprise && !(["PKR", "USD"].every((currency) => pkg.countryPricing.some((price) => price.currency.toUpperCase() === currency && price.amount > 0))) ? (
+                  <p className="mt-3 text-xs font-medium text-amber-300">Pricing incomplete — add PKR and USD prices to enable checkout.</p>
                 ) : null}
               </div>
               <div className="flex flex-col gap-1.5">
@@ -239,6 +290,12 @@ export default function AdminPackagesPage() {
                   label="Edit"
                   tone="neutral"
                   onClick={() => startEdit(pkg)}
+                />
+                <IconButton
+                  icon={pkg.isActive ? PowerOff : Power}
+                  label={pkg.isActive ? "Deactivate package" : "Activate package"}
+                  tone={pkg.isActive ? "danger" : "success"}
+                  onClick={() => void toggleActive(pkg)}
                 />
                 <IconButton
                   icon={Trash2}
@@ -287,37 +344,22 @@ export default function AdminPackagesPage() {
         <div className="space-y-4 border-t border-[var(--border)] pt-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="font-display text-base font-semibold">Country pricing</h3>
-              <p className="mt-1 text-sm text-muted">Use ISO codes such as PK / PKR, US / USD, or AE / AED.</p>
+              <h3 className="font-display text-base font-semibold">Plan prices</h3>
+              <p className="mt-1 text-sm text-muted">Set the two supported prices: PKR and USD.</p>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              className="!px-3 !py-2"
-              onClick={() => setForm((current) => ({
-                ...current,
-                countryPricing: [...current.countryPricing, { countryCode: "", currency: "", amount: 0, interval: "month" }],
-              }))}
-            >
-              Add country
-            </Button>
           </div>
           {form.countryPricing.map((price, index) => (
             <div key={index} className="rounded-2xl border border-[var(--border)] bg-[var(--hover-surface)]/40 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-medium">Price #{index + 1}</p><Button type="button" variant="danger" className="!px-3 !py-1.5 text-xs xl:hidden" onClick={() => setForm((current) => ({ ...current, countryPricing: current.countryPricing.filter((_, itemIndex) => itemIndex !== index) }))}>Remove</Button></div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[0.7fr_0.8fr_1fr_1fr_auto] xl:items-end">
-              <Input label="Country code" placeholder="PK" maxLength={2} value={price.countryCode} onChange={(e) => setForm((current) => ({ ...current, countryPricing: current.countryPricing.map((item, itemIndex) => itemIndex === index ? { ...item, countryCode: e.target.value.toUpperCase() } : item) }))} />
-              <Input label="Currency" placeholder="PKR" maxLength={3} value={price.currency} onChange={(e) => setForm((current) => ({ ...current, countryPricing: current.countryPricing.map((item, itemIndex) => itemIndex === index ? { ...item, currency: e.target.value.toUpperCase() } : item) }))} />
-              <Input label="Amount" type="number" min={0} step="0.01" value={price.amount} onChange={(e) => setForm((current) => ({ ...current, countryPricing: current.countryPricing.map((item, itemIndex) => itemIndex === index ? { ...item, amount: Number(e.target.value) } : item) }))} />
+              <div className="mb-3"><p className="text-sm font-medium">{price.currency} price</p></div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:items-end">
+              <Input label="Amount" type="number" min={0} step="0.01" placeholder={`Enter ${price.currency} price`} value={price.amount === 0 ? "" : price.amount} onChange={(e) => setForm((current) => ({ ...current, countryPricing: current.countryPricing.map((item, itemIndex) => itemIndex === index ? { ...item, amount: e.target.value === "" ? 0 : Number(e.target.value) } : item) }))} />
               <label className="space-y-1.5 text-sm font-medium text-foreground/90">Billing interval<select className="input-field block w-full" value={price.interval} onChange={(e) => setForm((current) => ({ ...current, countryPricing: current.countryPricing.map((item, itemIndex) => itemIndex === index ? { ...item, interval: e.target.value } : item) }))}>
                 <option value="month">Monthly</option>
                 <option value="year">Yearly</option>
               </select></label>
-              <Button type="button" variant="danger" className="hidden !px-3 xl:inline-flex" onClick={() => setForm((current) => ({ ...current, countryPricing: current.countryPricing.filter((_, itemIndex) => itemIndex !== index) }))}>Remove</Button>
               </div>
             </div>
           ))}
-          {form.countryPricing.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-6 text-center text-sm text-muted">No self-service prices configured.</p> : null}
         </div>
 
         <div className="space-y-4 border-t border-[var(--border)] pt-6">
@@ -325,38 +367,44 @@ export default function AdminPackagesPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Input
             label="QR offers"
-            type="number"
-            min={0}
+            type="text"
+            placeholder="Unlimited"
             value={form.offers}
-            onChange={(e) => setForm((f) => ({ ...f, offers: Number(e.target.value) }))}
+            onChange={(e) => setForm((f) => ({ ...f, offers: e.target.value }))}
           />
           <Input
             label="Customers"
-            type="number"
+            type="text"
+            placeholder="Unlimited"
             value={form.customers}
-            onChange={(e) => setForm((f) => ({ ...f, customers: Number(e.target.value) }))}
+            onChange={(e) => setForm((f) => ({ ...f, customers: e.target.value }))}
           />
           <Input
             label="Campaigns/mo"
-            type="number"
+            type="text"
+            placeholder="Unlimited"
             value={form.campaignsPerMonth}
             onChange={(e) =>
-              setForm((f) => ({ ...f, campaignsPerMonth: Number(e.target.value) }))
+              setForm((f) => ({ ...f, campaignsPerMonth: e.target.value }))
             }
           />
           <Input
             label="AI gens"
-            type="number"
+            type="text"
+            placeholder="Unlimited"
             value={form.aiGenerations}
             onChange={(e) =>
-              setForm((f) => ({ ...f, aiGenerations: Number(e.target.value) }))
+              setForm((f) => ({ ...f, aiGenerations: e.target.value }))
             }
           />
           <Input
           label="Sort order"
           type="number"
-          value={form.sortOrder}
-          onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+          min={0}
+          placeholder="Automatic"
+          value={form.sortOrder === 0 ? "" : form.sortOrder}
+          onKeyDown={(e) => { if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault(); }}
+          onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)) }))}
         />
         </div>
         </div>

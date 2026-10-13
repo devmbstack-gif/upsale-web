@@ -76,6 +76,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "Title is required" }, { status: 400 });
   }
 
+  const offerType = body.type ?? "percent";
+  const offerValue = Number(body.value);
+  if ((offerType === "percent" || offerType === "fixed") && !Number.isFinite(offerValue)) {
+    return NextResponse.json({ ok: false, message: "Enter a valid discount value." }, { status: 400 });
+  }
+  if (offerType === "percent" && (offerValue < 0 || offerValue > 100)) {
+    return NextResponse.json({ ok: false, message: "Percentage discount must be between 0 and 100." }, { status: 400 });
+  }
+  if (offerType === "fixed" && offerValue < 0) {
+    return NextResponse.json({ ok: false, message: "Fixed discount cannot be negative." }, { status: 400 });
+  }
+
   try {
     await assertOfferCapacity(businessId, owner);
   } catch (error) {
@@ -104,8 +116,8 @@ export async function POST(request: Request) {
     businessId,
     title: body.title.trim(),
     description: body.description ?? "",
-    type: body.type ?? "percent",
-    value: body.value ?? 0,
+    type: offerType,
+    value: offerType === "reward" ? 0 : offerValue,
     rewardLabel: body.rewardLabel ?? null,
     rules: body.rules ?? "",
     status: "active",

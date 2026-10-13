@@ -85,6 +85,7 @@ export async function POST(request: Request) {
     }
 
     const businessName = data.businessName.trim().replace(/\s+/g, " ");
+    const billingCurrency = data.country.trim().toLowerCase() === "pakistan" ? "PKR" : "USD";
     const businessNameKey = normalizeBusinessName(businessName);
     const businessSlug = offerNameSlug(businessName);
     const nameOwner = await BusinessOwnerModel.exists({
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
         supportEmail: "",
         category: data.category,
         country: data.country,
-        currency: data.currency,
+        currency: billingCurrency,
         timezone: data.timezone,
         city: data.city,
         logoUrl: "",
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
       plan: "Plan not selected",
       category: data.category,
       country: data.country,
-      currency: data.currency,
+      currency: billingCurrency,
       timezone: data.timezone,
       city: data.city,
       whatsapp: "",

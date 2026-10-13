@@ -14,7 +14,7 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
   },
   "/admin/packages": {
     title: "Packages Manager",
-    subtitle: "Plans, limits, and country pricing",
+    subtitle: "Plans, limits, and PKR/USD pricing",
   },
   "/admin/trial": {
     title: "Trial Settings",

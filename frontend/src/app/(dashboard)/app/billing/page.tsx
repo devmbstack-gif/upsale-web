@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { CheckCircle2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type Plan = {
@@ -11,6 +12,7 @@ type Plan = {
   description: string;
   features: string[];
   popular: boolean;
+  enterprise?: boolean;
   price: { amount: number; currency: string; interval: string } | null;
   limits: { offers: number; customers: number; campaignsPerMonth: number; aiGenerations: number };
 };
@@ -137,7 +139,7 @@ export default function BillingPage() {
               <p className="mt-2 text-sm text-muted">{plan.description}</p>
             </div>
             <p className="font-display text-3xl font-semibold">
-              {plan.price ? new Intl.NumberFormat(undefined, { style: "currency", currency: plan.price.currency, maximumFractionDigits: 0 }).format(plan.price.amount) : "Unavailable"}
+              {plan.enterprise ? "Custom pricing" : plan.price ? new Intl.NumberFormat(undefined, { style: "currency", currency: plan.price.currency, maximumFractionDigits: 0 }).format(plan.price.amount) : "Unavailable"}
               {plan.price ? <span className="text-sm font-normal text-muted"> / {plan.price.interval}</span> : null}
             </p>
             <ul className="flex-1 space-y-2 text-sm">
@@ -147,9 +149,13 @@ export default function BillingPage() {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Usage limits</p>
               <div className="space-y-1"><p>{plan.limits.offers || "Unlimited"} QR offers</p><p>{plan.limits.customers || "Unlimited"} customers</p><p>{plan.limits.campaignsPerMonth || "Unlimited"} campaigns / month</p><p>{plan.limits.aiGenerations || "Unlimited"} AI generations / month</p></div>
             </div>
-            <Button className="w-full" disabled={!plan.price || busy !== "" || currentPlan === plan.name} onClick={() => void checkout(plan.slug)}>
-              {currentPlan === plan.name ? "Current plan" : busy === plan.slug ? "Opening Stripe…" : "Choose plan"}
-            </Button>
+            {plan.enterprise ? (
+              <Link href="/#contact" className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold hover:bg-[var(--hover-surface)]">Contact sales</Link>
+            ) : (
+              <Button className="w-full" disabled={!plan.price || busy !== "" || currentPlan === plan.name} onClick={() => void checkout(plan.slug)}>
+                {currentPlan === plan.name ? "Current plan" : busy === plan.slug ? "Opening Stripe…" : "Choose plan"}
+              </Button>
+            )}
           </section>
         ))}
       </div>

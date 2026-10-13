@@ -23,6 +23,7 @@ export default function NewOfferPage() {
   const router = useRouter();
   const minExpiry = useMemo(() => todayISODate(), []);
   const [type, setType] = useState<"percent" | "reward" | "fixed">("percent");
+  const [discount, setDiscount] = useState("15");
   const [expires, setExpires] = useState("");
   const [expiryError, setExpiryError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +47,16 @@ export default function NewOfferPage() {
     if (!validateExpiry(expiresValue)) {
       return;
     }
+    const discountValue = Number(form.get("discount") ?? 0);
+    if ((type === "percent" || type === "fixed") && !Number.isFinite(discountValue)) {
+      setError("Enter a valid discount value."); return;
+    }
+    if (type === "percent" && (discountValue < 0 || discountValue > 100)) {
+      setError("Percentage discount must be between 0 and 100."); return;
+    }
+    if (type === "fixed" && discountValue < 0) {
+      setError("Amount off cannot be negative."); return;
+    }
 
     setSubmitting(true);
     try {
@@ -57,7 +68,7 @@ export default function NewOfferPage() {
           title: String(form.get("title") ?? ""),
           description: String(form.get("description") ?? ""),
           type,
-          value: Number(form.get("discount") ?? 0),
+          value: discountValue,
           rewardLabel: String(form.get("reward") ?? "") || null,
           expiresAt: expiresValue || null,
         }),
@@ -93,7 +104,10 @@ export default function NewOfferPage() {
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setType(t)}
+                    onClick={() => {
+                      setType(t);
+                      if (t === "percent" && Number(discount) > 100) setDiscount("100");
+                    }}
                     className={
                       type === t
                         ? "rounded-xl border border-[rgba(196,181,253,0.35)] bg-brand-from/20 px-4 py-2 text-sm capitalize text-foreground"
@@ -107,14 +121,40 @@ export default function NewOfferPage() {
             </div>
             {type === "percent" || type === "fixed" ? (
               <Input
+                key="discount-value"
                 label={type === "percent" ? "Discount (%)" : "Amount off"}
                 name="discount"
                 type="number"
-                min={1}
-                defaultValue={15}
+                min={0}
+                max={type === "percent" ? 100 : undefined}
+                step="any"
+                value={discount}
+                onKeyDown={(event) => {
+                  if (["-", "+", "e", "E"].includes(event.key)) event.preventDefault();
+                }}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  if (next === "") {
+                    setDiscount("");
+                    return;
+                  }
+                  const numeric = Number(next);
+                  if (!Number.isFinite(numeric)) return;
+                  if (numeric < 0) {
+                    setDiscount("0");
+                    return;
+                  }
+                  if (type === "percent" && numeric > 100) {
+                    setDiscount("100");
+                    return;
+                  }
+                  setDiscount(next);
+                }}
+                required
               />
             ) : (
               <Input
+                key="reward-label"
                 label="Reward label"
                 name="reward"
                 placeholder="Free dessert, VIP access…"

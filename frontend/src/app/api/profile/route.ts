@@ -26,7 +26,6 @@ export async function PATCH(request: Request) {
     "supportEmail",
     "category",
     "country",
-    "currency",
     "timezone",
     "city",
     "whatsapp",
@@ -34,6 +33,9 @@ export async function PATCH(request: Request) {
   const update: Record<string, unknown> = {};
   for (const key of allowed) {
     if (body[key] !== undefined) update[key] = body[key];
+  }
+  if (typeof body.country === "string") {
+    update.currency = body.country.trim().toLowerCase() === "pakistan" ? "PKR" : "USD";
   }
   if (typeof body.supportEmail === "string") {
     const supportEmail = body.supportEmail.trim().toLowerCase();

@@ -2,6 +2,13 @@ import { BusinessOwnerModel } from "@/lib/models/business-owner";
 import { writeAuditLog } from "@/lib/admin/audit";
 import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
 import { PackageModel } from "@/lib/models/package";
+import { CouponModel } from "@/lib/models/coupon";
+import { CustomerModel } from "@/lib/models/customer";
+import { DealModel } from "@/lib/models/deal";
+import { OfferModel } from "@/lib/models/offer";
+import { UsageCounterModel } from "@/lib/models/usage-counter";
+import { UserModel } from "@/lib/models/user";
+import { VisitModel } from "@/lib/models/visit";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -69,4 +76,37 @@ export async function PATCH(request: Request, context: Ctx) {
       isSuspended: Boolean(next!.isSuspended),
     },
   });
+}
+
+export async function DELETE(_request: Request, context: Ctx) {
+  const auth = await withSuperAdmin();
+  if ("error" in auth) return auth.error;
+
+  const { id } = await context.params;
+  const business = await BusinessOwnerModel.findById(id).select("businessName email stripeSubscriptionId").lean();
+  if (!business) return jsonError("Business not found", 404);
+
+  await Promise.all([
+    CouponModel.deleteMany({ businessId: id }),
+    CustomerModel.deleteMany({ businessId: id }),
+    DealModel.deleteMany({ businessId: id }),
+    OfferModel.deleteMany({ businessId: id }),
+    UsageCounterModel.deleteMany({ businessId: id }),
+    UserModel.deleteMany({ businessId: id }),
+    VisitModel.deleteMany({ businessId: id }),
+  ]);
+  await BusinessOwnerModel.deleteOne({ _id: id });
+
+  await writeAuditLog({
+    userId: auth.adminId,
+    action: "DELETE_BUSINESS",
+    entity: `BusinessOwner:${id}`,
+    previousValue: {
+      businessName: business.businessName,
+      email: business.email,
+      hadStripeSubscription: Boolean(business.stripeSubscriptionId),
+    },
+  });
+
+  return jsonOk({ deleted: true });
 }

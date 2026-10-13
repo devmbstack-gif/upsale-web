@@ -31,7 +31,7 @@ function serializePackage(doc: {
     isMostPopular: doc.isMostPopular,
     isEnterprise: doc.isEnterprise,
     isActive: doc.isActive,
-    countryPricing: doc.countryPricing ?? [],
+    countryPricing: (doc.countryPricing ?? []).filter((price) => ["PKR", "USD"].includes(price.currency.toUpperCase())),
   };
 }
 
@@ -51,6 +51,14 @@ export async function POST(request: Request) {
   if (!body?.name || !body?.slug || !body?.shortDescription || !body?.limits) {
     return jsonError("name, slug, shortDescription, and limits are required");
   }
+  const submittedPrices = Array.isArray(body.countryPricing) ? body.countryPricing : [];
+  const supportedPrices = submittedPrices.filter((price): price is Record<string, unknown> => {
+    if (!price || typeof price !== "object") return false;
+    return ["PKR", "USD"].includes(String((price as Record<string, unknown>).currency ?? "").toUpperCase());
+  });
+  if (body.isActive !== false && !body.isEnterprise && !["PKR", "USD"].every((currency) => supportedPrices.some((price) => String(price.currency).toUpperCase() === currency && Number(price.amount) > 0))) {
+    return jsonError("Active self-service packages require positive PKR and USD prices.");
+  }
 
   const created = await PackageModel.create({
     name: String(body.name).trim(),
@@ -64,7 +72,7 @@ export async function POST(request: Request) {
     isMostPopular: Boolean(body.isMostPopular),
     isEnterprise: Boolean(body.isEnterprise),
     isActive: body.isActive !== false,
-    countryPricing: Array.isArray(body.countryPricing) ? body.countryPricing : [],
+    countryPricing: supportedPrices,
   });
 
   await writeAuditLog({

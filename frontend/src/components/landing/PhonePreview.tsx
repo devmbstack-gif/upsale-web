@@ -19,7 +19,7 @@ const PREVIEW_STEPS = [
     title: "Enter WhatsApp Number",
   },
   {
-    label: "Coupon Ready",
+    label: "Offer Claimed",
     kicker: "Step 3 of 3",
     title: "Congratulations!",
   },
@@ -208,13 +208,21 @@ export default function PhonePreview({ compact = false }: { compact?: boolean })
                       <div className={styles.paneNotify}>
                         <p className={styles.paneKicker}>{PREVIEW_STEPS[2].kicker}</p>
                         <h3 className={styles.paneTitle}>{PREVIEW_STEPS[2].title}</h3>
-                        <div className={`${styles.waPopup} ${styles.waPopupSuccess}`}>
-                          <p className={styles.waPopupEyebrow}>Coupon ready</p>
-                          <strong className={styles.waPopupHeadline}>
-                            Congratulations! Your coupon code is ready
-                          </strong>
-                          <code className={styles.waCode}>AYE-15-4K</code>
-                          <p>Show this at the counter to redeem.</p>
+                        <div className={styles.celebrationCard}>
+                          <div className={styles.confetti} aria-hidden="true">
+                            {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+                          </div>
+                          <motion.div
+                            className={styles.celebrationIcon}
+                            initial={reduceMotion ? false : { scale: 0, rotate: -20 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                            aria-hidden="true"
+                          >
+                            ✓
+                          </motion.div>
+                          <strong>You won a discount!</strong>
+                          <p>Enjoy your reward and make today a little brighter.</p>
                         </div>
                       </div>
                     )}

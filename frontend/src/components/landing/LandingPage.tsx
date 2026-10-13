@@ -30,43 +30,22 @@ type LeadFormState = {
   message: string;
 };
 
-type RegionId = "PK" | "IN" | "AE" | "SA" | "GB" | "US";
-type PlanId = "starter" | "growth" | "pro";
-
-type Region = {
-  id: RegionId;
-  label: string;
-  currency: string;
-  locale: string;
-  prices: Record<PlanId, number>;
-};
-
 type Plan = {
-  id: PlanId;
+  id: string;
   name: string;
   summary: string;
   features: string[];
   popular?: boolean;
+  enterprise?: boolean;
   limits: { customers: number; campaigns: number; aiGenerations: number };
+  price?: { amount: number; currency: "PKR" | "USD"; interval: "month" | "year" } | null;
 };
 
 const FLOW = [
-  {
-    title: "Scan QR",
-    text: "A code on the counter opens your offer. No app download, no account to create first.",
-  },
-  {
-    title: "Get discount",
-    text: "The guest enters a name and WhatsApp number and leaves with a one-time saving.",
-  },
-  {
-    title: "Business gets customer",
-    text: "That visit becomes a profile you own, with the visit date and the offer they used.",
-  },
-  {
-    title: "Send future deals",
-    text: "Next week you message the same person with a reason to come back.",
-  },
+  { title: "Scan the QR code" },
+  { title: "Claim the offer" },
+  { title: "Welcome a new customer" },
+  { title: "Invite them back" },
 ] as const;
 
 const DEALS = [
@@ -90,149 +69,31 @@ const DEALS = [
 const WORKFLOW_STEPS = [
   {
     step: "01",
-    title: "Capture Customer Data",
-    text: "Customers scan the QR code at the counter and share WhatsApp details to unlock instantly.",
+    title: "Meet your customers",
   },
   {
     step: "02",
-    title: "AI Deal Engine",
-    text: "AI analyzes visit patterns and drafts personalized, high-converting offers automatically.",
+    title: "Create the right offer",
   },
   {
     step: "03",
-    title: "Growth & ROI",
-    text: "Deals sent on WhatsApp bring customers back in quiet hours and lift revenue.",
+    title: "Bring customers back",
   },
 ] as const;
 
 const GROWTH_BARS = [28, 36, 42, 48, 55, 63, 72] as const;
 
 const SETUP = [
-  {
-    title: "Create your place",
-    text: "Add the business name, city, and the counter the QR will sit on.",
-  },
-  {
-    title: "Brand the offer page",
-    text: "Upload a logo and set the violet, or any color your floor already uses.",
-  },
-  {
-    title: "Choose the discount",
-    text: "Percent off, a free item, or a fixed amount. One clear offer is enough.",
-  },
-  {
-    title: "Put the QR on the counter",
-    text: "Print the code or show it on a stand. Staff point, guests scan.",
-  },
-  {
-    title: "Collect WhatsApp",
-    text: "The form asks for a name and the number you can message again.",
-  },
-  {
-    title: "Issue a unique coupon",
-    text: "Each scan mints a single-use code so the offer cannot be passed around.",
-  },
-  {
-    title: "Open the customer list",
-    text: "Every claim shows up with the visit, the code, and the group.",
-  },
-  {
-    title: "Sort by intent",
-    text: "New, Repeat, VIP, and At Risk are ready before you write a word.",
-  },
-  {
-    title: "Send the next deal",
-    text: "Approve a draft and it goes out on WhatsApp to the group you picked.",
-  },
+  { title: "Add your business" },
+  { title: "Add your branding" },
+  { title: "Choose a discount" },
+  { title: "Display your QR code" },
+  { title: "Collect customer details" },
+  { title: "Give each customer a coupon" },
+  { title: "View your customer list" },
+  { title: "Choose an audience" },
+  { title: "Send your next deal" },
 ] as const;
-
-const PLANS: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    summary: "One counter, one offer, a list you can actually use.",
-    features: [
-      "1 location",
-      "QR discount page",
-      "500 customer profiles",
-      "Unique one-time coupons",
-      "Manual WhatsApp handoff",
-    ],
-    limits: { customers: 500, campaigns: 10, aiGenerations: 30 },
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    summary: "The loop, automated: capture, group, and message.",
-    popular: true,
-    features: [
-      "3 locations",
-      "AI Deal Maker",
-      "Unlimited customers",
-      "New, Repeat, VIP, At Risk",
-      "Scheduled WhatsApp campaigns",
-    ],
-    limits: { customers: 5000, campaigns: 60, aiGenerations: 200 },
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    summary: "For teams running more than one floor.",
-    features: [
-      "10 locations",
-      "Everything in Growth",
-      "Staff seats",
-      "Custom offer rules",
-      "Customer export",
-    ],
-    limits: { customers: 0, campaigns: 0, aiGenerations: 0 },
-  },
-];
-
-const REGIONS: Region[] = [
-  {
-    id: "PK",
-    label: "Pakistan",
-    currency: "PKR",
-    locale: "en-PK",
-    prices: { starter: 4990, growth: 9990, pro: 19990 },
-  },
-  {
-    id: "IN",
-    label: "India",
-    currency: "INR",
-    locale: "en-IN",
-    prices: { starter: 1499, growth: 3499, pro: 7999 },
-  },
-  {
-    id: "AE",
-    label: "UAE",
-    currency: "AED",
-    locale: "en-AE",
-    prices: { starter: 79, growth: 179, pro: 349 },
-  },
-  {
-    id: "SA",
-    label: "Saudi Arabia",
-    currency: "SAR",
-    locale: "en-SA",
-    prices: { starter: 79, growth: 179, pro: 349 },
-  },
-  {
-    id: "GB",
-    label: "UK",
-    currency: "GBP",
-    locale: "en-GB",
-    prices: { starter: 19, growth: 39, pro: 79 },
-  },
-  {
-    id: "US",
-    label: "USA",
-    currency: "USD",
-    locale: "en-US",
-    prices: { starter: 29, growth: 59, pro: 119 },
-  },
-];
 
 const EMPTY_LEAD: LeadFormState = {
   name: "",
@@ -258,10 +119,10 @@ function Reveal({ children, className, delay = 0 }: RevealProps) {
   );
 }
 
-function formatMoney(amount: number, region: Region) {
-  return new Intl.NumberFormat(region.locale, {
+function formatMoney(amount: number, currency: "PKR" | "USD") {
+  return new Intl.NumberFormat(currency === "PKR" ? "en-PK" : "en-US", {
     style: "currency",
-    currency: region.currency,
+    currency,
     maximumFractionDigits: 0,
   }).format(amount);
 }
@@ -289,7 +150,6 @@ function ProductWorkflow() {
         >
           <span className={styles.workflowStep}>{WORKFLOW_STEPS[0].step}</span>
           <h3>{WORKFLOW_STEPS[0].title}</h3>
-          <p>{WORKFLOW_STEPS[0].text}</p>
           <div className={styles.workflowVisual}>
             <div className={styles.workflowQrStand}>
               <div className={styles.workflowQrMark}>
@@ -314,7 +174,6 @@ function ProductWorkflow() {
         >
           <span className={styles.workflowStep}>{WORKFLOW_STEPS[1].step}</span>
           <h3>{WORKFLOW_STEPS[1].title}</h3>
-          <p>{WORKFLOW_STEPS[1].text}</p>
           <div className={styles.workflowVisual}>
             <div className={styles.aiSegments}>
               <span className={styles.segmentRisk}>At Risk Customers</span>
@@ -367,7 +226,6 @@ function ProductWorkflow() {
         >
           <span className={styles.workflowStep}>{WORKFLOW_STEPS[2].step}</span>
           <h3>{WORKFLOW_STEPS[2].title}</h3>
-          <p>{WORKFLOW_STEPS[2].text}</p>
           <div className={styles.workflowVisual}>
             <div className={styles.growthMetric}>
               <strong>+35%</strong>
@@ -428,27 +286,33 @@ function PricingCardReveal({
 }
 
 function Pricing() {
-  const [regionId, setRegionId] = useState<RegionId>("PK");
-  const region = REGIONS.find((item) => item.id === regionId) ?? REGIONS[0];
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [pricingLoaded, setPricingLoaded] = useState(false);
+
+  useEffect(() => {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const pakistanLocale = (navigator.languages ?? [navigator.language]).some((language) => /(?:^|-)PK$/i.test(language));
+    const country = timezone === "Asia/Karachi" || pakistanLocale ? "PK" : "OTHER";
+    const controller = new AbortController();
+    fetch(`/api/public/plans?country=${country}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Pricing unavailable");
+        return response.json() as Promise<{ ok: boolean; plans: Plan[] }>;
+      })
+      .then((payload) => {
+        if (payload.ok && payload.plans.length) setPlans(payload.plans);
+      })
+      .catch(() => undefined)
+      .finally(() => setPricingLoaded(true));
+    return () => controller.abort();
+  }, []);
+  const standardPlans = plans.filter((plan) => !plan.enterprise);
+  const enterprisePlan = plans.find((plan) => plan.enterprise);
 
   return (
     <div>
-      <div className={styles.tabs} role="tablist" aria-label="Pricing region">
-        {REGIONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            className={`${styles.tab} ${regionId === item.id ? styles.tabOn : ""}`}
-            aria-selected={regionId === item.id}
-            onClick={() => setRegionId(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
       <div className={styles.pricingGrid}>
-        {PLANS.map((plan, index) => (
+        {standardPlans.map((plan, index) => (
           <PricingCardReveal key={plan.id} index={index}>
             <article
               className={`${styles.priceCard} ${plan.popular ? styles.popular : ""}`}
@@ -457,8 +321,9 @@ function Pricing() {
               <h3>{plan.name}</h3>
               <p>{plan.summary}</p>
               <div className={styles.amount}>
-                {formatMoney(region.prices[plan.id], region)}
-                <span>/ month</span>
+                {plan.price ? formatMoney(plan.price.amount, plan.price.currency) : "Contact us"}
+                {plan.price ? <small>{plan.price.currency}</small> : null}
+                {plan.price ? <span>/ {plan.price.interval}</span> : null}
               </div>
               <ul className={styles.features}>
                 {plan.features.map((feature) => (
@@ -472,26 +337,26 @@ function Pricing() {
                 <span>{plan.limits.aiGenerations ? `${plan.limits.aiGenerations} AI generations` : "Unlimited AI generations"}</span>
               </div>
               <Link href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>
-                {plan.popular ? "Start with Growth" : "Sign up"}
+                {plan.popular ? "Start with Growth" : "Subscribe"}
               </Link>
             </article>
           </PricingCardReveal>
         ))}
       </div>
-      <Reveal>
+      {pricingLoaded && plans.length === 0 ? (
+        <p className={styles.lede}>Plans are being updated. Please check back shortly.</p>
+      ) : null}
+      {enterprisePlan ? <Reveal>
         <div className={styles.enterprise}>
           <div>
-            <h3>Enterprise</h3>
-            <p>
-              More locations, a white-label offer page, or a custom handoff
-              into the tools you already run.
-            </p>
+            <h3>{enterprisePlan.name}</h3>
+            <p>{enterprisePlan.summary}</p>
           </div>
           <a href="#contact" className={`${styles.btn} ${styles.btnGhost}`}>
             Contact sales
           </a>
         </div>
-      </Reveal>
+      </Reveal> : null}
     </div>
   );
 }
@@ -668,11 +533,6 @@ export default function LandingPage() {
                     Turn every walk-in into{" "}
                     <span className={styles.headlineAccent}>a customer you can message again</span>
                   </h1>
-                  <p className={styles.subtitle}>
-                    UPSale puts a discount on your counter. Guests scan, share
-                    WhatsApp, and take a one-time code. You keep the person,
-                    not just the receipt.
-                  </p>
                   <div className={styles.heroActions}>
                     <Link
                       href="/signup"
@@ -681,9 +541,6 @@ export default function LandingPage() {
                       Sign up
                     </Link>
                   </div>
-                  <p className={styles.finePrint}>
-                    Free to start. No card. Customers never install an app.
-                  </p>
                 </Reveal>
               </div>
               <Reveal delay={0.08}>
@@ -733,10 +590,6 @@ export default function LandingPage() {
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>How it works</p>
               <h2>Four steps from the door to the next message</h2>
-              <p className={styles.lede}>
-                The guest gets a saving today. You get a contact you can reach
-                when the floor is quiet.
-              </p>
             </Reveal>
             <div className={styles.flow}>
               <motion.div
@@ -763,7 +616,6 @@ export default function LandingPage() {
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h3>{item.title}</h3>
-                    <p>{item.text}</p>
                   </article>
                 </Reveal>
               ))}
@@ -773,10 +625,7 @@ export default function LandingPage() {
           <section className={`${styles.section} ${styles.container}`} id="features">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>Product</p>
-              <h2>How UPSale Drives Repeat Customers with AI</h2>
-              <p className={styles.lede}>
-                Turn walk-in visitors into loyal repeat customers in 3 simple steps.
-              </p>
+              <h2>Bring customers back with smarter offers</h2>
             </Reveal>
             <ProductWorkflow />
           </section>
@@ -784,7 +633,7 @@ export default function LandingPage() {
           <section className={`${styles.section} ${styles.container}`} id="integrations">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>Setup</p>
-              <h2>Nine moves from an empty account to a live offer</h2>
+              <h2>Set up your first offer in nine steps</h2>
             </Reveal>
             <div className={styles.setup}>
               {SETUP.map((item, index) => (
@@ -814,7 +663,6 @@ export default function LandingPage() {
                     </motion.span>
                     <div>
                       <h3>{item.title}</h3>
-                      <p>{item.text}</p>
                     </div>
                   </article>
                 </motion.div>
@@ -825,10 +673,9 @@ export default function LandingPage() {
           <section className={`${styles.section} ${styles.container}`} id="pricing">
             <Reveal className={styles.heading}>
               <p className={styles.eyebrow}>Pricing</p>
-              <h2>Local prices for the counter you already have</h2>
+              <h2>Simple pricing for your business</h2>
               <p className={styles.lede}>
-                Same product. Currency and monthly price follow the country you
-                sell in.
+                Choose the plan that fits today, then grow when you are ready.
               </p>
             </Reveal>
             <Pricing />

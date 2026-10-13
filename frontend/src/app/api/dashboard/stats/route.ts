@@ -20,8 +20,8 @@ export async function GET() {
     getMonthlyUsage(businessId),
     getBusinessLimits(owner).catch(() => null),
     owner.subscriptionStatus === "trial" && owner.trialPackageId
-      ? PackageModel.findById(owner.trialPackageId).select("name featureBullets").lean()
-      : owner.planSlug ? PackageModel.findOne({ slug: owner.planSlug }).select("name featureBullets").lean() : null,
+      ? PackageModel.findOne({ _id: owner.trialPackageId, isActive: true }).select("name featureBullets").lean()
+      : owner.planSlug ? PackageModel.findOne({ slug: owner.planSlug, isActive: true }).select("name featureBullets").lean() : null,
   ]);
 
   const totalScans = offers.reduce((sum, o) => sum + (o.scans ?? 0), 0);
