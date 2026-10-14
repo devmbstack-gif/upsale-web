@@ -12,7 +12,6 @@ export async function POST(request: Request) {
   const backendUrl = process.env.BACKEND_INTERNAL_URL;
   const secret = process.env.INTERNAL_API_SECRET;
   if (!backendUrl || !secret) return NextResponse.json({ ok: false, message: "Billing is not configured." }, { status: 503 });
-  const origin = new URL(request.url).origin;
   const onboarding = auth.owner.subscriptionStatus === "onboarding_pending";
   const returnPath = onboarding ? "/choose-plan" : "/app/billing";
   try {
@@ -22,8 +21,8 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         businessId: auth.businessId,
         planSlug: parsed.data.planSlug,
-        successUrl: `${origin}${returnPath}?payment=success`,
-        cancelUrl: `${origin}${returnPath}?payment=cancelled`,
+        successUrl: `${returnPath}?payment=success`,
+        cancelUrl: `${returnPath}?payment=cancelled`,
       }),
       cache: "no-store",
     });

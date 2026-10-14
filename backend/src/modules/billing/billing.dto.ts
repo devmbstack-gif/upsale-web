@@ -1,4 +1,4 @@
-import { IsMongoId, IsString, IsUrl, Matches } from 'class-validator';
+import { IsMongoId, IsString, Matches } from 'class-validator';
 
 export class CreateCheckoutDto {
   @IsMongoId()
@@ -8,10 +8,12 @@ export class CreateCheckoutDto {
   @Matches(/^[a-z0-9-]+$/)
   planSlug: string;
 
-  @IsUrl({ require_tld: false })
+  @IsString()
+  @Matches(/^\/(?:choose-plan|app\/billing)\?payment=success$/)
   successUrl: string;
 
-  @IsUrl({ require_tld: false })
+  @IsString()
+  @Matches(/^\/(?:choose-plan|app\/billing)\?payment=cancelled$/)
   cancelUrl: string;
 }
 
