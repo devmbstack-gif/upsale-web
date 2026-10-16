@@ -36,6 +36,7 @@ export default function AdminCmsPage() {
   const selectedSection = sections.find((section) => section.id === selectedId);
   const isSeoSection = selectedSection?.sectionKey === "seo";
   const isBrandingSection = selectedSection?.sectionKey === "branding";
+  const isLegalSection = ["legal_privacy", "legal_terms", "legal_data_deletion"].includes(selectedSection?.sectionKey ?? "");
 
   function seoContent() {
     try {
@@ -47,6 +48,30 @@ export default function AdminCmsPage() {
 
   function updateSeoField(key: string, value: unknown) {
     setJsonText(JSON.stringify({ ...seoContent(), [key]: value }, null, 2));
+  }
+
+  function legalContent() {
+    const content = seoContent();
+    return {
+      title: String(content.title ?? ""),
+      description: String(content.description ?? ""),
+      updated: String(content.updated ?? ""),
+      contactEmail: String(content.contactEmail ?? ""),
+      sections: Array.isArray(content.sections) ? content.sections.map((section) => ({
+        title: String((section as Record<string, unknown>)?.title ?? ""),
+        body: String((section as Record<string, unknown>)?.body ?? ""),
+      })) : [],
+    };
+  }
+
+  function updateLegalField(key: "title" | "description" | "updated" | "contactEmail", value: string) {
+    setJsonText(JSON.stringify({ ...seoContent(), [key]: value }, null, 2));
+  }
+
+  function updateLegalSection(index: number, key: "title" | "body", value: string) {
+    const content = legalContent();
+    const sections = content.sections.map((section, sectionIndex) => sectionIndex === index ? { ...section, [key]: value } : section);
+    setJsonText(JSON.stringify({ ...seoContent(), sections }, null, 2));
   }
 
   async function uploadBrandingImage(type: "logoLight" | "logoDark" | "favicon", file?: File) {
@@ -224,7 +249,7 @@ export default function AdminCmsPage() {
       </div>
 
       <div className="card-interactive space-y-3 p-5">
-        <h2 className="font-display text-lg font-semibold">{isSeoSection ? "Website SEO" : isBrandingSection ? "Website branding" : "Edit content (JSON)"}</h2>
+        <h2 className="font-display text-lg font-semibold">{isSeoSection ? "Website SEO" : isBrandingSection ? "Website branding" : isLegalSection ? "Legal page editor" : "Edit content (JSON)"}</h2>
         {isSeoSection ? (
           <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--hover-surface)]/30 p-4">
             <p className="text-sm text-muted">Published values control homepage search metadata and social sharing previews.</p>
@@ -262,7 +287,17 @@ export default function AdminCmsPage() {
             ))}
           </div>
         ) : null}
-        {!isBrandingSection ? <TextArea
+        {isLegalSection ? <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--hover-surface)]/30 p-4">
+          <p className="text-sm text-muted">Edit the legal page using normal fields. Save & publish to make changes live.</p>
+          <Input label="Page title" value={legalContent().title} onChange={(e) => updateLegalField("title", e.target.value)} />
+          <TextArea label="Introductory text" value={legalContent().description} onChange={(e) => updateLegalField("description", e.target.value)} />
+          <div className="grid gap-4 sm:grid-cols-2"><Input label="Last updated" placeholder="October 16, 2026" value={legalContent().updated} onChange={(e) => updateLegalField("updated", e.target.value)} /><Input label="Contact email" type="email" value={legalContent().contactEmail} onChange={(e) => updateLegalField("contactEmail", e.target.value)} /></div>
+          <div className="space-y-4 border-t border-[var(--border)] pt-4">
+            <h3 className="font-medium">Page sections</h3>
+            {legalContent().sections.map((section, index) => <div key={index} className="space-y-3 rounded-xl border border-[var(--border)] p-4"><Input label={`Section ${index + 1} heading`} value={section.title} onChange={(e) => updateLegalSection(index, "title", e.target.value)} /><TextArea label={`Section ${index + 1} content`} value={section.body} onChange={(e) => updateLegalSection(index, "body", e.target.value)} /></div>)}
+          </div>
+        </div> : null}
+        {!isBrandingSection && !isLegalSection ? <TextArea
           label={isSeoSection ? "Advanced SEO JSON" : "Content JSON"}
           className="min-h-[220px] font-mono text-xs"
           value={jsonText}

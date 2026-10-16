@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input, PasswordField, TextArea } from "@/components/ui/Input";
 import { Reveal } from "@/components/ui/Reveal";
+import { WhatsAppConnectionCard } from "@/components/whatsapp/WhatsAppConnectionCard";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import ProfileLoading from "./loading";
 
@@ -20,14 +21,6 @@ type Profile = {
   plan?: string;
   description?: string;
   logoUrl?: string;
-};
-
-type WhatsAppConnection = {
-  status: "not_connected" | "connected" | "error" | "disabled";
-  displayPhoneNumber?: string;
-  verifiedName?: string;
-  qualityRating?: string;
-  lastError?: string;
 };
 
 function broadcastLogo(logoUrl: string, businessName?: string) {
@@ -57,10 +50,6 @@ export default function ProfilePage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [waConnection, setWaConnection] = useState<WhatsAppConnection>({ status: "not_connected" });
-  const [waBusy, setWaBusy] = useState(false);
-  const [waMessage, setWaMessage] = useState<string | null>(null);
-  const [waCredentials, setWaCredentials] = useState({ accessToken: "", phoneNumberId: "", businessAccountId: "", testRecipient: "" });
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -99,54 +88,6 @@ export default function ProfilePage() {
       });
     })();
   }, []);
-
-  useEffect(() => {
-    void (async () => {
-      const response = await fetch("/api/whatsapp/connection", { cache: "no-store" });
-      const data = (await response.json()) as WhatsAppConnection;
-      if (response.ok) setWaConnection(data);
-    })();
-  }, []);
-
-  async function connectWhatsApp() {
-    setWaBusy(true);
-    setWaMessage(null);
-    try {
-      const response = await fetch("/api/whatsapp/connection", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(waCredentials),
-      });
-      const data = (await response.json()) as WhatsAppConnection & { ok?: boolean; message?: string };
-      if (!response.ok || !data.ok) {
-        setWaMessage(data.message ?? "Could not connect WhatsApp.");
-        return;
-      }
-      setWaConnection(data);
-      setWaCredentials((current) => ({ ...current, accessToken: "" }));
-      setWaMessage("WhatsApp Cloud API connected. Send a test message to finish verification.");
-      window.dispatchEvent(new Event("upsale:whatsapp-connected"));
-    } finally {
-      setWaBusy(false);
-    }
-  }
-
-  async function testWhatsApp() {
-    setWaBusy(true);
-    setWaMessage(null);
-    try {
-      const recipient = waCredentials.testRecipient || form.whatsapp;
-      const response = await fetch("/api/whatsapp/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient }),
-      });
-      const data = (await response.json()) as { ok?: boolean; message?: string };
-      setWaMessage(response.ok && data.ok ? "Test message accepted by WhatsApp. Check the recipient phone." : data.message ?? "Test message failed.");
-    } finally {
-      setWaBusy(false);
-    }
-  }
 
   async function onLogoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -404,40 +345,7 @@ export default function ProfilePage() {
       </Reveal>
 
       <Reveal delay={1}>
-        <div className="card-interactive space-y-6 p-6 md:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="font-display text-lg font-semibold">WhatsApp Cloud API</h2>
-              <p className="text-sm text-muted">Connect this business&apos;s own Meta credentials. The token is encrypted and never returned to the browser.</p>
-            </div>
-          </div>
-          <fieldset className="space-y-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant={waConnection.status === "connected" ? "active" : "paused"}>
-              {waConnection.status === "connected" ? "Connected" : "Not connected"}
-            </Badge>
-            {waConnection.verifiedName ? <span className="text-sm">{waConnection.verifiedName}</span> : null}
-            {waConnection.displayPhoneNumber ? <span className="text-sm text-muted">{waConnection.displayPhoneNumber}</span> : null}
-            {waConnection.qualityRating ? <span className="text-xs text-muted">Quality: {waConnection.qualityRating}</span> : null}
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <PasswordField label="Permanent access token" name="waAccessToken" autoComplete="off" value={waCredentials.accessToken} onChange={(e) => setWaCredentials((value) => ({ ...value, accessToken: e.target.value }))} />
-            <Input label="Phone Number ID" name="waPhoneNumberId" value={waCredentials.phoneNumberId} onChange={(e) => setWaCredentials((value) => ({ ...value, phoneNumberId: e.target.value.replace(/\D/g, "") }))} />
-            <Input label="WhatsApp Business Account ID" name="waBusinessAccountId" value={waCredentials.businessAccountId} onChange={(e) => setWaCredentials((value) => ({ ...value, businessAccountId: e.target.value.replace(/\D/g, "") }))} />
-            <Input label="Test recipient (international format)" name="waTestRecipient" value={waCredentials.testRecipient} onChange={(e) => setWaCredentials((value) => ({ ...value, testRecipient: e.target.value }))} placeholder={form.whatsapp || "+923001234567"} />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" disabled={waBusy || !waCredentials.accessToken || !waCredentials.phoneNumberId || !waCredentials.businessAccountId} onClick={() => void connectWhatsApp()}>
-              {waBusy ? "Checking…" : "Connect & verify"}
-            </Button>
-            <Button type="button" variant="secondary" disabled={waBusy || waConnection.status !== "connected"} onClick={() => void testWhatsApp()}>
-              Send test message
-            </Button>
-          </div>
-          {waConnection.lastError ? <p className="text-sm text-red-300">{waConnection.lastError}</p> : null}
-          {waMessage ? <p className="text-sm text-muted">{waMessage}</p> : null}
-          </fieldset>
-        </div>
+        <WhatsAppConnectionCard defaultRecipient={form.whatsapp} />
       </Reveal>
 
       <Reveal delay={2}>

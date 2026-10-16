@@ -8,6 +8,14 @@ export class ConnectWhatsAppDto {
   @IsString() @Matches(/^\d+$/) businessAccountId: string;
 }
 
+/** Values returned by Meta's Embedded Signup JavaScript SDK. */
+export class EmbeddedSignupDto {
+  @IsMongoId() businessId: string;
+  @IsString() @MinLength(8) authorizationCode: string;
+  @IsString() @Matches(/^\d+$/) phoneNumberId: string;
+  @IsString() @Matches(/^\d+$/) businessAccountId: string;
+}
+
 export class BusinessRequestDto { @IsMongoId() businessId: string; }
 
 export class TestWhatsAppDto extends BusinessRequestDto {

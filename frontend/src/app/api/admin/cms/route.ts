@@ -1,6 +1,7 @@
 import { SiteSectionCMSModel } from "@/lib/models/site-section-cms";
 import { writeAuditLog } from "@/lib/admin/audit";
 import { withSuperAdmin, jsonOk, jsonError } from "@/lib/admin/api";
+import { LEGAL_DEFAULTS } from "@/lib/legal-content";
 
 const DEFAULT_SECTIONS = [
   {
@@ -51,6 +52,9 @@ const DEFAULT_SECTIONS = [
       blurb: "QR offers that turn walk-ins into WhatsApp customers.",
     },
   },
+  { sectionKey: "legal_privacy", locale: "en", content: LEGAL_DEFAULTS.legal_privacy },
+  { sectionKey: "legal_terms", locale: "en", content: LEGAL_DEFAULTS.legal_terms },
+  { sectionKey: "legal_data_deletion", locale: "en", content: LEGAL_DEFAULTS.legal_data_deletion },
 ];
 
 export async function GET() {

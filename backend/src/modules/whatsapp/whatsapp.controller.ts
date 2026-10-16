@@ -3,7 +3,7 @@ import type { RawBodyRequest } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { WhatsAppService } from './whatsapp.service.js';
-import { BusinessRequestDto, ConnectWhatsAppDto, ScheduleCampaignDto, SendCampaignDto, TestWhatsAppDto, VerifyNumberDto, WhatsAppPreferencesDto } from './whatsapp.dto.js';
+import { BusinessRequestDto, ConnectWhatsAppDto, EmbeddedSignupDto, ScheduleCampaignDto, SendCampaignDto, TestWhatsAppDto, VerifyNumberDto, WhatsAppPreferencesDto } from './whatsapp.dto.js';
 
 @Controller()
 export class WhatsAppController {
@@ -16,6 +16,11 @@ export class WhatsAppController {
   @Post('internal/whatsapp/connect')
   connect(@Headers('x-internal-secret') secret: string | undefined, @Body() dto: ConnectWhatsAppDto) {
     this.internal(secret); return this.whatsapp.connect(dto);
+  }
+
+  @Post('internal/whatsapp/embedded-signup')
+  embeddedSignup(@Headers('x-internal-secret') secret: string | undefined, @Body() dto: EmbeddedSignupDto) {
+    this.internal(secret); return this.whatsapp.connectEmbeddedSignup(dto);
   }
 
   @Post('internal/whatsapp/status')

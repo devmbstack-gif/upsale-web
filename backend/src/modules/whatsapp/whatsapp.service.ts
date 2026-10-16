@@ -4,7 +4,7 @@ import { InjectConnection } from '@nestjs/mongoose';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Types } from 'mongoose';
 import type { Connection } from 'mongoose';
-import { ConnectWhatsAppDto, ScheduleCampaignDto, SendCampaignDto } from './whatsapp.dto.js';
+import { ConnectWhatsAppDto, EmbeddedSignupDto, ScheduleCampaignDto, SendCampaignDto } from './whatsapp.dto.js';
 import { decryptWhatsAppSecret, encryptWhatsAppSecret } from './whatsapp.crypto.js';
 import { MailService } from '../mail/mail.service.js';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
@@ -22,6 +22,7 @@ type WaConnection = {
   lastTestedAt?: Date;
   failureEmailAlerts?: boolean;
   failureAlertEmail?: string;
+  connectionMethod?: 'manual' | 'embedded_signup';
 };
 
 @Injectable()
@@ -59,29 +60,68 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
     return data;
   }
 
-  async connect(dto: ConnectWhatsAppDto) {
+  private async persistConnection(input: {
+    businessId: string;
+    accessToken: string;
+    phoneNumberId: string;
+    businessAccountId: string;
+    connectionMethod: 'manual' | 'embedded_signup';
+  }) {
     const details = await this.graph<{ display_phone_number?: string; verified_name?: string; quality_rating?: string }>(
-      `${dto.phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`, dto.accessToken,
+      `${input.phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`, input.accessToken,
     );
     await this.db.collection<WaConnection>('whatsapp_connections').updateOne(
-      { businessId: new Types.ObjectId(dto.businessId) },
+      { businessId: new Types.ObjectId(input.businessId) },
       { $set: {
-        accessTokenEncrypted: encryptWhatsAppSecret(dto.accessToken, this.masterKey()),
-        phoneNumberId: dto.phoneNumberId,
-        businessAccountId: dto.businessAccountId,
+        accessTokenEncrypted: encryptWhatsAppSecret(input.accessToken, this.masterKey()),
+        phoneNumberId: input.phoneNumberId,
+        businessAccountId: input.businessAccountId,
         displayPhoneNumber: details.display_phone_number ?? '',
         verifiedName: details.verified_name ?? '',
         qualityRating: details.quality_rating ?? '',
+        connectionMethod: input.connectionMethod,
         status: 'connected', lastError: '', lastTestedAt: new Date(), updatedAt: new Date(),
       }, $setOnInsert: { createdAt: new Date() } }, { upsert: true },
     );
     return { status: 'connected', displayPhoneNumber: details.display_phone_number ?? '', verifiedName: details.verified_name ?? '', qualityRating: details.quality_rating ?? '' };
   }
 
+  async connect(dto: ConnectWhatsAppDto) {
+    return this.persistConnection({ ...dto, connectionMethod: 'manual' });
+  }
+
+  async connectEmbeddedSignup(dto: EmbeddedSignupDto) {
+    const appId = this.config.get<string>('WHATSAPP_APP_ID');
+    const appSecret = this.config.get<string>('WHATSAPP_APP_SECRET');
+    if (!appId || !appSecret) throw new ServiceUnavailableException('WhatsApp Embedded Signup is not configured.');
+
+    const exchangeUrl = new URL(`${await this.baseUrl()}/oauth/access_token`);
+    exchangeUrl.searchParams.set('client_id', appId);
+    exchangeUrl.searchParams.set('client_secret', appSecret);
+    exchangeUrl.searchParams.set('code', dto.authorizationCode);
+    const exchange = await fetch(exchangeUrl, { signal: AbortSignal.timeout(15000) });
+    const exchangeData = await exchange.json().catch(() => ({})) as { access_token?: string; error?: { message?: string } };
+    if (!exchange.ok || !exchangeData.access_token) throw new BadRequestException(exchangeData.error?.message ?? 'Meta could not authorize this WhatsApp account.');
+
+    const token = exchangeData.access_token;
+    const phoneList = await this.graph<{ data?: Array<{ id?: string }> }>(`${dto.businessAccountId}/phone_numbers?fields=id`, token);
+    if (!phoneList.data?.some((phone) => phone.id === dto.phoneNumberId)) {
+      throw new BadRequestException('The selected phone number does not belong to the selected WhatsApp Business Account.');
+    }
+    await this.graph(`${dto.businessAccountId}/subscribed_apps`, token, { method: 'POST', body: '{}' });
+    return this.persistConnection({ ...dto, accessToken: token, connectionMethod: 'embedded_signup' });
+  }
+
   async status(businessId: string) {
     const value = await this.db.collection<WaConnection>('whatsapp_connections').findOne({ businessId: new Types.ObjectId(businessId) });
-    if (!value) return { status: 'not_connected' };
-    return { status: value.status, displayPhoneNumber: value.displayPhoneNumber ?? '', verifiedName: value.verifiedName ?? '', qualityRating: value.qualityRating ?? '', lastError: value.lastError ?? '', lastTestedAt: value.lastTestedAt ?? null, tokenMasked: '••••••••', failureEmailAlerts: Boolean(value.failureEmailAlerts), failureAlertEmail: value.failureAlertEmail ?? '' };
+    const embeddedSignup = {
+      enabled: Boolean(this.config.get<string>('WHATSAPP_APP_ID') && this.config.get<string>('WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID') && this.config.get<string>('WHATSAPP_APP_SECRET')),
+      appId: this.config.get<string>('WHATSAPP_APP_ID') ?? '',
+      configId: this.config.get<string>('WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID') ?? '',
+      apiVersion: this.config.get<string>('WHATSAPP_API_VERSION', 'v23.0'),
+    };
+    if (!value) return { status: 'not_connected', embeddedSignup };
+    return { status: value.status, displayPhoneNumber: value.displayPhoneNumber ?? '', verifiedName: value.verifiedName ?? '', qualityRating: value.qualityRating ?? '', lastError: value.lastError ?? '', lastTestedAt: value.lastTestedAt ?? null, tokenMasked: '••••••••', failureEmailAlerts: Boolean(value.failureEmailAlerts), failureAlertEmail: value.failureAlertEmail ?? '', connectionMethod: value.connectionMethod ?? 'manual', embeddedSignup };
   }
 
   async preferences(businessId: string, failureEmailAlerts: boolean, failureAlertEmail?: string) {
@@ -114,8 +154,8 @@ export class WhatsAppService implements OnModuleInit, OnModuleDestroy {
       this.db.collection('whatsapp_messages').countDocuments({ status: 'failed', updatedAt: { $gte: since } }),
     ]);
     const configured = Boolean(
-      this.config.get('WHATSAPP_ACCESS_TOKEN') &&
-      this.config.get('WHATSAPP_PHONE_NUMBER_ID') &&
+      this.config.get('WHATSAPP_APP_ID') &&
+      this.config.get('WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID') &&
       this.config.get('WHATSAPP_APP_SECRET') &&
       this.config.get('WHATSAPP_WEBHOOK_VERIFY_TOKEN') &&
       this.config.get('WHATSAPP_ENCRYPTION_KEY'),
