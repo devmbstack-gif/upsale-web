@@ -93,18 +93,16 @@ function LoginFormInner() {
       <header className={styles.progress}>
         <div className={styles.progressTop}>
           <div className={styles.progressLead}>
+            <Link href="/" className={styles.backHome} aria-label="Back to home">
+              <span className={styles.backHomeArrow} aria-hidden="true">←</span>
+              <span className={styles.backHomeText}>Back to home</span>
+            </Link>
             <Link href="/" className={styles.brand} aria-label="UPSale home">
               <BrandLogo variant="auto" size="md" priority />
             </Link>
           </div>
           <div className={styles.themeActions}>
             <ThemeToggle />
-            <Link href="/" className={styles.backHome} aria-label="Back to home">
-              <span className={styles.backHomeArrow} aria-hidden="true">
-                ←
-              </span>
-              <span className={styles.backHomeText}>Back to home</span>
-            </Link>
           </div>
         </div>
       </header>

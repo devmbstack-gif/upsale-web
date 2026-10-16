@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   BadgePercent,
   CreditCard,
@@ -39,8 +39,6 @@ const nav = [
   { href: "/app/profile", label: "Profile", icon: UserRound },
 ];
 
-const whatsAppFeatureEnabled = process.env.NEXT_PUBLIC_WHATSAPP_ENABLED === "true";
-
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
@@ -50,27 +48,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
-  const [whatsAppEnabled, setWhatsAppEnabled] = useState(false);
-
-  useEffect(() => {
-    if (!whatsAppFeatureEnabled) return;
-    let cancelled = false;
-    async function checkWhatsApp() {
-      try {
-        const response = await fetch("/api/whatsapp/connection", { cache: "no-store" });
-        const data = (await response.json().catch(() => ({}))) as { status?: string };
-        if (!cancelled) setWhatsAppEnabled(response.ok && data.status === "connected");
-      } catch {
-        if (!cancelled) setWhatsAppEnabled(false);
-      }
-    }
-    void checkWhatsApp();
-    window.addEventListener("upsale:whatsapp-connected", checkWhatsApp);
-    return () => {
-      cancelled = true;
-      window.removeEventListener("upsale:whatsapp-connected", checkWhatsApp);
-    };
-  }, []);
 
   function isActive(href: string) {
     if (href === "/app") return pathname === "/app";
@@ -125,20 +102,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <nav className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-3">
           {nav.map((item, index) => {
             const active = isActive(item.href);
-            if (item.href === "/app/whatsapp" && !whatsAppEnabled) {
-              return (
-                <div
-                  key={item.href}
-                  className="flex min-h-11 min-w-0 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted opacity-60"
-                  aria-disabled="true"
-                  title="WhatsApp messaging is coming soon"
-                >
-                  <span className="grid h-6 w-6 shrink-0 place-items-center" aria-hidden><item.icon size={19} strokeWidth={1.9} /></span>
-                  <span className="min-w-0 flex-1 truncate leading-5">{item.label}</span>
-                  <span className="shrink-0 rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">Coming Soon</span>
-                </div>
-              );
-            }
             return (
               <Link
                 key={item.href}

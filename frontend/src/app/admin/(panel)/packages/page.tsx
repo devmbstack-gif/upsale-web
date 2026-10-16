@@ -178,7 +178,9 @@ export default function AdminPackagesPage() {
       setEditing(null);
       setForm(emptyForm);
       await load();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const scrollContainer = editorRef.current?.closest("main");
+      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {

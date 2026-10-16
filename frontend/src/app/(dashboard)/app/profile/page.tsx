@@ -7,8 +7,6 @@ import { Reveal } from "@/components/ui/Reveal";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import ProfileLoading from "./loading";
 
-const whatsAppFeatureEnabled = process.env.NEXT_PUBLIC_WHATSAPP_ENABLED === "true";
-
 type Profile = {
   businessName?: string;
   category?: string;
@@ -412,9 +410,8 @@ export default function ProfilePage() {
               <h2 className="font-display text-lg font-semibold">WhatsApp Cloud API</h2>
               <p className="text-sm text-muted">Connect this business&apos;s own Meta credentials. The token is encrypted and never returned to the browser.</p>
             </div>
-            {!whatsAppFeatureEnabled ? <span className="rounded-full border border-brand-from/30 bg-brand-from/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-to">Coming Soon</span> : null}
           </div>
-          <fieldset disabled={!whatsAppFeatureEnabled} className={!whatsAppFeatureEnabled ? "space-y-6 opacity-50" : "space-y-6"}>
+          <fieldset className="space-y-6">
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant={waConnection.status === "connected" ? "active" : "paused"}>
               {waConnection.status === "connected" ? "Connected" : "Not connected"}
