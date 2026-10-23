@@ -561,6 +561,8 @@ export default function LandingPage() {
                   className={`${styles.videoElement} ${videoFloating ? styles.videoFloating : ""}`}
                   src={process.env.NEXT_PUBLIC_DEMO_VIDEO_URL}
                   poster="/video-thumbnail.png"
+                  width={1280}
+                  height={720}
                   controls
                   muted
                   playsInline

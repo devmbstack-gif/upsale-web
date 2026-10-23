@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   },
   description:
     "UPSale turns a counter QR code into a WhatsApp customer list, coupons, and offers for local businesses.",
+  verification: {
+    google: "gbNv9idm0Z3HtbvdZe8CzjR2QkvEdKuCZoqy-aVKtkI",
+  },
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },

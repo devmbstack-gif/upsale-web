@@ -5,6 +5,10 @@
 /* Dark (default) — brand, softer glow + clearer text */
 :root,
 html.dark {
+  /* Compatibility aliases used by the marketing and legal CSS. Keeping them
+     tied to the Next-managed fonts prevents a fallback-font layout shift. */
+  --font-bric: var(--font-display);
+  --font-dm: var(--font-body);
   --background: #12101c;
   --foreground: #f7f4ff;
   --surface: #1a1528;

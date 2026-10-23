@@ -1894,7 +1894,10 @@
 .video {
   position: relative;
   margin-top: 28px;
+  /* Reserve the complete media area before the poster or remote video arrives. */
+  width: 100%;
   aspect-ratio: 16 / 9;
+  contain: layout paint;
   border-radius: 28px;
   overflow: hidden;
   border: 1px solid var(--border);
